@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<items>
+  <item id="1">
+    <displayName>Basic Sword</displayName>
+    <attr>
+      <hardness value="10" />
+      <range value="1" />
+    </attr>
+    <requirements>
+      <level>
+        <min>0</min>
+        <max>10</max>
+      </level>
+      <str>
+        <min>0</min>
+        <max>10</max>
+      </str>
+    </requirements>
+  </item>
+</items>

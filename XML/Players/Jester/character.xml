@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?><character>
+	<information>
+		<name>Jester</name>
+		<password>Jester</password>
+		<playtime>0</playtime>
+	</information>
+	<stats>
+		<EXP>0</EXP>
+		<Strength>10</Strength>
+		<Speed>10</Speed>
+		<Defense>10</Defense>
+		<Intelligence>10</Intelligence>
+		<Magic>10</Magic>
+	</stats>
+	<inventory>
+		<item id="1" quantity="1">
+			<add attr="str" value="10" />
+		</item>
+		<item id="2" quantity="1" equip="1">
+			<add special="magic" value="1" />
+		</item>
+	</inventory>
+	<social>
+		<twitter>
+			<username>@PureMunky</username>
+			<password></password>
+		</twitter>
+		<friends>
+			<char name="Fossil5" desc="Test" />
+			<char name="Marstead" desc="Test" />
+			<group name="FWFS" desc="GroupTest" />
+			<password></password>
+		</friends>
+		<group name="FWFS" active="1" joined="1/3/2011 08:07:43" />
+	</social>
+	<history>
+	</history>
+</character>

@@ -1,0 +1,19 @@
+/* TEAM */
+
+Original Author: Phil Corbett
+Email: corbett.phil@gmail.com
+Twitter: @PureMunky
+Location: Columbus, OH, USA
+
+
+/* THANKS */
+
+https://github.com
+http://humanstxt.org
+
+
+/* SITE */
+
+Standards: HTML5
+Components: jQuery
+Software: Visual Studio 2010
