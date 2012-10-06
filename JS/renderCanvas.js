@@ -26,7 +26,7 @@
     this.WriteOutput = function (inOutput) {
         ctx.font = "20px Times New Roman";
         ctx.fillStyle = "Black";
-        ctx.fillText(inOutput, 5, 30);
+        ctx.fillText(inOutput, 50, 30);
     };
 
     this.setPlayerImage = function (inSrcImage) {
@@ -78,19 +78,18 @@
 	drawings[0] = new drawing(0, 0, 16, 16, '');
 
     function clearCanvas() {
-        ctx.clearRect(0, 0, $('#playArea').width(), $('#playArea').height());
+        document.getElementById('playArea').width = document.getElementById('playArea').width;
     }
 
     this.drawCanvas = function () {
         requestAnimationFrame(drawCanvas);
         clearCanvas();
 
-
         for (var i = 0; i < drawings.length; i++) {
         	try {
 	           	ctx.drawImage(drawings[i].image, 0, 0, drawings[i].width, drawings[i].height, drawings[i].x, drawings[i].y, drawings[i].width, drawings[i].height);	
         	}catch(e) {
-				//TG.Engines.Debug.WriteOutput(e);        		
+				TG.Engines.Debug.WriteOutput(e);        		
         	}
         }
 
