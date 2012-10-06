@@ -1,10 +1,5 @@
 ﻿function InputV1() {
     $(function () {
-        //TG.Engines.Render.displayLogin();
-        TG.Engines.GlobalVars._STEPTIMER = setInterval(TG.Engines.Action.MoveOneStep, 16);
-    });
-
-    $(function () {
         $(document).keydown(function (event) {
             if (!keyboardEntry) {
                 event.preventDefault();
