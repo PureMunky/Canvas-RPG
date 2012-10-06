@@ -9,8 +9,7 @@
         TG.Engines.Render.drawCanvas();
     });
 
-    var playerImage = TG.Engines.GlobalVars._PlayerImageRIGHT;
-
+	
     this.FillScreen = function () {
         $('#playArea').width(1);
         $('#playArea').height(1);
@@ -31,7 +30,7 @@
     };
 
     this.setPlayerImage = function (inSrcImage) {
-        playerImage = inSrcImage;
+		drawings[0].setImage(inSrcImage);
     }
 
     this.Pan = function (vPixels, hPixels) {
@@ -39,11 +38,7 @@
     };
 
     this.Move = function (vPixels, hPixels) {
-        if (drawings[0]) {
-            drawings[0] = drawing(drawings[0].x + hPixels, drawings[0].y + vPixels, 16, 16, playerImage);
-        } else {
-            drawings[0] = drawing(hPixels, vPixels, 16, 16, playerImage);
-        }
+        drawings[0].setPosition(drawings[0].x + hPixels, drawings[0].y + vPixels);
     };
 
     this.displayLogin = function () {
@@ -55,21 +50,32 @@
     };
 
     var drawings = new Array();
-
+	
     function drawing(inX, inY, inHeight, inWidth, inImageSrc) {
-        return {
-            x: inX,
-            y: inY,
-            height: inHeight,
-            width: inWidth,
-            imgSrc: inImageSrc,
-            image: function () {
-                var img = new Image();
-                img.src = imgSrc;
-                return img;
-            }
-        };
+        var that = this;
+        
+        that.x = inX;
+        that.y = inY;
+        
+        that.height = inHeight;
+        that.width = inWidth;
+        
+        that.imgSrc = inImageSrc;
+        
+        that.image = new Image();
+        that.image.src = inImageSrc;
+        
+        that.setImage = function (imgSrc) {
+        	that.image.src = imgSrc;
+        }
+        
+        that.setPosition = function (x, y) {
+        	that.x = x;
+        	that.y = y;
+        }
     }
+
+	drawings[0] = new drawing(0, 0, 16, 16, '');
 
     function clearCanvas() {
         ctx.clearRect(0, 0, $('#playArea').width(), $('#playArea').height());
@@ -79,24 +85,15 @@
         requestAnimationFrame(drawCanvas);
         clearCanvas();
 
+
         for (var i = 0; i < drawings.length; i++) {
-            var i = 0;
-            var img = new Image();
-            img.src = drawings[i].imgSrc;
-            ctx.save();
-            ctx.drawImage(img, drawings[i].x, drawings[i].y);
-            ctx.restore();
+        	try {
+	           	ctx.drawImage(drawings[i].image, 0, 0, drawings[i].width, drawings[i].height, drawings[i].x, drawings[i].y, drawings[i].width, drawings[i].height);	
+        	}catch(e) {
+				//TG.Engines.Debug.WriteOutput(e);        		
+        	}
         }
 
-        var time = new Date().getTime() * 0.002;
-        var x = Math.sin(time * 2) * 96 + 128;
-        var y = Math.cos(time * 0.9) * 96 + 128;
-
-        ctx.fillStyle = 'rgb(255,0,0)';
-        ctx.beginPath();
-        ctx.arc(x, y, 10, 0, Math.PI * 2, true);
-        ctx.closePath();
-        ctx.fill();
     };
 
     return this;
