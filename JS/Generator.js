@@ -21,8 +21,6 @@ var Generator = (function (){
 		}
 	
 		oNPC.prototype = new oGameObject();
-		//inherit game object from oGameObject and use the TG.Engines.Game.GameObjects to manage location/interation instead of TG.Engines.Render.drawings
-		
 		function oNPC() {
 			var that = this;
 			
@@ -37,6 +35,8 @@ var Generator = (function (){
 		    }
 		    
 		    var state = {};
+		    
+		    var inv = new Array();
 		    
 		    that.title = '';
 		    that.image = new Image();
@@ -119,6 +119,10 @@ var Generator = (function (){
 		    
 		    that.setAI = function (newAI) {
 		    	_AI = newAI;
+		    };
+		    
+		    that.Attack = function () {
+		    	
 		    };
 		}
 
