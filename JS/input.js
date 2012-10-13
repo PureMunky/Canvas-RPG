@@ -17,7 +17,7 @@
                     TG.Engines.Game.GameObjects[0].setMoving({ horizontal: -1 });
                     //moving.horizontal = -1;
                 } else if (event.keyCode == _RUNKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setMoving(true);
+                    TG.Engines.Game.GameObjects[0].setRun(true);
                     //moving.running = true;
                 } else if (event.keyCode == _ATTACKKEY.keyCode) {
 					TG.Engines.Game.GameObjects[0].Attack();
@@ -38,7 +38,7 @@
                 } else if (event.keyCode == _LEFTKEY.keyCode) {
                     TG.Engines.Game.GameObjects[0].setMoving({ horizontal: 0 });
                 } else if (event.keyCode == _RUNKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setMoving(false);
+                    TG.Engines.Game.GameObjects[0].setRun(false);
                     //moving.running = false;
                 }
             }

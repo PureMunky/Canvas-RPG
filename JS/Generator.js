@@ -117,8 +117,8 @@ var Generator = (function (){
 		        that.setFacing(moving);
 		        
 		        that.setPosition(
-		        	that.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS),
-		        	that.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS)
+		        	that.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1)),
+		        	that.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1))
 		        );
 		        
 		        return that;
