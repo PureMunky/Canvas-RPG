@@ -6,13 +6,12 @@ function GameCore(){
     
 	this.Tick = function () {
 		TG.Engines.Action.MoveOneStep();
+		//GameObjects.push(TG.Engines.Generate.NPC());
 	};
 	
-	var _GameObjects = new Array();
+	this.GameObjects = new Array();
+	GameObjects[0] = TG.Engines.Generate.Player();
 	
-	this GameObjects = function () {
-		return _GameObjects;
-	}
 	
 	return this;
 }

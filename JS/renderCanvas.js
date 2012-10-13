@@ -30,7 +30,7 @@
     };
 
     this.setPlayerImage = function (inSrcImage) {
-		drawings[0].setImage(inSrcImage);
+		TG.Engines.Game.GameObjects[0].setImage(inSrcImage);
     }
 
     this.Pan = function (vPixels, hPixels) {
@@ -38,7 +38,8 @@
     };
 
     this.Move = function (vPixels, hPixels) {
-        drawings[0].setPosition(drawings[0].x + hPixels, drawings[0].y + vPixels);
+        //drawings[0].setPosition(drawings[0].x + hPixels, drawings[0].y + vPixels);
+        TG.Engines.Game.GameObjects[0].setPosition(TG.Engines.Game.GameObjects[0].x + hPixels, TG.Engines.Game.GameObjects[0].y + vPixels);
     };
 
     this.displayLogin = function () {
@@ -49,34 +50,6 @@
         //$('#dvLogin').hide();
     };
 
-    var drawings = new Array();
-	
-    function drawing(inX, inY, inHeight, inWidth, inImageSrc) {
-        var that = this;
-        
-        that.x = inX;
-        that.y = inY;
-        
-        that.height = inHeight;
-        that.width = inWidth;
-        
-        that.imgSrc = inImageSrc;
-        
-        that.image = new Image();
-        that.image.src = inImageSrc;
-        
-        that.setImage = function (imgSrc) {
-        	that.image.src = imgSrc;
-        }
-        
-        that.setPosition = function (x, y) {
-        	that.x = x;
-        	that.y = y;
-        }
-    }
-
-	drawings[0] = new drawing(0, 0, 16, 16, '');
-
     function clearCanvas() {
         document.getElementById('playArea').width = document.getElementById('playArea').width;
     }
@@ -85,9 +58,19 @@
         requestAnimationFrame(drawCanvas);
         clearCanvas();
 
-        for (var i = 0; i < drawings.length; i++) {
+  		TG.Engines.Debug.WriteOutput('x: ' + TG.Engines.Game.GameObjects[0].x + ', y: ' + TG.Engines.Game.GameObjects[0].y);
+        for (var i = 0; i < TG.Engines.Game.GameObjects.length; i++) {
         	try {
-	           	ctx.drawImage(drawings[i].image, 0, 0, drawings[i].width, drawings[i].height, drawings[i].x, drawings[i].y, drawings[i].width, drawings[i].height);	
+	           	ctx.drawImage(TG.Engines.Game.GameObjects[i].image,
+	           		0,
+	           		0,
+	           		TG.Engines.Game.GameObjects[i].width,
+	           		TG.Engines.Game.GameObjects[i].height,
+	           		TG.Engines.Game.GameObjects[i].x,
+	           		TG.Engines.Game.GameObjects[i].y,
+	           		TG.Engines.Game.GameObjects[i].width,
+	           		TG.Engines.Game.GameObjects[i].height
+	           	);	
         	}catch(e) {
 				TG.Engines.Debug.WriteOutput(e);        		
         	}
