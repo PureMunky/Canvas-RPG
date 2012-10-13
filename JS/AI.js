@@ -73,15 +73,15 @@ var AI1 = (function(){
 	
 	var _pace = function (distance, direction) {
 		var distance = distance || 100;
-		var newMoving = {
-			vertical: direction.vertical || 0,
-			horizontal: direction.horizontal || 1
+		var newMoving = direction || {
+			vertical: 0,
+			horizontal: 1
 		};
 		
 		return function (that) {
 			var state = that.getState();
 			
-			if(state.initialized) {
+			if(state.initialized == 'pace') {
 				state.moveTick++;
 				if (state.moveLoop == state.moveTick) {
 					state.moveTick = 0;
@@ -95,12 +95,53 @@ var AI1 = (function(){
 					that.setMoving(newMoving);
 				}
 			} else {
-				state.initialized = true;
+				state.initialized = 'pace';
 				state.moveLoop = distance;
 				state.moveTick = 0;
 				state.moving = newMoving;
 				
 				that.setMoving(newMoving);
+			}
+			
+			that.setState(state);
+		}
+	};
+	
+	var _toward = function (position) {
+		
+		return function (that) {
+			var newMoving = {
+				vertical: 0,
+				horizontal: 0
+			}
+			
+			if (that.x < position.x) newMoving.horizontal = 1;
+			if (that.x > position.x) newMoving.horizontal = -1;
+			if (that.y < position.y) newMoving.vertical = 1;
+			if (that.y > position.y) newMoving.vertical = -1;
+			
+			that.setMoving(newMoving);
+		}	
+	};
+	
+	var _hostile = function (npc) {
+		return function (that) {
+			var state = that.getState();
+			
+			if(that.getStats().perception * 10 < DistanceBetween(that, npc)) {
+				that.setDebugInfo('pacing');
+				_pace()(that);
+			} else if (that.getAttackRange() > DistanceBetween(that, npc)) {
+				state.timeSinceLastAttack = state.timeSinceLastAttack || 0;
+				state.timeSinceLastAttack++;
+				if(state.timeSinceLastAttack > that.getAttackSpeed()) {
+					state.timeSinceLastAttack = 0;
+					that.Attack();
+				}
+				that.setDebugInfo('attacking: ' + state.timeSinceLastAttack);
+			} else {
+				_toward(npc)(that);
+				that.setDebugInfo('tracking');
 			}
 			
 			that.setState(state);
@@ -119,6 +160,12 @@ var AI1 = (function(){
 		},
 		pace: function(distance, direction) {
 			return _pace(distance, direction);
+		},
+		toward: function(position) {
+			return _toward(position);
+		},
+		hostile: function(npc) {
+			return _hostile(npc);
 		}
 	};
 })();
