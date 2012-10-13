@@ -121,11 +121,23 @@ var Generator = (function (){
 		    	_AI = newAI;
 		    };
 		    
+		    that.Give = function(item) {
+		    	inv.push(item);
+		    }
+		    
 		    that.Attack = function () {
-		    	
+		    	TG.Engines.Debug.Log(that.title + ' attack with ' + inv[0].title + ' - ' + inv[0].damage + 'dmg');
 		    };
 		}
 
+	function oItem() {
+		var that = this;
+		
+		that.title = 'sword';
+		that.damage = 30;
+		that.level = 1;
+	}
+	
 	function _Player() {
 		var newPlayer = new oNPC();
 		newPlayer
@@ -145,11 +157,17 @@ var Generator = (function (){
 			.setPosition((Math.random() % 100) * 1000, (Math.random() % 100) * 300)
 			.setImage(TG.Engines.GlobalVars._PlayerImageDOWN)
 			.setDimensions(16, 16)
-			.setAI(TG.Engines.AI.wander());//.setAI(TG.Engines.AI.pace(50, {vertical: 0, horizontal: 0}));
+			.setAI(TG.Engines.AI.idle());
 		
 		newNPC.title = inTitle;
 		
 		return newNPC;
+	}
+	
+	function _Item() {
+		var newItem = new oItem();
+		
+		return newItem;
 	}
 	
 	return {
@@ -158,6 +176,9 @@ var Generator = (function (){
 		},
 		NPC: function (inTitle) {
 			return _NPC(inTitle);
-		}		
+		},
+		Item: function () {
+			return _Item();
+		}	
 	};
 })();

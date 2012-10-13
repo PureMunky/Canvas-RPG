@@ -13,7 +13,7 @@ function GameCore(){
 	
 	this.GameObjects = new Array();
 	GameObjects[0] = TG.Engines.Generate.Player();
-	
+	GameObjects[0].Give(TG.Engines.Generate.Item());
 	
 	GameObjects.push(TG.Engines.Generate.NPC('A'));
 	GameObjects.push(TG.Engines.Generate.NPC('B'));
