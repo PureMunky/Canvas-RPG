@@ -46,7 +46,9 @@ var Generator = (function (){
 		    }
 		    
 			that.setImage = function (imgSrc) {
-		    	that.image.src = imgSrc;
+		    	if(that.image.src != imgSrc) {
+		    		that.image.src = imgSrc;
+		    	}
 		    	return that;
 		    }
 		    that.setDimensions = function(h, w) {
@@ -82,27 +84,27 @@ var Generator = (function (){
 		    	return state;
 		    }
 		    
-		    that.MoveOneStep = function () {
-		    	if(_AI) _AI(that);
-		    	
-		    	var vPan, hPan, vMove, hMove;
-
-		        hPan = 0;
-		        vPan = 0;
-		        hMove = moving.horizontal;
-		        vMove = moving.vertical;
-		
-		        if (hMove > 0) {
+		    that.setFacing = function(direction) {
+		    	if (direction.horizontal > 0) {
 		            that.setImage(TG.Engines.GlobalVars._PlayerImageRIGHT);
-		        } else if (hMove < 0) {
+		        } else if (direction.horizontal < 0) {
 		            that.setImage(TG.Engines.GlobalVars._PlayerImageLEFT);
-		        } else if (vMove > 0) {
+		        } else if (direction.vertical > 0) {
 		            that.setImage(TG.Engines.GlobalVars._PlayerImageDOWN);
-		        } else if (vMove < 0) {
+		        } else if (direction.vertical < 0) {
 		            that.setImage(TG.Engines.GlobalVars._PlayerImageUP);
 		        }
+		    }
+		    
+		    that.MoveOneStep = function () {
+		    	if(_AI) _AI(that);
+		
+		        that.setFacing(moving);
 		        
-		        that.setPosition(that.x + (hMove * TG.Engines.GlobalVars._STEPPIXELS), that.y + (vMove * TG.Engines.GlobalVars._STEPPIXELS));
+		        that.setPosition(
+		        	that.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS),
+		        	that.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS)
+		        );
 		    };
 		    
 		    var _AI = function (that) {
@@ -133,32 +135,7 @@ var Generator = (function (){
 			.setPosition((Math.random() % 100) * 1000, (Math.random() % 100) * 300)
 			.setImage(TG.Engines.GlobalVars._PlayerImageDOWN)
 			.setDimensions(16, 16)
-			.setAI(function (that) {
-				var state = that.getState();
-				
-				if(state.initialized) {
-					state.moveTick++;
-					if (state.moveLoop == state.moveTick) {
-						state.moveTick = 0;
-						state.moving = state.moving * -1;
-						that.setMoving({
-							vertical: state.moving,
-							horizontal: 0
-						});
-					}
-				} else {
-					state.initialized = true;
-					state.moveLoop = 200;
-					state.moveTick = 0;
-					state.moving = 1;
-					that.setMoving({
-						vertical: 1,
-						horizontal: 0
-					});
-				}
-				
-				that.setState(state);
-			});
+			.setAI(TG.Engines.AI.idle());//.setAI(TG.Engines.AI.pace(50, {vertical: 0, horizontal: 0}));
 		
 		newNPC.title = inTitle;
 		

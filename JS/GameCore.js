@@ -16,10 +16,9 @@ function GameCore(){
 	
 	
 	GameObjects.push(TG.Engines.Generate.NPC('A'));
-	/*
-	GameObjects.push(TG.Engines.Generate.NPC());
-	GameObjects.push(TG.Engines.Generate.NPC());
-	GameObjects.push(TG.Engines.Generate.NPC());
-	*/
+	GameObjects.push(TG.Engines.Generate.NPC('B'));
+	GameObjects.push(TG.Engines.Generate.NPC('C'));
+	GameObjects.push(TG.Engines.Generate.NPC('D'));
+
 	return this;
 }
