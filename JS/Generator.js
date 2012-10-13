@@ -42,7 +42,7 @@ var Generator = (function (){
 		    that.image = new Image();
 		    
 		    that.toString = function() {
-		    	return that.title + ': ' + state.moving;
+		    	return that.title + ': ' + state.originPoint.x + ': ' + that.x;
 		    }
 		    
 			that.setImage = function (imgSrc) {
@@ -61,6 +61,12 @@ var Generator = (function (){
 		    	that.x = x;
 		    	that.y = y;
 		    	return that;
+		    }
+		    that.getPosition = function () {
+		    	return {
+		    		x: that.x,
+		    		y: that.y
+		    	}
 		    }
 		    
 		    that.setMoving = function (move) {
@@ -135,7 +141,7 @@ var Generator = (function (){
 			.setPosition((Math.random() % 100) * 1000, (Math.random() % 100) * 300)
 			.setImage(TG.Engines.GlobalVars._PlayerImageDOWN)
 			.setDimensions(16, 16)
-			.setAI(TG.Engines.AI.idle());//.setAI(TG.Engines.AI.pace(50, {vertical: 0, horizontal: 0}));
+			.setAI(TG.Engines.AI.wander());//.setAI(TG.Engines.AI.pace(50, {vertical: 0, horizontal: 0}));
 		
 		newNPC.title = inTitle;
 		

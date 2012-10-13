@@ -35,11 +35,40 @@ var AI1 = (function(){
 			}
 			
 			that.setFacing(facing);
+			return facing;
 		}
 	}
 	
 	var _wander = function (distance) {
+		var distance = distance || 100;
+		
+		return function (that) {
+			var state = that.getState();
 			
+			if(state.initialized) {
+				var newMove = _idle()(that);
+				
+				if(Math.random() * 100 < 10) {
+					//TODO: Make the wander algorithm have a distance boundary.
+					that.setMoving({horizontal: 0, vertical: 0});
+				} else {
+					if (
+						newMove.horizonal == 1 ||
+						newMove.horizontal == -1 ||
+						newMove.vertical == 1 ||
+						newMove.vertical == -1
+					) {
+						that.setMoving(newMove);
+					}
+				}
+				
+			} else {
+				state.initialized = true;
+				state.originPoint = that.getPosition();
+				
+			}
+			that.setState(state);
+		}
 	}
 	
 	var _pace = function (distance, direction) {
