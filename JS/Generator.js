@@ -42,7 +42,7 @@ var Generator = (function (){
 		    that.image = new Image();
 		    
 		    that.toString = function() {
-		    	return that.title + ': ' + state.originPoint.x + ': ' + that.x;
+		    	return that.title;
 		    }
 		    
 			that.setImage = function (imgSrc) {
