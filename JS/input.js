@@ -5,18 +5,19 @@
                 event.preventDefault();
 
                 if (event.keyCode == _UPKEY.keyCode) {
-                    TG.Engines.Action.SetMoving({ vertical: -1 });
+                    //TG.Engines.Action.SetMoving({ vertical: -1 });
+                    TG.Engines.Game.GameObjects[0].setMoving({ vertical: -1 });
                 } else if (event.keyCode == _RIGHTKEY.keyCode) {
-                    TG.Engines.Action.SetMoving({ horizontal: 1 });
+                    TG.Engines.Game.GameObjects[0].setMoving({ horizontal: 1 });
                     //moving.horizontal = 1;
                 } else if (event.keyCode == _DOWNKEY.keyCode) {
-                    TG.Engines.Action.SetMoving({ vertical: 1 });
+                    TG.Engines.Game.GameObjects[0].setMoving({ vertical: 1 });
                     //moving.vertical = 1;
                 } else if (event.keyCode == _LEFTKEY.keyCode) {
-                    TG.Engines.Action.SetMoving({ horizontal: -1 });
+                    TG.Engines.Game.GameObjects[0].setMoving({ horizontal: -1 });
                     //moving.horizontal = -1;
                 } else if (event.keyCode == _RUNKEY.keyCode) {
-                    TG.Engines.Action.SetRun(true);
+                    TG.Engines.Game.GameObjects[0].setMoving(true);
                     //moving.running = true;
                 } else if (event.keyCode == _ATTACKKEY.keyCode) {
 
@@ -29,15 +30,15 @@
             if (!keyboardEntry) {
                 event.preventDefault();
                 if (event.keyCode == _UPKEY.keyCode) {
-                    TG.Engines.Action.SetMoving({ vertical: 0 });
+                    TG.Engines.Game.GameObjects[0].setMoving({ vertical: 0 });
                 } else if (event.keyCode == _RIGHTKEY.keyCode) {
-                    TG.Engines.Action.SetMoving({ horizontal: 0 });
+                    TG.Engines.Game.GameObjects[0].setMoving({ horizontal: 0 });
                 } else if (event.keyCode == _DOWNKEY.keyCode) {
-                    TG.Engines.Action.SetMoving({ vertical: 0 });
+                    TG.Engines.Game.GameObjects[0].setMoving({ vertical: 0 });
                 } else if (event.keyCode == _LEFTKEY.keyCode) {
-                    TG.Engines.Action.SetMoving({ horizontal: 0 });
+                    TG.Engines.Game.GameObjects[0].setMoving({ horizontal: 0 });
                 } else if (event.keyCode == _RUNKEY.keyCode) {
-                    TG.Engines.Action.SetRun(false);
+                    TG.Engines.Game.GameObjects[0].setMoving(false);
                     //moving.running = false;
                 }
             }

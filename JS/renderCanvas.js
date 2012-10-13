@@ -23,10 +23,12 @@
         document.getElementById('playArea').setAttribute('height', height + 'px');
     };
 
-    this.WriteOutput = function (inOutput) {
-        ctx.font = "20px Times New Roman";
+    this.WriteOutput = function (inOutput, x, y) {
+    	x = x || 50;
+    	y = y || 30;
+        ctx.font = "15px Times New Roman";
         ctx.fillStyle = "Black";
-        ctx.fillText(inOutput, 50, 30);
+        ctx.fillText(inOutput, x, y);
     };
 
     this.setPlayerImage = function (inSrcImage) {
@@ -70,7 +72,14 @@
 	           		TG.Engines.Game.GameObjects[i].y,
 	           		TG.Engines.Game.GameObjects[i].width,
 	           		TG.Engines.Game.GameObjects[i].height
-	           	);	
+	           	);
+	           	
+	           	if(TG.Engines.Game.GameObjects[i].title) {
+	           		WriteOutput(TG.Engines.Game.GameObjects[i].toString(),
+	           			TG.Engines.Game.GameObjects[i].x + TG.Engines.Game.GameObjects[i].width,
+	           			TG.Engines.Game.GameObjects[i].y + TG.Engines.Game.GameObjects[i].height
+	           		);
+	           	}
         	}catch(e) {
 				TG.Engines.Debug.WriteOutput(e);        		
         	}
