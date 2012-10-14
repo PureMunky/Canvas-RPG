@@ -3,7 +3,7 @@
         $(document).keydown(function (event) {
             if (!keyboardEntry) {
                 event.preventDefault();
-
+				//TODO: smooth out when pressing two opposing directions at the same time (e.x. Left and Right).
                 if (event.keyCode == _UPKEY.keyCode) {
                     //TG.Engines.Action.SetMoving({ vertical: -1 });
                     TG.Engines.Game.GameObjects[0].setMoving({ vertical: -1 });

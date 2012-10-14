@@ -115,7 +115,7 @@ var Generator = (function (){
 		    	if(_AI) _AI(that);
 		
 		        that.setFacing(moving);
-		        
+		        //TODO: Create action cooldowns to prevent from spamming attacks...see weapon attack speed.
 		        that.setPosition(
 		        	that.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1)),
 		        	that.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1))

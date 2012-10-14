@@ -125,15 +125,17 @@ var AI1 = (function(){
 	};
 	
 	var _hostile = function (npc) {
+		//TODO: Fix the pacing algorithm to stop moving diagonally after the player has escaped the AIs perception.
 		return function (that) {
 			var state = that.getState();
 			
-			if(that.getStats().perception * 10 < DistanceBetween(that, npc)) {
+			if(that.getStats().perception * 10 < Distance.Between(that, npc)) {
 				that.setDebugInfo('pacing');
 				_pace()(that);
-			} else if (that.getAttackRange() > DistanceBetween(that, npc)) {
+			} else if (that.getAttackRange() > Distance.Between(that, npc)) {
 				state.timeSinceLastAttack = state.timeSinceLastAttack || 0;
 				state.timeSinceLastAttack++;
+				//TODO: Put attack cooldown in the action and attack before the cooldown occurs for AI.
 				if(state.timeSinceLastAttack > that.getAttackSpeed()) {
 					state.timeSinceLastAttack = 0;
 					that.Attack();
