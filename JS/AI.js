@@ -108,7 +108,7 @@ var AI1 = (function(){
 	};
 	
 	var _toward = function (position) {
-		
+		//TODO: Fix to move in a straight line instead of 45 degree angles.
 		return function (that) {
 			var newMoving = {
 				vertical: 0,
@@ -119,7 +119,8 @@ var AI1 = (function(){
 			if (that.x > position.x) newMoving.horizontal = -1;
 			if (that.y < position.y) newMoving.vertical = 1;
 			if (that.y > position.y) newMoving.vertical = -1;
-			
+			if (that.x == position.x && that.y == position.y) that.setAI(function() {});
+			that.setDebugInfo('toward (x: ' + position.x + ', y: ' + position.y + ')');
 			that.setMoving(newMoving);
 		}	
 	};

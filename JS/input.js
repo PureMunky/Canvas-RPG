@@ -4,6 +4,7 @@
             if (!keyboardEntry) {
                 event.preventDefault();
 				//TODO: smooth out when pressing two opposing directions at the same time (e.x. Left and Right).
+				//TODO: add ability to click/touch where to move to (for phone/tablet).
                 if (event.keyCode == _UPKEY.keyCode) {
                     //TG.Engines.Action.SetMoving({ vertical: -1 });
                     TG.Engines.Game.GameObjects[0].setMoving({ vertical: -1 });
@@ -73,5 +74,15 @@
         hideLogin();
         keyboardEntry = false;
     }
+    
+    $(function () {
+    	//TODO: Set click event to be context sensitive (e.x. click on an enemy turns player hostile and attacks enemy).
+    	document.getElementById('playArea').addEventListener('click', function(e) {
+	        var clickPos = {x: e.offsetX, y: e.offsetY};
+	        TG.Engines.Game.GameObjects[0].setAI(TG.Engines.AI.toward(clickPos));
+	    }, false);
+    });
+    
+    
     return this;
 };

@@ -1,6 +1,6 @@
 ﻿//GV1
 function GV1() {
-    this._STEPPIXELS = 2;
+    this._STEPPIXELS = .5;
     this._STEPTIMER;
     this._PANBOUNDARYPIX = 100;
     this._RUNPERC = .50;
