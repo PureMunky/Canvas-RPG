@@ -100,9 +100,9 @@ var Generator = (function (){
 		    }
 		    
 		    that.setFacing = function(direction) {
-		    	if (direction.horizontal > 0) {
+		    	if (direction.horizontal > 0 && direction.horizontal > Math.abs(direction.vertical)) {
 		            that.setImage(TG.Engines.GlobalVars._PlayerImageRIGHT);
-		        } else if (direction.horizontal < 0) {
+		        } else if (direction.horizontal < 0 && Math.abs(direction.horizontal) > Math.abs(direction.vertical)) {
 		            that.setImage(TG.Engines.GlobalVars._PlayerImageLEFT);
 		        } else if (direction.vertical > 0) {
 		            that.setImage(TG.Engines.GlobalVars._PlayerImageDOWN);

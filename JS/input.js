@@ -87,11 +87,27 @@
     	var pad = navigator.webkitGetGamepads()[0];
     	try {
     		if (pad) {
-	    		//TG.Engines.Debug.WriteOutput(pad.axes[0]);
-	    		TG.Engines.Game.GameObjects[0].setMoving({ horizontal: pad.axes[0] });
-	    		TG.Engines.Game.GameObjects[0].setMoving({ vertical: pad.axes[1] });
-	    		//TG.Engines.Game.GameObjects[0].setFacing({ horizontal: pad.axes[2] });
-	    		//TG.Engines.Game.GameObjects[0].setFacing({ vertical: pad.axes[3] });
+    			// Set Horizontal Motion
+	    		if (Math.abs(pad.axes[0]) > TG.Engines.GlobalVars._GamePadThreshold) {
+	    			TG.Engines.Game.GameObjects[0].setMoving({ horizontal: pad.axes[0] });
+	    		} else {
+	    			TG.Engines.Game.GameObjects[0].setMoving({ horizontal: 0 });
+	    		}
+	    		
+	    		// Set Vertical Motion
+	    		if (Math.abs(pad.axes[1]) > TG.Engines.GlobalVars._GamePadThreshold) {
+	    			TG.Engines.Game.GameObjects[0].setMoving({ vertical: pad.axes[1] });
+	    		} else {
+	    			TG.Engines.Game.GameObjects[0].setMoving({ vertical: 0 });	    			
+	    		}
+	    		
+	    		// Run
+	    		TG.Engines.Game.GameObjects[0].setRun(pad.buttons[2]);
+
+				// Attack
+				if(pad.buttons[0])
+					TG.Engines.Game.GameObjects[0].Attack();
+					
 	    	} else {
 	    		TG.Engines.Debug.WriteOutput('no gamepad');
 	    	}
@@ -112,6 +128,8 @@
 	    } 
     }
     
+    // Start the gamepad Polling
     gamepadTick();
+    
     return this;
 };
