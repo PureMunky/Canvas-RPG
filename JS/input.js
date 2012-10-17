@@ -83,6 +83,35 @@
 	    }, false);
     });
     
+    function gamepadTick() {
+    	var pad = navigator.webkitGetGamepads()[0];
+    	try {
+    		if (pad) {
+	    		//TG.Engines.Debug.WriteOutput(pad.axes[0]);
+	    		TG.Engines.Game.GameObjects[0].setMoving({ horizontal: pad.axes[0] });
+	    		TG.Engines.Game.GameObjects[0].setMoving({ vertical: pad.axes[1] });
+	    		//TG.Engines.Game.GameObjects[0].setFacing({ horizontal: pad.axes[2] });
+	    		//TG.Engines.Game.GameObjects[0].setFacing({ vertical: pad.axes[3] });
+	    	} else {
+	    		TG.Engines.Debug.WriteOutput('no gamepad');
+	    	}
+    	} catch (e) {
+
+    	}
+    	
+    	gamepadPoll();
+    }
     
+    function gamepadPoll() {
+	    if (window.requestAnimationFrame) {
+	      window.requestAnimationFrame(gamepadTick);
+	    } else if (window.mozRequestAnimationFrame) {
+	      window.mozRequestAnimationFrame(gamepadTick);
+	    } else if (window.webkitRequestAnimationFrame) {
+	      window.webkitRequestAnimationFrame(gamepadTick);
+	    } 
+    }
+    
+    gamepadTick();
     return this;
 };
