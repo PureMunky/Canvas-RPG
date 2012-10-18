@@ -105,9 +105,8 @@
 	    		TG.Engines.Game.GameObjects[0].setRun(pad.buttons[2]);
 
 				// Attack
-				if(pad.buttons[0])
-					TG.Engines.Game.GameObjects[0].Attack();
-					
+				// TODO: Only fire attack once per button push.
+				TG.Engines.Game.GameObjects[0].Attack();
 	    	} else {
 	    		TG.Engines.Debug.WriteOutput('no gamepad');
 	    	}

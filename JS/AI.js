@@ -120,7 +120,6 @@ var AI1 = (function(){
 			if (that.y < position.y) newMoving.vertical = 1;
 			if (that.y > position.y) newMoving.vertical = -1;
 			if (that.x == position.x && that.y == position.y) that.setAI(function() {});
-			that.setDebugInfo('toward (x: ' + position.x + ', y: ' + position.y + ')');
 			that.setMoving(newMoving);
 		}	
 	};
@@ -131,7 +130,6 @@ var AI1 = (function(){
 			var state = that.getState();
 			
 			if(that.getStats().perception * 10 < Distance.Between(that, npc)) {
-				that.setDebugInfo('pacing');
 				_pace()(that);
 			} else if (that.getAttackRange() > Distance.Between(that, npc)) {
 				state.timeSinceLastAttack = state.timeSinceLastAttack || 0;
@@ -141,10 +139,8 @@ var AI1 = (function(){
 					state.timeSinceLastAttack = 0;
 					that.Attack();
 				}
-				that.setDebugInfo('attacking: ' + state.timeSinceLastAttack);
 			} else {
 				_toward(npc)(that);
-				that.setDebugInfo('tracking');
 			}
 			
 			that.setState(state);

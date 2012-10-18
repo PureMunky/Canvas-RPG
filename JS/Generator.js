@@ -113,7 +113,7 @@ var Generator = (function (){
 		    
 		    that.MoveOneStep = function () {
 		    	if(_AI) _AI(that);
-		
+		    	
 		        that.setFacing(moving);
 		        //TODO: Create action cooldowns to prevent from spamming attacks...see weapon attack speed.
 		        that.setPosition(
