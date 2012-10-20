@@ -5,16 +5,49 @@ var Generator = (function() {
 	}
 	
 	function oRender(inImage, inWidth, inHeight, inImageX, inImageY) {
+	    // TODO: Move this to the render class.
 		this.image = 	inImage || new Image();
 		this.width = 	inWidth || 16;
 		this.height = 	inHeight || 16;
 		this.imageX = 	inImageX || 0;
 		this.imageY = 	inImageY || 0;
+		
+		function oFrame(inX, inY, inTime) {
+		    this.x = inX;
+		    this.y = inY;
+		    this.t = inTime;
+		}
+		
+		function oAnimation(inFrames) {
+		    this.frames = inFrames || new Array();
+		    
+		    var   currentFrame = 0,
+		          currentTime = 0;
+		    
+		    var incFrame = function () {
+		        currentFrame++;
+		        if(currentFrame > this.frames.length) {
+		            currentFrame = 0;
+		        }
+		    }
+		    
+		    this.Tick = function () {
+                currentTime++;
+                if(currentTime > frames[currentFrame].t) {
+                    currentTime = 0;
+                    incFrame();
+                }
+		    };
+		    
+		    this.addFrame = function (inFrame) {
+		        this.frames.push(inFrame);
+		    }
+		}
 	}
 	
 	function oGameObject(inX, inY, inHeight, inWidth) {
 		var that = this;
-
+		
 		var _position = new oPosition(inX, inY);
 
 		that.height = inHeight;
