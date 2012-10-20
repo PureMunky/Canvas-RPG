@@ -135,7 +135,7 @@ var Generator = (function() {
 				_AI(that, state.AI);
 
 			that.setFacing(moving);
-            //that.incAnimationFrame(4);
+            that.incAnimationFrame(4);
             
 			_position.x = _position.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			_position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
