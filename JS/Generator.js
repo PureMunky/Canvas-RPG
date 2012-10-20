@@ -20,8 +20,44 @@ var Generator = (function (){
 		    }
 		}
 		
-		oNPC.prototype = new oGameObject();
-		function oNPC() {
+		function oSex(title) {
+			var that = this;
+			that.title = title;
+			
+			that.toString = function () {
+				return that.title;
+			}
+		}
+		
+		var _Sex = {
+			male: function () {
+				var rtnMale = new oSex('male');
+				
+				rtnMale.state = {
+					
+				};
+				rtnMale.haveSex = function(self, partner){
+					if(self && partner) {
+						partner.state.pregnant = partner.state.pregnant ? true : false;
+					} else {
+						return false;
+					}
+				}
+				return rtnMale;
+			},
+			female: function () {
+				var rtnFemale = new oSex('female');
+				
+				rtnFemale.state = {
+					pregnant: false
+				};
+				
+				return rtnFemale;
+			}
+		}
+		
+		//oNPC.prototype = new oGameObject();
+		function oNPC(inTitle, inSex) {
 			var that = this;
 			
 			var moving = {
@@ -43,16 +79,18 @@ var Generator = (function (){
 		    
 		    var state = {
 		    	AI: {},
-		    	Core: {}
+		    	Core: {},
+		    	Environment: {}
 		    };
 		    
 		    var inv = new Array();
 		    var equipment = new Array();
 		    
-		    that.title = '';
+		    that.title = inTitle;
 		    that.image = new Image();
 		    that.debugInfo = '';
-		    
+		    that.sex = inSex;
+
 		    that.toString = function() {
 		    	return that.title + ' ' + that.debugInfo;
 		    }
@@ -125,6 +163,7 @@ var Generator = (function (){
 		        	that.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1))
 		        );
 		        
+		        that.setDebugInfo(that.sex.toString());
 		        return that;
 		    };
 		    
@@ -190,20 +229,20 @@ var Generator = (function (){
 		
 	}
 	
-	function _Player() {
-		var newPlayer = new oNPC();
+	function _Player(inName, inSex) {
+		var newPlayer = new oNPC(inName, inSex);
 		newPlayer
 			.setPosition(0,0)
 			.setImage(TG.Engines.GlobalVars._PlayerImageRIGHT)
 			.setDimensions(16, 16);
 			
-		newPlayer.title = 'Player';
+		//newPlayer.title = 'Player';
 			
 		return newPlayer;
 	}
 	
-	function _NPC (inTitle) {
-		var newNPC = new oNPC();
+	function _NPC (inTitle, inSex) {
+		var newNPC = new oNPC(inTitle, inSex);
 		
 		newNPC
 			.setPosition((Math.random() % 100) * 1000, (Math.random() % 100) * 300)
@@ -211,7 +250,7 @@ var Generator = (function (){
 			.setDimensions(16, 16)
 			.setAI(TG.Engines.AI.hostile(GameObjects[0]));
 		
-		newNPC.title = inTitle;
+		//newNPC.title = inTitle;
 		
 		return newNPC;
 	}
@@ -223,14 +262,22 @@ var Generator = (function (){
 	}
 	
 	return {
-		Player: function () {
-			return _Player();
+		Player: function (inName, inSex) {
+			return _Player(inName, inSex);
 		},
-		NPC: function (inTitle) {
-			return _NPC(inTitle);
+		NPC: function (inTitle, inSex) {
+			return _NPC(inTitle, inSex);
 		},
 		Item: function () {
 			return _Item();
-		}	
+		},
+		Sex: {
+			Male: function() {
+				return _Sex.male();
+			},
+			Female: function() {
+				return _Sex.female();
+			}
+		}
 	};
 })();
