@@ -21,7 +21,7 @@
                     TG.Engines.Game.GameObjects[0].setRun(true);
                     //moving.running = true;
                 } else if (event.keyCode == _ATTACKKEY.keyCode) {
-					TG.Engines.Game.GameObjects[0].Attack();
+					TG.Engines.Game.GameObjects[0].Combat.Attack();
                 }
             }
             TG.Engines.Debug.WriteOutput(event.keyCode);

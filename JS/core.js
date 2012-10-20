@@ -8,5 +8,6 @@ TG.Engines.Debug = DebugFull();
 TG.Engines.Render = RenderCanvasV1();
 TG.Engines.AI = AI1;
 TG.Engines.Generate = Generator;
+TG.Engines.Relationships = Relationships;
 TG.Engines.Game = GameCore();
 

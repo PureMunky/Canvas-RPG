@@ -25,7 +25,7 @@ var Generator = (function (){
 			that.title = title;
 			
 			that.toString = function () {
-				return that.title;
+				return that.title + (that.state.pregnant || '');
 			}
 		}
 		
@@ -36,13 +36,7 @@ var Generator = (function (){
 				rtnMale.state = {
 					
 				};
-				rtnMale.haveSex = function(self, partner){
-					if(self && partner) {
-						partner.state.pregnant = partner.state.pregnant ? true : false;
-					} else {
-						return false;
-					}
-				}
+				
 				return rtnMale;
 			},
 			female: function () {
@@ -51,6 +45,10 @@ var Generator = (function (){
 				rtnFemale.state = {
 					pregnant: false
 				};
+				
+				rtnFemale.giveBirth = function () {
+					return TG.Engines.Generate.NPC('baby', TG.Engines.Generate.Sex.Female());
+				}
 				
 				return rtnFemale;
 			}
@@ -71,6 +69,13 @@ var Generator = (function (){
 		    }
 		    
 		    that.stats = {
+		    	strength: 10,
+		    	speed: 10,
+		    	perception: 10,
+		    	magic: 10
+		    }
+		    
+		    that.DNA = {
 		    	strength: 10,
 		    	speed: 10,
 		    	perception: 10,
@@ -131,13 +136,13 @@ var Generator = (function (){
 		        moving.running = run;
 		    };
 		    
-		    that.setState = function(inState) {
-		    	state = inState;
+		    that.setAIState = function(inState) {
+		    	state.AI = inState;
 		    	return state;
 		    }
 		    
-		    that.getState = function () {
-		    	return state;
+		    that.getAIState = function () {
+		    	return state.AI;
 		    }
 		    
 		    that.setFacing = function(direction) {
@@ -154,7 +159,7 @@ var Generator = (function (){
 		    
 		    that.MoveOneStep = function () {
 		    	_TickClean();
-		    	if(_AI) _AI(that);
+		    	if(_AI) _AI(that, state.AI);
 		    	
 		        that.setFacing(moving);
 		        
@@ -187,26 +192,6 @@ var Generator = (function (){
 		    	_AI = newAI;
 		    };
 		    
-		    that.getAttackRange = function () {
-		    	if(equipment[0]) {
-		    		return equipment[0].range || 10;
-		    	}
-		    	return 0;
-		    }
-		    that.getAttackSpeed = function () {
-		    	if(equipment[0]) {
-		    		return equipment[0].speed || 500;
-		    	}
-		    	return 500;
-		    }
-		    
-		    that.Attack = function () {
-		    	if(state.Core.attackCooldown <= 0) {
-					state.Core.attackCooldown = that.getAttackSpeed();
-					TG.Engines.Debug.Log(that.title + ' attack with ' + inv[0].title + ' - ' + inv[0].damage + 'dmg');
-				}
-		    };
-		    
 		    that.Inventory = {
 		    	Give: function(item) {
 		    		inv.push(item);
@@ -214,8 +199,22 @@ var Generator = (function (){
 		    	Equip: function(item) {
 		    		inv.push(item);
 		    		equipment.push(item);
+		    	},
+		    	PrimaryWeapon: function() {
+		    		return equipment[0];
 		    	}
-		    }
+		    };
+		    
+		    that.Combat = {
+		    	Attack: function () {
+		    		if(state.Core.attackCooldown <= 0) {
+		    			var w = that.Inventory.PrimaryWeapon();
+						state.Core.attackCooldown = w.speed;
+						TG.Engines.Debug.Log(that.title + ' attack with ' + w.title + ' - ' + w.damage + 'dmg');
+					}
+		    	}
+		    };
+		    
 		}
 
 	function oItem() {

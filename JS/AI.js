@@ -42,10 +42,8 @@ var AI1 = (function(){
 	var _wander = function (distance) {
 		var distance = distance || 100;
 		
-		return function (that) {
-			var state = that.getState();
-			
-			if(state.AI.initialized) {
+		return function (that, state) {	
+			if(state.initialized) {
 				var newMove = _idle()(that);
 				
 				if(Math.random() * 100 < 10) {
@@ -63,11 +61,10 @@ var AI1 = (function(){
 				}
 				
 			} else {
-				state.AI.initialized = true;
-				state.AI.originPoint = that.getPosition();
+				state.initialized = true;
+				state.originPoint = that.getPosition();
 				
 			}
-			that.setState(state);
 		}
 	}
 	
@@ -78,38 +75,34 @@ var AI1 = (function(){
 			horizontal: 1
 		};
 		
-		return function (that) {
-			var state = that.getState();
-			
-			if(state.AI.initialized == 'pace') {
-				state.AI.moveTick++;
-				if (state.AI.moveLoop == state.AI.moveTick) {
-					state.AI.moveTick = 0;
-					newMoving = state.AI.moving;
+		return function (that, state) {			
+			if(state.initialized == 'pace') {
+				state.moveTick++;
+				if (state.moveLoop == state.moveTick) {
+					state.moveTick = 0;
+					newMoving = state.moving;
 					
-					newMoving.vertical = state.AI.moving.vertical * -1;
-					newMoving.horizontal = state.AI.moving.horizontal * -1;
+					newMoving.vertical = state.moving.vertical * -1;
+					newMoving.horizontal = state.moving.horizontal * -1;
 					
-					state.AI.moving = newMoving;
+					state.moving = newMoving;
 					
 					that.setMoving(newMoving);
 				}
 			} else {
-				state.AI.initialized = 'pace';
-				state.AI.moveLoop = distance;
-				state.AI.moveTick = 0;
-				state.AI.moving = newMoving;
+				state.initialized = 'pace';
+				state.moveLoop = distance;
+				state.moveTick = 0;
+				state.moving = newMoving;
 				
 				that.setMoving(newMoving);
 			}
-			
-			that.setState(state);
 		}
 	};
 	
 	var _toward = function (position) {
 		//TODO: Fix to move in a straight line instead of 45 degree angles.
-		return function (that) {
+		return function (that, state) {
 			var newMoving = {
 				vertical: 0,
 				horizontal: 0
@@ -126,18 +119,14 @@ var AI1 = (function(){
 	
 	var _hostile = function (npc) {
 		//TODO: Fix the pacing algorithm to stop moving diagonally after the player has escaped the AIs perception.
-		return function (that) {
-			var state = that.getState();
-			
+		return function (that, state) {			
 			if(that.stats.perception * 10 < Distance.Between(that, npc)) {
-				_pace()(that);
+				_pace()(that, state);
 			} else if (that.getAttackRange() > Distance.Between(that, npc)) {
 				that.Attack();
 			} else {
-				_toward(npc)(that);
+				_toward(npc)(that, state);
 			}
-			
-			that.setState(state);
 		}
 	};
 	

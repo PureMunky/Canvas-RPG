@@ -41,10 +41,12 @@ function GameCore(){
 	this.GameObjects = new Array();
 	GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male());
 	
-	GameObjects.push(TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male()));
-	GameObjects.push(TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male()));
-	GameObjects.push(TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female()));
-	GameObjects.push(TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female()));
+	GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male());
+	GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male());
+	GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female());
+	GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female());
+	
+	TG.Engines.Relationships.Mate(GameObjects[2], GameObjects[3]);
 	
 	for(var i = 0; i < GameObjects.length; i++) {
 		GameObjects[i].Inventory.Equip(TG.Engines.Generate.Item());
