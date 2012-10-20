@@ -45,7 +45,7 @@ var AI1 = (function(){
 		return function (that) {
 			var state = that.getState();
 			
-			if(state.initialized) {
+			if(state.AI.initialized) {
 				var newMove = _idle()(that);
 				
 				if(Math.random() * 100 < 10) {
@@ -63,8 +63,8 @@ var AI1 = (function(){
 				}
 				
 			} else {
-				state.initialized = true;
-				state.originPoint = that.getPosition();
+				state.AI.initialized = true;
+				state.AI.originPoint = that.getPosition();
 				
 			}
 			that.setState(state);
@@ -81,24 +81,24 @@ var AI1 = (function(){
 		return function (that) {
 			var state = that.getState();
 			
-			if(state.initialized == 'pace') {
-				state.moveTick++;
-				if (state.moveLoop == state.moveTick) {
-					state.moveTick = 0;
-					newMoving = state.moving;
+			if(state.AI.initialized == 'pace') {
+				state.AI.moveTick++;
+				if (state.AI.moveLoop == state.AI.moveTick) {
+					state.AI.moveTick = 0;
+					newMoving = state.AI.moving;
 					
-					newMoving.vertical = state.moving.vertical * -1;
-					newMoving.horizontal = state.moving.horizontal * -1;
+					newMoving.vertical = state.AI.moving.vertical * -1;
+					newMoving.horizontal = state.AI.moving.horizontal * -1;
 					
-					state.moving = newMoving;
+					state.AI.moving = newMoving;
 					
 					that.setMoving(newMoving);
 				}
 			} else {
-				state.initialized = 'pace';
-				state.moveLoop = distance;
-				state.moveTick = 0;
-				state.moving = newMoving;
+				state.AI.initialized = 'pace';
+				state.AI.moveLoop = distance;
+				state.AI.moveTick = 0;
+				state.AI.moving = newMoving;
 				
 				that.setMoving(newMoving);
 			}
