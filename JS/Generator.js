@@ -40,31 +40,6 @@ var Generator = (function() {
 		}
 	}
 
-	var _Sex = {
-		male : function() {
-			var rtnMale = new oSex('male');
-
-			rtnMale.state = {
-
-			};
-
-			return rtnMale;
-		},
-		female : function() {
-			var rtnFemale = new oSex('female');
-
-			rtnFemale.state = {
-				pregnant : false
-			};
-
-			rtnFemale.giveBirth = function() {
-				return TG.Engines.Generate.NPC('baby', TG.Engines.Generate.Sex.Female());
-			}
-
-			return rtnFemale;
-		}
-	}
-
 	function oNPC(inTitle, inSex, inPosition) {
 		var that = this;
 
@@ -249,6 +224,7 @@ var Generator = (function() {
 
 	}
 
+// object defaults
 	function _Player(inName, inSex) {
 		var newPlayer = new oNPC(inName, inSex, {
 			x : 0,
@@ -273,6 +249,30 @@ var Generator = (function() {
 		return newNPC;
 	}
 
+	var _Sex = {
+		male : function() {
+			var rtnMale = new oSex('male');
+
+			rtnMale.state = {
+
+			};
+
+			return rtnMale;
+		},
+		female : function() {
+			var rtnFemale = new oSex('female');
+
+			rtnFemale.state = {
+				pregnant : false
+			};
+
+			rtnFemale.giveBirth = function() {
+				return TG.Engines.Generate.NPC('baby', TG.Engines.Generate.Sex.Female());
+			}
+
+			return rtnFemale;
+		}
+	}
 	function _Item() {
 		var newItem = new oItem();
 
