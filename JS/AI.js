@@ -11,7 +11,7 @@ var AI1 = (function(){
 				vertical: 0,
 				horizontal: 0
 			};
-			
+			// TODO: Remove random and base this on environment.
 			if(Math.random() * 100 < 1) {
 				var rnd = Math.random() * 100;
 				switch (true){
@@ -108,11 +108,13 @@ var AI1 = (function(){
 				horizontal: 0
 			}
 			
-			if (that.x < position.x) newMoving.horizontal = 1;
-			if (that.x > position.x) newMoving.horizontal = -1;
-			if (that.y < position.y) newMoving.vertical = 1;
-			if (that.y > position.y) newMoving.vertical = -1;
-			if (that.x == position.x && that.y == position.y) that.setAI(function() {});
+			var pos = that.getPosition();
+			
+			if (pos.x < position.x) newMoving.horizontal = 1;
+			if (pos.x > position.x) newMoving.horizontal = -1;
+			if (pos.y < position.y) newMoving.vertical = 1;
+			if (pos.y > position.y) newMoving.vertical = -1;
+			if (pos.x == position.x && pos.y == position.y) that.setAI(function() {});
 			that.setMoving(newMoving);
 		}	
 	};
@@ -120,12 +122,12 @@ var AI1 = (function(){
 	var _hostile = function (npc) {
 		//TODO: Fix the pacing algorithm to stop moving diagonally after the player has escaped the AIs perception.
 		return function (that, state) {			
-			if(that.stats.perception * 10 < Distance.Between(that, npc)) {
+			if(!that.Can.See(npc)) {
 				_pace()(that, state);
-			} else if (that.getAttackRange() > Distance.Between(that, npc)) {
-				that.Attack();
+			} else if (that.Can.Attack(npc)) {
+				that.Combat.Attack();
 			} else {
-				_toward(npc)(that, state);
+				_toward(npc.getPosition())(that, state);
 			}
 		}
 	};

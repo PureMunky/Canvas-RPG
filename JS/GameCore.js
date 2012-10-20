@@ -15,9 +15,12 @@ function GameCore(){
 	this.Distance = {};
 	this.Distance.Between = function(o1, o2) {
 		o2 = o2 || GameObjects[0];
+		p1 = o1.getPosition();
+		p2 = o2.getPosition();
+		
 		var a, b;
-		a = Math.abs(o1.x - o2.x);
-		b = Math.abs(o1.y - o2.y);
+		a = Math.abs(p1.x - p2.x);
+		b = Math.abs(p1.y - p2.y);
 		
 		return Math.sqrt((a * a) + (b * b));
 	}

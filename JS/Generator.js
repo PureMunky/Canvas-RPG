@@ -55,7 +55,7 @@ var Generator = (function (){
 		}
 		
 		//oNPC.prototype = new oGameObject();
-		function oNPC(inTitle, inSex) {
+		function oNPC(inTitle, inSex, inPosition) {
 			var that = this;
 			
 			var moving = {
@@ -67,63 +67,6 @@ var Generator = (function (){
 		        down: false,
 		        running: false
 		    }
-		    
-		    that.stats = {
-		    	strength: 10,
-		    	speed: 10,
-		    	perception: 10,
-		    	magic: 10
-		    }
-		    
-		    that.DNA = {
-		    	strength: 10,
-		    	speed: 10,
-		    	perception: 10,
-		    	magic: 10
-		    }
-		    
-		    var state = {
-		    	AI: {},
-		    	Core: {},
-		    	Environment: {}
-		    };
-		    
-		    var inv = new Array();
-		    var equipment = new Array();
-		    
-		    that.title = inTitle;
-		    that.image = new Image();
-		    that.debugInfo = '';
-		    that.sex = inSex;
-
-		    that.toString = function() {
-		    	return that.title + ' ' + that.debugInfo;
-		    }
-		    
-			that.setImage = function (imgSrc) {
-		    	if(that.image.src != imgSrc) {
-		    		that.image.src = imgSrc;
-		    	}
-		    	return that;
-		    }
-		    that.setDimensions = function(h, w) {
-		    	that.height = h;
-		    	that.width = w;
-		    	return that;
-		    }
-		    
-		    that.setPosition = function (x, y) {
-		    	that.x = x;
-		    	that.y = y;
-		    	return that;
-		    }
-		    that.getPosition = function () {
-		    	return {
-		    		x: that.x,
-		    		y: that.y
-		    	}
-		    }
-		    
 		    that.setMoving = function (move) {
 		        if (move.vertical === 0) moving.vertical = 0;
 		        if (move.horizontal === 0) moving.horizontal = 0;
@@ -131,31 +74,78 @@ var Generator = (function (){
 		        moving.vertical = move.vertical ? move.vertical : moving.vertical;
 		        moving.horizontal = move.horizontal ? move.horizontal : moving.horizontal;
 		    };
-		
 		    that.setRun = function (run) {
 		        moving.running = run;
 		    };
 		    
-		    that.setAIState = function(inState) {
-		    	state.AI = inState;
-		    	return state;
+		    var DNA = {
+		    	strength: 10,
+		    	speed: 10,
+		    	perception: 10,
+		    	magic: 10
+		    }
+		    that.getDNA = function () {
+		    	return DNA;
 		    }
 		    
-		    that.getAIState = function () {
-		    	return state.AI;
+		    var state = {
+		    	AI: {},
+		    	Core: {},
+		    	Environment: {}
+		    };
+		    var inv = new Array();
+		    var equipment = new Array();
+		    
+		    that.title = inTitle;
+		    that.sex = inSex;
+
+		    that.toString = function() {
+		    	return that.title + ' ' + that.debugInfo;
+		    }
+		      
+		    var _position = {
+		    	x: inPosition ? inPosition.x : 0,
+		    	y: inPosition ? inPosition.y : 0
+		    };
+		    that.getPosition = function () {
+		    	return {
+		    		x: _position.x,
+		    		y: _position.y,
+		    		
+		    	}
 		    }
 		    
+		    var _render = {
+		    	image: new Image(),
+		    	width: 16,
+		    	height: 16,
+		    	imageX: 0,
+		    	imageY: 0,
+		    };
+		    that.getRender = function () {
+		    	var rtnRender = _render
+		    	rtnRender.x = _position.x;
+		    	rtnRender.y = _position.y;
+		    	
+		    	return rtnRender;
+		    }
+		    var setImage = function (imgSrc) {
+		    	if(_render.image.src != imgSrc) {
+		    		_render.image.src = imgSrc;
+		    	}
+		    	return that;
+		    }
 		    that.setFacing = function(direction) {
 		    	if (direction.horizontal > 0 && direction.horizontal > Math.abs(direction.vertical)) {
-		            that.setImage(TG.Engines.GlobalVars._PlayerImageRIGHT);
+		            setImage(TG.Engines.GlobalVars._PlayerImageRIGHT);
 		        } else if (direction.horizontal < 0 && Math.abs(direction.horizontal) > Math.abs(direction.vertical)) {
-		            that.setImage(TG.Engines.GlobalVars._PlayerImageLEFT);
+		            setImage(TG.Engines.GlobalVars._PlayerImageLEFT);
 		        } else if (direction.vertical > 0) {
-		            that.setImage(TG.Engines.GlobalVars._PlayerImageDOWN);
+		            setImage(TG.Engines.GlobalVars._PlayerImageDOWN);
 		        } else if (direction.vertical < 0) {
-		            that.setImage(TG.Engines.GlobalVars._PlayerImageUP);
+		            setImage(TG.Engines.GlobalVars._PlayerImageUP);
 		        }
-		    }
+		    };
 		    
 		    that.MoveOneStep = function () {
 		    	_TickClean();
@@ -163,15 +153,20 @@ var Generator = (function (){
 		    	
 		        that.setFacing(moving);
 		        
-		        that.setPosition(
-		        	that.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1)),
-		        	that.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1))
-		        );
+		        _position.x = _position.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
+		        _position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 		        
 		        that.setDebugInfo(that.sex.toString());
 		        return that;
 		    };
+		    var _TickClean = function () {
+		    	state.Core.attackCooldown = state.Core.attackCooldown || 0;
+		    	
+				if(state.Core.attackCooldown > 0) state.Core.attackCooldown--;
+				that.setDebugInfo(state.Core.attackCooldown);
+		    }
 		    
+		    that.debugInfo = '';
 		    that.setDebugInfo = function (txt) {
 		    	that.debugInfo = txt;
 		    	return that;
@@ -180,17 +175,24 @@ var Generator = (function (){
 		    var _AI = function (that) {
 		    	
 		    };
-		    
-		    var _TickClean = function () {
-		    	state.Core.attackCooldown = state.Core.attackCooldown || 0;
-		    	
-				if(state.Core.attackCooldown > 0) state.Core.attackCooldown--;
-				that.setDebugInfo(state.Core.attackCooldown);
-		    }
-		    
 		    that.setAI = function (newAI) {
 		    	_AI = newAI;
 		    };
+		    
+		    var stats = {
+		    	strength: 10,
+		    	speed: 10,
+		    	perception: 10,
+		    	magic: 10
+		    }
+		    that.Can = {
+		    	See: function(o) {
+		    		return (stats.perception * 10 ) > TG.Engines.Game.Distance.Between(that, o);	    		
+		    	},
+		    	Attack: function(o) {
+		    		return (that.Combat.Range() > TG.Engines.Game.Distance.Between(that, o));
+		    	}
+		    }
 		    
 		    that.Inventory = {
 		    	Give: function(item) {
@@ -210,8 +212,22 @@ var Generator = (function (){
 		    		if(state.Core.attackCooldown <= 0) {
 		    			var w = that.Inventory.PrimaryWeapon();
 						state.Core.attackCooldown = w.speed;
-						TG.Engines.Debug.Log(that.title + ' attack with ' + w.title + ' - ' + w.damage + 'dmg');
+						TG.Engines.Debug.Log(that.title + ' attack with ' + w.title + ' - ' + that.Combat.Damage() + 'dmg');
 					}
+		    	},
+		    	Damage: function () {
+		    		var w = that.Inventory.PrimaryWeapon();
+		    		return (stats.strength * w.damage);
+		    	},
+		    	Range: function () {
+		    		var w = that.Inventory.PrimaryWeapon();
+		    		return (w.range);
+		    	}
+		    };
+		    
+		    that.Defence = {
+		    	DamageReduction: function () {
+		    		return 0;
 		    	}
 		    };
 		    
@@ -229,11 +245,7 @@ var Generator = (function (){
 	}
 	
 	function _Player(inName, inSex) {
-		var newPlayer = new oNPC(inName, inSex);
-		newPlayer
-			.setPosition(0,0)
-			.setImage(TG.Engines.GlobalVars._PlayerImageRIGHT)
-			.setDimensions(16, 16);
+		var newPlayer = new oNPC(inName, inSex, {x: 0, y: 0});
 			
 		//newPlayer.title = 'Player';
 			
@@ -241,13 +253,9 @@ var Generator = (function (){
 	}
 	
 	function _NPC (inTitle, inSex) {
-		var newNPC = new oNPC(inTitle, inSex);
+		var newNPC = new oNPC(inTitle, inSex, {x: (Math.random() % 100) * 1000, y: (Math.random() % 100) * 300});
 		
-		newNPC
-			.setPosition((Math.random() % 100) * 1000, (Math.random() % 100) * 300)
-			.setImage(TG.Engines.GlobalVars._PlayerImageDOWN)
-			.setDimensions(16, 16)
-			.setAI(TG.Engines.AI.hostile(GameObjects[0]));
+		newNPC.setAI(TG.Engines.AI.hostile(GameObjects[0]));
 		
 		//newNPC.title = inTitle;
 		

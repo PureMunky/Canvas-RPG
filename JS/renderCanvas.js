@@ -41,7 +41,7 @@
 
     this.Move = function (vPixels, hPixels) {
         //drawings[0].setPosition(drawings[0].x + hPixels, drawings[0].y + vPixels);
-        TG.Engines.Game.GameObjects[0].setPosition(TG.Engines.Game.GameObjects[0].x + hPixels, TG.Engines.Game.GameObjects[0].y + vPixels);
+        //TG.Engines.Game.GameObjects[0].setPosition(TG.Engines.Game.GameObjects[0].x + hPixels, TG.Engines.Game.GameObjects[0].y + vPixels);
     };
 
     this.displayLogin = function () {
@@ -60,24 +60,26 @@
         requestAnimationFrame(drawCanvas);
         clearCanvas();
 
-  		TG.Engines.Debug.WriteOutput('x: ' + TG.Engines.Game.GameObjects[0].x + ', y: ' + TG.Engines.Game.GameObjects[0].y);
+  		//TG.Engines.Debug.WriteOutput('x: ' + TG.Engines.Game.GameObjects[0].x + ', y: ' + TG.Engines.Game.GameObjects[0].y);
         for (var i = 0; i < TG.Engines.Game.GameObjects.length; i++) {
         	try {
-	           	ctx.drawImage(TG.Engines.Game.GameObjects[i].image,
-	           		0,
-	           		0,
-	           		TG.Engines.Game.GameObjects[i].width,
-	           		TG.Engines.Game.GameObjects[i].height,
-	           		TG.Engines.Game.GameObjects[i].x,
-	           		TG.Engines.Game.GameObjects[i].y,
-	           		TG.Engines.Game.GameObjects[i].width,
-	           		TG.Engines.Game.GameObjects[i].height
+        		var r = TG.Engines.Game.GameObjects[i].getRender();
+        		
+	           	ctx.drawImage(r.image,
+	           		r.imageX,
+	           		r.imageY,
+	           		r.width,
+	           		r.height,
+	           		r.x,
+	           		r.y,
+	           		r.width,
+	           		r.height
 	           	);
 	           	
 	           	if(TG.Engines.Game.GameObjects[i].title) {
 	           		WriteOutput(TG.Engines.Game.GameObjects[i].toString(),
-	           			TG.Engines.Game.GameObjects[i].x + TG.Engines.Game.GameObjects[i].width,
-	           			TG.Engines.Game.GameObjects[i].y + TG.Engines.Game.GameObjects[i].height
+	           			r.x + r.width,
+	           			r.y + r.height
 	           		);
 	           	}
         	}catch(e) {
