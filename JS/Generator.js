@@ -99,31 +99,35 @@ var Generator = (function() {
 			return _position;
 		}
 		
-		var _render = new oRender();
+		var _render = new oRender(TG.Engines.GlobalVars._PlayerImage);
 		that.getRender = function() {
-			var rtnRender = _render
+			var rtnRender = _render;
 			rtnRender.x = _position.x;
 			rtnRender.y = _position.y;
 
 			return rtnRender;
 		}
-		var setImage = function(imgSrc) {
-			if (_render.image.src != imgSrc) {
-				_render.image.src = imgSrc;
-			}
-			return that;
-		}
+
 		that.setFacing = function(direction) {
 			if (direction.horizontal > 0 && direction.horizontal > Math.abs(direction.vertical)) {
-				setImage(TG.Engines.GlobalVars._PlayerImageRIGHT);
+			    _render.imageX = 0;
 			} else if (direction.horizontal < 0 && Math.abs(direction.horizontal) > Math.abs(direction.vertical)) {
-				setImage(TG.Engines.GlobalVars._PlayerImageLEFT);
+				_render.imageX = 32;
 			} else if (direction.vertical > 0) {
-				setImage(TG.Engines.GlobalVars._PlayerImageDOWN);
+			    _render.imageX = 16;
 			} else if (direction.vertical < 0) {
-				setImage(TG.Engines.GlobalVars._PlayerImageUP);
+			    _render.imageX = 48;
 			}
 		};
+		
+		that.setAnimationFrame = function (inFrameNumber) {
+		    _render.imageY = inFrameNumber * _render.height;
+		}
+		
+		that.incAnimationFrame = function (inTotalFrames) {
+		    _render.imageY += _render.height;
+		    if (_render.imageY >= (_render.height * 4)) _render.imageY = 0;
+		}
 
 		that.MoveOneStep = function() {
 			_TickClean();
@@ -131,7 +135,8 @@ var Generator = (function() {
 				_AI(that, state.AI);
 
 			that.setFacing(moving);
-
+            //that.incAnimationFrame(4);
+            
 			_position.x = _position.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			_position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 
@@ -191,6 +196,7 @@ var Generator = (function() {
 				if (state.Core.attackCooldown <= 0) {
 					var w = that.Inventory.PrimaryWeapon();
 					state.Core.attackCooldown = w.speed;
+					that.setAnimationFrame(4);
 					// TODO: Invoke "hit" on all objects within range.
 					TG.Engines.Debug.Log(that.title + ' attack with ' + w.title + ' - ' + that.Combat.Damage() + 'dmg');
 				}
