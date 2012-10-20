@@ -31,25 +31,9 @@
         ctx.fillText(inOutput, x, y);
     };
 
-    this.setPlayerImage = function (inSrcImage) {
-		TG.Engines.Game.GameObjects[0].setImage(inSrcImage);
-    }
-
     this.Pan = function (vPixels, hPixels) {
+    	// TODO: Setup panning
         var p = true;
-    };
-
-    this.Move = function (vPixels, hPixels) {
-        //drawings[0].setPosition(drawings[0].x + hPixels, drawings[0].y + vPixels);
-        //TG.Engines.Game.GameObjects[0].setPosition(TG.Engines.Game.GameObjects[0].x + hPixels, TG.Engines.Game.GameObjects[0].y + vPixels);
-    };
-
-    this.displayLogin = function () {
-        //$('#dvLogin').css('left', 400).css('top', 200).show();
-    };
-
-    this.hideLogin = function () {
-        //$('#dvLogin').hide();
     };
 
     function clearCanvas() {
