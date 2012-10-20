@@ -1,9 +1,21 @@
 var Generator = (function() {
+	function oPosition(inX, inY) {
+		this.x = inX;
+		this.y = inY;
+	}
+	
+	function oRender(inImage, inWidth, inHeight, inImageX, inImageY) {
+		this.image = 	inImage || new Image();
+		this.width = 	inWidth || 16;
+		this.height = 	inHeight || 16;
+		this.imageX = 	inImageX || 0;
+		this.imageY = 	inImageY || 0;
+	}
+	
 	function oGameObject(inX, inY, inHeight, inWidth) {
 		var that = this;
 
-		that.x = inX;
-		that.y = inY;
+		var _position = new oPosition(inX, inY);
 
 		that.height = inHeight;
 		that.width = inWidth;
@@ -53,7 +65,6 @@ var Generator = (function() {
 		}
 	}
 
-	//oNPC.prototype = new oGameObject();
 	function oNPC(inTitle, inSex, inPosition) {
 		var that = this;
 
@@ -65,7 +76,8 @@ var Generator = (function() {
 			up : false,
 			down : false,
 			running : false
-		}
+		};
+		
 		that.setMoving = function(move) {
 			if (move.vertical === 0)
 				moving.vertical = 0;
@@ -84,7 +96,8 @@ var Generator = (function() {
 			speed : 10,
 			perception : 10,
 			magic : 10
-		}
+		};
+		
 		that.getDNA = function() {
 			return DNA;
 		}
@@ -99,31 +112,19 @@ var Generator = (function() {
 		};
 		var inv = new Array();
 		var equipment = new Array();
-
 		that.title = inTitle;
 		that.sex = inSex;
 
 		that.toString = function() {
 			return that.title + ' HP: ' + state.Combat.HP + '/' + state.Combat.MaxHP + ' - ' + that.debugInfo;
 		}
-		var _position = {
-			x : inPosition ? inPosition.x : 0,
-			y : inPosition ? inPosition.y : 0
-		};
+		
+		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
 		that.getPosition = function() {
-			return {
-				x : _position.x,
-				y : _position.y,
-
-			}
+			return _position;
 		}
-		var _render = {
-			image : new Image(),
-			width : 16,
-			height : 16,
-			imageX : 0,
-			imageY : 0,
-		};
+		
+		var _render = new oRender();
 		that.getRender = function() {
 			var rtnRender = _render
 			rtnRender.x = _position.x;
