@@ -48,7 +48,7 @@ function GameCore(){
 	
 	
 	for(var i = 0; i < GameObjects.length; i++) {
-		GameObjects[i].Equip(TG.Engines.Generate.Item());
+		GameObjects[i].Inventory.Equip(TG.Engines.Generate.Item());
 	}
 	
 	return this;

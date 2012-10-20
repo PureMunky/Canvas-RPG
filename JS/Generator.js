@@ -19,7 +19,7 @@ var Generator = (function (){
 		    	that.y = y;
 		    }
 		}
-	
+		
 		oNPC.prototype = new oGameObject();
 		function oNPC() {
 			var that = this;
@@ -34,14 +34,17 @@ var Generator = (function (){
 		        running: false
 		    }
 		    
-		    var stats = {
+		    that.stats = {
 		    	strength: 10,
 		    	speed: 10,
 		    	perception: 10,
 		    	magic: 10
 		    }
 		    
-		    var state = {};
+		    var state = {
+		    	AI: {},
+		    	Core: {}
+		    };
 		    
 		    var inv = new Array();
 		    var equipment = new Array();
@@ -112,10 +115,11 @@ var Generator = (function (){
 		    }
 		    
 		    that.MoveOneStep = function () {
+		    	_TickClean();
 		    	if(_AI) _AI(that);
 		    	
 		        that.setFacing(moving);
-		        //TODO: Create action cooldowns to prevent from spamming attacks...see weapon attack speed.
+		        
 		        that.setPosition(
 		        	that.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1)),
 		        	that.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1))
@@ -128,22 +132,21 @@ var Generator = (function (){
 		    	that.debugInfo = txt;
 		    	return that;
 		    }
+		    
 		    var _AI = function (that) {
 		    	
 		    };
 		    
+		    var _TickClean = function () {
+		    	state.Core.attackCooldown = state.Core.attackCooldown || 0;
+		    	
+				if(state.Core.attackCooldown > 0) state.Core.attackCooldown--;
+				that.setDebugInfo(state.Core.attackCooldown);
+		    }
+		    
 		    that.setAI = function (newAI) {
 		    	_AI = newAI;
 		    };
-		    
-		    that.Give = function(item) {
-		    	inv.push(item);
-		    }
-		    
-		    that.Equip = function(item) {
-		    	inv.push(item);
-		    	equipment.push(item);
-		    }
 		    
 		    that.getAttackRange = function () {
 		    	if(equipment[0]) {
@@ -159,11 +162,20 @@ var Generator = (function (){
 		    }
 		    
 		    that.Attack = function () {
-		    	TG.Engines.Debug.Log(that.title + ' attack with ' + inv[0].title + ' - ' + inv[0].damage + 'dmg');
+		    	if(state.Core.attackCooldown <= 0) {
+					state.Core.attackCooldown = that.getAttackSpeed();
+					TG.Engines.Debug.Log(that.title + ' attack with ' + inv[0].title + ' - ' + inv[0].damage + 'dmg');
+				}
 		    };
 		    
-		    that.getStats = function() {
-		    	return stats;
+		    that.Inventory = {
+		    	Give: function(item) {
+		    		inv.push(item);
+		    	},
+		    	Equip: function(item) {
+		    		inv.push(item);
+		    		equipment.push(item);
+		    	}
 		    }
 		}
 

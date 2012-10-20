@@ -129,16 +129,10 @@ var AI1 = (function(){
 		return function (that) {
 			var state = that.getState();
 			
-			if(that.getStats().perception * 10 < Distance.Between(that, npc)) {
+			if(that.stats.perception * 10 < Distance.Between(that, npc)) {
 				_pace()(that);
 			} else if (that.getAttackRange() > Distance.Between(that, npc)) {
-				state.timeSinceLastAttack = state.timeSinceLastAttack || 0;
-				state.timeSinceLastAttack++;
-				//TODO: Put attack cooldown in the action and attack before the cooldown occurs for AI.
-				if(state.timeSinceLastAttack > that.getAttackSpeed()) {
-					state.timeSinceLastAttack = 0;
-					that.Attack();
-				}
+				that.Attack();
 			} else {
 				_toward(npc)(that);
 			}
