@@ -79,86 +79,103 @@
 var Animation = (function () {
 	function oRender(inImage, inWidth, inHeight, inImageX, inImageY) {
 	    // TODO: Move this to the render class.
-		this.image = 	inImage || new Image();
-		this.width = 	inWidth || 16;
-		this.height = 	inHeight || 16;
-		this.imageX = 	inImageX || 0;
-		this.imageY = 	inImageY || 0;
+	    var that = this;
+	    
+		that.image = 	inImage || new Image();
+		that.width = 	inWidth || 16;
+		that.height = 	inHeight || 16;
+		that.imageX = 	inImageX || 0;
+		that.imageY = 	inImageY || 0;
 		
-		this.Animations = new Array();
-		this.CurrentAnimation = 0;
+		that.Animations = new Array();
+		var CurrentAnimation = 'walk';
 		
-		this.addAnimation = function(inAnimation) {
-			this.Animations.push(inAnimation);
+		that.addAnimation = function(inAnimation, name) {
+			that.Animations[name] = inAnimation;
 		}
 		
-		this.setAnimation = function(name) {
-			//this.CurrentAnimation = name;
+		that.setAnimation = function(name) {
+			CurrentAnimation = name;
 		}
 		
-		this.Tick = function () {
-			this.Animations[0].Tick();
+		that.Tick = function () {
+			that.Animations[CurrentAnimation].Tick();
 		}
 		
-		this.CurrentFrame = function () {
+		that.CurrentFrame = function () {
 			return {
-				image: this.image,
-				imageX: this.Animations[0].CurrentFrame().x,
-				imageY: this.Animations[0].CurrentFrame().y,
-				width: this.width,
-				height: this.height
+				image: that.image,
+				imageX: that.Animations[CurrentAnimation].CurrentFrame().x || that.imageX,
+				imageY: that.Animations[CurrentAnimation].CurrentFrame().y || that.imageY,
+				width: that.width,
+				height: that.height
 			}
 		}
 	}
 	
 	function oFrame(inX, inY, inTime) {
-	    this.x = inX;
-	    this.y = inY;
-	    this.t = inTime;
+		var that = this;
+		
+	    that.x = inX;
+	    that.y = inY;
+	    that.t = inTime;
 	}
 	
-	function oAnimation() {
-	    this.frames = new Array();
+	function oAnimation(interrupt) {
+		var that = this;
+		
+	    that.frames = new Array();
+	    that.interrupt = interrupt || false;
 	    
 	    var   currentFrame = 0,
 	          currentTime = 0;
 	    
 	    var incFrame = function () {
 	        currentFrame++;
-	        if(currentFrame > this.frames.length) {
+	        if(currentFrame >= that.frames.length) {
 	            currentFrame = 0;
 	        }
 	    }
 	    
-	    this.Tick = function () {
-	    	/*
+	    that.Tick = function () {
+	    	
             currentTime++;
-            if(currentTime > frames[currentFrame].t) {
+            if(currentTime > that.frames[currentFrame].t) {
                 currentTime = 0;
                 incFrame();
             }
-            */
-           incFrame();
+            
+           //incFrame();
 	    };
 	    
-	    this.addFrame = function (inFrame) {
-	        this.frames.push(inFrame);
+	    that.addFrame = function (inFrame) {
+	        that.frames.push(inFrame);
 	    }
 	    
-	    this.CurrentFrame = function () {
-	    	return this.frames[0];
+	    that.CurrentFrame = function () {
+	    	return that.frames[currentFrame];
 	    }
 	}
 	
 	var _Character = function (inImage, defaultAnimation) {
 		var _render = new oRender(inImage, 16, 16, 0, 0);
 		var _Walk = new oAnimation();
-		_Walk.addFrame(new oFrame(null, 0, 100));
-		_Walk.addFrame(new oFrame(null, 16, 100));
-		_Walk.addFrame(new oFrame(null, 32, 100));
-		_Walk.addFrame(new oFrame(null, 48, 100));
-		_render.addAnimation(_Walk);
-
+		_Walk.addFrame(new oFrame(null, 0, 20));
+		_Walk.addFrame(new oFrame(null, 16, 20));
+		_Walk.addFrame(new oFrame(null, 32, 20));
+		_Walk.addFrame(new oFrame(null, 48, 20));
+		_render.addAnimation(_Walk, 'walk');
+		
+		var _Idle = new oAnimation();
+		_Idle.addFrame(new oFrame(64, 0, 20));
+		_Idle.addFrame(new oFrame(64, 16, 20));
+		_Idle.addFrame(new oFrame(64, 32, 20));
+		_render.addAnimation(_Idle, 'idle');
+		
+		var _AttackMelee = new oAnimation();
+		_AttackMelee.addFrame(new oFrame(null, 64, 20));
+		_render.addAnimation(_AttackMelee, 'attackMelee');
+		
 		return _render;
 	}
 	

@@ -103,12 +103,18 @@ var Generator = (function() {
 		that.setFacing = function(direction) {
 			if (direction.horizontal > 0 && direction.horizontal > Math.abs(direction.vertical)) {
 			    _render.imageX = 0;
+			    _render.setAnimation('walk');
 			} else if (direction.horizontal < 0 && Math.abs(direction.horizontal) > Math.abs(direction.vertical)) {
 				_render.imageX = 32;
+				_render.setAnimation('walk');
 			} else if (direction.vertical > 0) {
 			    _render.imageX = 16;
+			    _render.setAnimation('walk');
 			} else if (direction.vertical < 0) {
 			    _render.imageX = 48;
+			    _render.setAnimation('walk');
+			} else {
+				_render.setAnimation('idle');
 			}
 		};
 		
@@ -192,7 +198,7 @@ var Generator = (function() {
 				if (state.Core.attackCooldown <= 0) {
 					var w = that.Inventory.PrimaryWeapon();
 					state.Core.attackCooldown = w.speed;
-					that.setAnimationFrame(4);
+					_render.setAnimation('attackMelee');
 					// TODO: Invoke "hit" on all objects within range.
 					TG.Engines.Debug.Log(that.title + ' attack with ' + w.title + ' - ' + that.Combat.Damage() + 'dmg');
 				}
