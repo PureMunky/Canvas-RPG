@@ -195,6 +195,9 @@ var Generator = (function() {
 					state.Core.attackCooldown = w.speed;
 					_render.setAnimation('attackMelee');
 					// TODO: Invoke "hit" on all objects within range.
+					var hitObjects = TG.Engines.Game.Distance.Within(that, that.Combat.Range(), function(acted) {
+						acted.Combat.HitFor(that.Combat.Damage());
+					});
 					TG.Engines.Debug.Log(that.title + ' attack with ' + w.title + ' - ' + that.Combat.Damage() + 'dmg');
 				}
 			},
@@ -205,6 +208,9 @@ var Generator = (function() {
 			Range : function() {
 				var w = that.Inventory.PrimaryWeapon();
 				return (w.range);
+			},
+			HitFor: function(dmg) {
+				state.Combat.HP -= (dmg - that.Defence.DamageReduction());
 			}
 		};
 

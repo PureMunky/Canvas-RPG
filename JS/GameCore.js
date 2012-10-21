@@ -24,20 +24,34 @@ function GameCore(){
 			
 			return Math.sqrt((a * a) + (b * b));
 		},
-		Closest: function (o1) {
+		Closest: function (o1, o2, action) {
 			//TODO: add a second object to compare (e.x. Closest(item) or Closest(hostile));
 			var rtnObject = {title: 'none'};
 			var shortestDistance = 1000;
 			
 			for(var i = 0; i < GameObjects.length; i++) {
-				var thisDistance = DistanceBetween(o1, GameObjects[i]);
+				var thisDistance = Distance.Between(o1, GameObjects[i]);
 				if(thisDistance < shortestDistance && o1 != GameObjects[i]) {
+					if(action) action(GameObjects[i]);
 					shortestDistance = thisDistance;
 					rtnObject = GameObjects[i];
 				}
 			}
 			
 			return rtnObject;
+		},
+		Within: function (o1, distance, action) {
+			var rtnArray = new Array();
+			
+			for(var i = 0; i < GameObjects.length; i++) {
+				var thisDistance = Distance.Between(o1, GameObjects[i]);
+				if(thisDistance < distance && o1 != GameObjects[i]) {
+					if(action) action(GameObjects[i]);
+					rtnArray.push(GameObjects[i]);
+				}
+			}
+			
+			return rtnArray;
 		}
 	};
 	
