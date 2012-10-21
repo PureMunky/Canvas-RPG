@@ -138,18 +138,13 @@ var Generator = (function() {
            	
 			_position.x = _position.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			_position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
-
-			var r = that.getRender();
-			// FIXME: animation class doesn't work
-			that.setDebugInfo(r.imageX + ' ' + r.imageY);
+			
 			return that;
 		};
 		var _TickClean = function() {
 			state.Core.attackCooldown = state.Core.attackCooldown || 0;
 
-			if (state.Core.attackCooldown > 0)
-				state.Core.attackCooldown--;
-			that.setDebugInfo(state.Core.attackCooldown);
+			if (state.Core.attackCooldown > 0) state.Core.attackCooldown--;
 		}
 
 		that.debugInfo = '';
@@ -227,7 +222,7 @@ var Generator = (function() {
 		that.title = 'sword';
 		that.damage = 30;
 		that.range = 20;
-		that.speed = 300;
+		that.speed = 30;
 		that.level = 1;
 
 	}

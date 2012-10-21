@@ -190,7 +190,8 @@ var Animation = (function () {
 		_render.addAnimation(_Idle, 'idle');
 		
 		var _AttackMelee = new oAnimation(true);
-		_AttackMelee.addFrame(new oFrame(null, 64, 20));
+		_AttackMelee.addFrame(new oFrame(null, 64, 10));
+		_AttackMelee.addFrame(new oFrame(null, 80, 10));
 		_render.addAnimation(_AttackMelee, 'attackMelee');
 		
 		return _render;
