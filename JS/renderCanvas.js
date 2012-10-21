@@ -88,25 +88,38 @@ var Animation = (function () {
 		that.imageY = 	inImageY || 0;
 		
 		that.Animations = new Array();
-		var CurrentAnimation = 'walk';
+		var PrimaryAnimation = 'walk';
+		var InterruptAnimation = null;
 		
 		that.addAnimation = function(inAnimation, name) {
 			that.Animations[name] = inAnimation;
 		}
 		
 		that.setAnimation = function(name) {
-			CurrentAnimation = name;
+			if(that.Animations[name].interrupt) {
+				InterruptAnimation = name;
+			} else {
+				PrimaryAnimation = name;	
+			}
 		}
 		
 		that.Tick = function () {
-			that.Animations[CurrentAnimation].Tick();
+			var bool = that.CurrentAnimation().Tick();
+			
+			if(!bool) InterruptAnimation = null;
+		}
+		
+		that.CurrentAnimation = function() {
+			var animation = InterruptAnimation || PrimaryAnimation;
+			
+			return that.Animations[animation];
 		}
 		
 		that.CurrentFrame = function () {
 			return {
 				image: that.image,
-				imageX: that.Animations[CurrentAnimation].CurrentFrame().x || that.imageX,
-				imageY: that.Animations[CurrentAnimation].CurrentFrame().y || that.imageY,
+				imageX: that.CurrentAnimation().CurrentFrame().x || that.imageX,
+				imageY: that.CurrentAnimation().CurrentFrame().y || that.imageY,
 				width: that.width,
 				height: that.height
 			}
@@ -131,21 +144,25 @@ var Animation = (function () {
 	          currentTime = 0;
 	    
 	    var incFrame = function () {
+	    	var rtnBool = true;
 	        currentFrame++;
 	        if(currentFrame >= that.frames.length) {
 	            currentFrame = 0;
+	            rtnBool = !interrupt;
 	        }
+	        
+	        return rtnBool;
 	    }
 	    
 	    that.Tick = function () {
-	    	
+	    	var rtnBool = true;
             currentTime++;
             if(currentTime > that.frames[currentFrame].t) {
                 currentTime = 0;
-                incFrame();
+                rtnBool = incFrame();
             }
             
-           //incFrame();
+           return rtnBool;
 	    };
 	    
 	    that.addFrame = function (inFrame) {
@@ -167,12 +184,12 @@ var Animation = (function () {
 		_render.addAnimation(_Walk, 'walk');
 		
 		var _Idle = new oAnimation();
-		_Idle.addFrame(new oFrame(64, 0, 20));
-		_Idle.addFrame(new oFrame(64, 16, 20));
-		_Idle.addFrame(new oFrame(64, 32, 20));
+		_Idle.addFrame(new oFrame(64, 0, 100));
+		_Idle.addFrame(new oFrame(64, 16, 100));
+		_Idle.addFrame(new oFrame(64, 32, 100));
 		_render.addAnimation(_Idle, 'idle');
 		
-		var _AttackMelee = new oAnimation();
+		var _AttackMelee = new oAnimation(true);
 		_AttackMelee.addFrame(new oFrame(null, 64, 20));
 		_render.addAnimation(_AttackMelee, 'attackMelee');
 		
