@@ -1,7 +1,7 @@
 var AI1 = (function(){
 	var _still = function () {
 		return function (that) {
-			
+			that.setMoving({horizontal: 0, vertical: 0});
 		}
 	}
 	
@@ -33,7 +33,7 @@ var AI1 = (function(){
 						break;
 				}
 			}
-			
+			that.setMoving({horizontal: 0, vertical: 0});
 			that.setFacing(facing);
 			return facing;
 		}

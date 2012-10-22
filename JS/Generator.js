@@ -48,11 +48,19 @@ var Generator = (function() {
 		that.setMoving = function(move) {
 			if (move.vertical === 0)
 				moving.vertical = 0;
+				
 			if (move.horizontal === 0)
 				moving.horizontal = 0;
 
-			moving.vertical = move.vertical ? move.vertical : moving.vertical;
-			moving.horizontal = move.horizontal ? move.horizontal : moving.horizontal;
+			moving.vertical = !!move.vertical ? move.vertical : moving.vertical;
+			moving.horizontal = !!move.horizontal ? move.horizontal : moving.horizontal;
+			
+			if(moving.vertical != 0 || moving.horizontal != 0) {
+			    _render.setAnimation('walk');
+			} else {
+			    // TODO: Prevent idle animation from firing when dead. Maybe set up a "what is the character doing" function.
+			    _render.setAnimation('idle');
+			}
 		};
 		that.setRun = function(run) {
 			moving.running = run;
@@ -103,18 +111,12 @@ var Generator = (function() {
 		that.setFacing = function(direction) {
 			if (direction.horizontal > 0 && direction.horizontal > Math.abs(direction.vertical)) {
 			    _render.imageX = 0;
-			    _render.setAnimation('walk');
 			} else if (direction.horizontal < 0 && Math.abs(direction.horizontal) > Math.abs(direction.vertical)) {
 				_render.imageX = 32;
-				_render.setAnimation('walk');
 			} else if (direction.vertical > 0) {
 			    _render.imageX = 16;
-			    _render.setAnimation('walk');
 			} else if (direction.vertical < 0) {
 			    _render.imageX = 48;
-			    _render.setAnimation('walk');
-			} else {
-				_render.setAnimation('idle');
 			}
 		};
 		
@@ -194,23 +196,32 @@ var Generator = (function() {
 					var w = that.Inventory.PrimaryWeapon();
 					state.Core.attackCooldown = w.speed;
 					_render.setAnimation('attackMelee');
-					// TODO: Invoke "hit" on all objects within range.
 					var hitObjects = TG.Engines.Game.Distance.Within(that, that.Combat.Range(), function(acted) {
 						acted.Combat.HitFor(that.Combat.Damage());
+				        that.Inventory.PrimaryWeapon().XPUp();
 					});
 					TG.Engines.Debug.Log(that.title + ' attack with ' + w.title + ' - ' + that.Combat.Damage() + 'dmg');
 				}
 			},
 			Damage : function() {
 				var w = that.Inventory.PrimaryWeapon();
-				return (stats.strength * w.damage);
+				return (stats.strength * w.getDamage());
 			},
 			Range : function() {
 				var w = that.Inventory.PrimaryWeapon();
 				return (w.range);
 			},
 			HitFor: function(dmg) {
-				state.Combat.HP -= (dmg - that.Defence.DamageReduction());
+			    dmg = (dmg - that.Defence.DamageReduction());
+			    
+			    if (dmg >= state.Combat.HP) {
+			        state.Combat.HP = 0;
+			        that.setAI(TG.Engines.AI.still());
+			        _render.setAnimation('dead');
+			    } else {
+			     state.Combat.HP -= dmg;    
+			    }
+				
 			}
 		};
 
@@ -222,15 +233,33 @@ var Generator = (function() {
 
 	}
 
-	function oItem() {
+	function oItem(inTitle, inDamage, inRange, inSpeed, inType) {
 		var that = this;
 
-		that.title = 'sword';
-		that.damage = 30;
-		that.range = 20;
-		that.speed = 30;
-		that.level = 1;
-
+		that.title = inTitle || 'Fist';
+		that.damage = inDamage || 5;
+		that.range = inRange || 10;
+		that.speed = inSpeed || 10;
+		that.type = inType || 'melee';
+		
+		var level = 1;
+		var XP = 0;
+		
+		that.getDamage = function () {
+		    return that.damage * level;
+		}
+		
+		that.XPUp = function() {
+		    XP++;
+		}
+	}
+	
+	var Items = {
+	    Weapons: {
+	        Fist:  function () { return new oItem('Fist', 5, 10, 10);              },
+	        Sword: function () { return new oItem('Sword', 30, 20, 10);            },
+	        Bow:   function () { return new oItem('Bow', 1000, 1000, 50, 'ranged');   }
+	    }
 	}
 
 // object defaults
@@ -240,7 +269,7 @@ var Generator = (function() {
 			y : 0
 		});
 
-		//newPlayer.title = 'Player';
+		newPlayer.Inventory.Equip(Items.Weapons.Bow());
 
 		return newPlayer;
 	}
@@ -253,7 +282,7 @@ var Generator = (function() {
 
 		newNPC.setAI(TG.Engines.AI.hostile(GameObjects[0]));
 
-		//newNPC.title = inTitle;
+		newNPC.Inventory.Equip(Items.Weapons.Fist());
 
 		return newNPC;
 	}

@@ -78,7 +78,6 @@
 
 var Animation = (function () {
 	function oRender(inImage, inWidth, inHeight, inImageX, inImageY) {
-	    // TODO: Move this to the render class.
 	    var that = this;
 	    
 		that.image = 	inImage || new Image();
@@ -193,6 +192,10 @@ var Animation = (function () {
 		_AttackMelee.addFrame(new oFrame(null, 64, 10));
 		_AttackMelee.addFrame(new oFrame(null, 80, 10));
 		_render.addAnimation(_AttackMelee, 'attackMelee');
+		
+		var _Dead = new oAnimation();
+		_Dead.addFrame(new oFrame(64, 0, 1000));
+		_render.addAnimation(_Dead, 'dead');
 		
 		return _render;
 	}
