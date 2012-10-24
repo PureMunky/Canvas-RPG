@@ -230,7 +230,6 @@ var Generator = (function() {
 				return 0;
 			}
 		};
-
 	}
 
 	function oItem(inTitle, inDamage, inRange, inSpeed, inType) {

@@ -44,31 +44,33 @@
         requestAnimationFrame(drawCanvas);
         clearCanvas();
 
-  		//TG.Engines.Debug.WriteOutput('x: ' + TG.Engines.Game.GameObjects[0].x + ', y: ' + TG.Engines.Game.GameObjects[0].y);
-        for (var i = 0; i < TG.Engines.Game.GameObjects.length; i++) {
-        	try {
-        		var r = TG.Engines.Game.GameObjects[i].getRender();
-        		
-	           	ctx.drawImage(r.image,
-	           		r.imageX,
-	           		r.imageY,
-	           		r.width,
-	           		r.height,
-	           		r.x,
-	           		r.y,
-	           		r.width,
-	           		r.height
-	           	);
-	           	
-	           	if(TG.Engines.Game.GameObjects[i].title) {
-	           		WriteOutput(TG.Engines.Game.GameObjects[i].toString(),
-	           			r.x + r.width,
-	           			r.y + r.height
-	           		);
-	           	}
-        	}catch(e) {
-				TG.Engines.Debug.WriteOutput(e);        		
-        	}
+  		TG.Engines.Debug.WriteOutput(TG.Engines.Game.CurrentHistoryLocation);
+  		if (TG.Engines.Game.CurrentHistory()) {
+            for (var i = 0; i < TG.Engines.Game.CurrentHistory().length; i++) {
+            	try {
+            		var r = TG.Engines.Game.CurrentHistory()[i].getRender();
+            		
+    	           	ctx.drawImage(r.image,
+    	           		r.imageX,
+    	           		r.imageY,
+    	           		r.width,
+    	           		r.height,
+    	           		r.x,
+    	           		r.y,
+    	           		r.width,
+    	           		r.height
+    	           	);
+    	           	
+    	           	if(TG.Engines.Game.CurrentHistory()[i].title) {
+    	           		WriteOutput(TG.Engines.Game.CurrentHistory()[i].toString(),
+    	           			r.x + r.width,
+    	           			r.y + r.height
+    	           		);
+    	           	}
+            	}catch(e) {
+    				TG.Engines.Debug.WriteOutput(e);        		
+            	}
+            }
         }
 
     };

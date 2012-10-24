@@ -3,16 +3,46 @@ function GameCore(){
         //TG.Engines.Render.displayLogin();
         TG.Engines.GlobalVars._STEPTIMER = setInterval(TG.Engines.Game.Tick, 16);
     });
+    var that = this;
     
-	this.Tick = function () {
-		//TG.Engines.Action.MoveOneStep();
+	that.Tick = function () {
+		RecordHistory();
+		
 		for(var i = 0; i < GameObjects.length; i++){
 			GameObjects[i]
 				.MoveOneStep();
 		}
 	};
 	
-	this.Distance = {
+	that.History = new Array();
+	that.CurrentHistoryLocation = 200;
+	
+	that.CurrentHistory = function () {
+	    /*
+	    if(that.CurrentHistoryLocation == null || that.History.length < that.CurrentHistoryLocation) {
+	        return GameObjects;
+	    } else {
+	        return that.History[that.CurrentHistoryLocation-1];
+	    }
+	    */
+	   return that.History[0];
+	}
+	
+	that.Pause = function () {
+        that.CurrentHistoryLocation = that.CurrentHistoryLocation == null ? that.History.length - 1 : null;
+    }
+    that.Rewind = function () {
+        if(CurrentHistoryLocation != null) CurrentHistoryLocation--;
+    }
+    that.Forward = function () {
+        if(CurrentHistoryLocation != null) CurrentHistoryLocation++;
+    }
+    
+    var RecordHistory = function () {
+        that.History.push(that.GameObjects);
+    }
+    
+	that.Distance = {
 		Between: function(o1, o2) {
 			o2 = o2 || GameObjects[0];
 			p1 = o1.getPosition();
@@ -55,13 +85,12 @@ function GameCore(){
 		}
 	};
 	
-	this.GameObjects = new Array();
-	GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male());
-	
-	GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male());
-	GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male());
-	GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female());
-	GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female());
+	that.GameObjects = new Array();
+	that.GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male());
+	that.GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male());
+	that.GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male());
+	that.GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female());
+	that.GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female());
 	
 	TG.Engines.Relationships.Mate(GameObjects[2], GameObjects[3]); //test mating
 	
@@ -69,5 +98,5 @@ function GameCore(){
 		GameObjects[i].Inventory.Equip(TG.Engines.Generate.Item());
 	}
 	
-	return this;
+	return that;
 }
