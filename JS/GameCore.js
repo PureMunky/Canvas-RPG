@@ -25,7 +25,7 @@ function GameCore(){
 	        return that.History[that.CurrentHistoryLocation-1];
 	    }
 	    */
-	   return that.History[0];
+	   return GameObjects;
 	}
 	
 	that.Pause = function () {
@@ -37,7 +37,9 @@ function GameCore(){
     that.Forward = function () {
         if(CurrentHistoryLocation != null) CurrentHistoryLocation++;
     }
-    
+    that.Player = function () {
+    	return GameObjects[0];
+    }
     var RecordHistory = function () {
         that.History.push(that.GameObjects);
     }
@@ -85,12 +87,12 @@ function GameCore(){
 		}
 	};
 	
-	that.GameObjects = new Array();
-	that.GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male());
-	that.GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male());
-	that.GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male());
-	that.GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female());
-	that.GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female());
+	var GameObjects = new Array();
+	GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male());
+	GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male());
+	GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male());
+	GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female());
+	GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female());
 	
 	TG.Engines.Relationships.Mate(GameObjects[2], GameObjects[3]); //test mating
 	
