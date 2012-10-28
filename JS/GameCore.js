@@ -25,7 +25,7 @@ function GameCore(){
 	        return that.History[that.CurrentHistoryLocation-1];
 	    }
 	    */
-	   return GameObjects;
+	   return GameObjects || new Array();
 	}
 	
 	that.Pause = function () {
@@ -87,7 +87,7 @@ function GameCore(){
 		}
 	};
 	
-	var GameObjects = new Array();
+	GameObjects = new Array();
 	GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male());
 	GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male());
 	GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male());

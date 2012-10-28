@@ -44,7 +44,7 @@
         requestAnimationFrame(drawCanvas);
         clearCanvas();
 
-  		TG.Engines.Debug.WriteOutput(TG.Engines.Game.CurrentHistoryLocation);
+  		//TG.Engines.Debug.WriteOutput(TG.Engines.Game.CurrentHistoryLocation);
   		if (TG.Engines.Game.CurrentHistory()) {
             for (var i = 0; i < TG.Engines.Game.CurrentHistory().length; i++) {
             	try {

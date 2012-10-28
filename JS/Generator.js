@@ -280,7 +280,7 @@ var Generator = (function() {
 		});
 
 		newNPC.setAI(TG.Engines.AI.hostile(GameObjects[0]));
-
+		//newNPC.setAI(TG.Engines.AI.idle());
 		newNPC.Inventory.Equip(Items.Weapons.Fist());
 
 		return newNPC;
