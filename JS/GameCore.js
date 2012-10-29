@@ -16,7 +16,6 @@ function GameCore(){
 	
 	that.History = new Array();
 	that.CurrentHistoryLocation = 200;
-	
 	that.CurrentHistory = function () {
 	    /*
 	    if(that.CurrentHistoryLocation == null || that.History.length < that.CurrentHistoryLocation) {
@@ -87,7 +86,7 @@ function GameCore(){
 		}
 	};
 	
-	GameObjects = new Array();
+	var GameObjects = new Array();
 	GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male());
 	GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male());
 	GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male());

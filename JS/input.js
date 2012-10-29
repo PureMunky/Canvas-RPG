@@ -7,21 +7,21 @@
 				//TODO: add ability to click/touch where to move to (for phone/tablet).
                 if (event.keyCode == _UPKEY.keyCode) {
                     //TG.Engines.Action.SetMoving({ vertical: -1 });
-                    TG.Engines.Game.GameObjects[0].setMoving({ vertical: -1 });
+                    TG.Engines.Game.Player().setMoving({ vertical: -1 });
                 } else if (event.keyCode == _RIGHTKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setMoving({ horizontal: 1 });
+                    TG.Engines.Game.Player().setMoving({ horizontal: 1 });
                     //moving.horizontal = 1;
                 } else if (event.keyCode == _DOWNKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setMoving({ vertical: 1 });
+                    TG.Engines.Game.Player().setMoving({ vertical: 1 });
                     //moving.vertical = 1;
                 } else if (event.keyCode == _LEFTKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setMoving({ horizontal: -1 });
+                    TG.Engines.Game.Player().setMoving({ horizontal: -1 });
                     //moving.horizontal = -1;
                 } else if (event.keyCode == _RUNKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setRun(true);
+                    TG.Engines.Game.Player().setRun(true);
                     //moving.running = true;
                 } else if (event.keyCode == _ATTACKKEY.keyCode) {
-					TG.Engines.Game.GameObjects[0].Combat.Attack();
+					TG.Engines.Game.Player().Combat.Attack();
                 } else if (event.keyCode == _PAUSE.keyCode) {
                     TG.Engines.Game.Pause();
                 } else if (event.keyCode == _REWIND.keyCode) {
@@ -38,15 +38,15 @@
             if (!keyboardEntry) {
                 event.preventDefault();
                 if (event.keyCode == _UPKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setMoving({ vertical: 0 });
+                    TG.Engines.Game.Player().setMoving({ vertical: 0 });
                 } else if (event.keyCode == _RIGHTKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setMoving({ horizontal: 0 });
+                    TG.Engines.Game.Player().setMoving({ horizontal: 0 });
                 } else if (event.keyCode == _DOWNKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setMoving({ vertical: 0 });
+                    TG.Engines.Game.Player().setMoving({ vertical: 0 });
                 } else if (event.keyCode == _LEFTKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setMoving({ horizontal: 0 });
+                    TG.Engines.Game.Player().setMoving({ horizontal: 0 });
                 } else if (event.keyCode == _RUNKEY.keyCode) {
-                    TG.Engines.Game.GameObjects[0].setRun(false);
+                    TG.Engines.Game.Player().setRun(false);
                     //moving.running = false;
                 }
             }
@@ -101,24 +101,24 @@
     		if (pad) {
     			// Set Horizontal Motion
 	    		if (Math.abs(pad.axes[0]) > TG.Engines.GlobalVars._GamePadThreshold) {
-	    			TG.Engines.Game.GameObjects[0].setMoving({ horizontal: pad.axes[0] });
+	    			TG.Engines.Game.Player().setMoving({ horizontal: pad.axes[0] });
 	    		} else {
-	    			TG.Engines.Game.GameObjects[0].setMoving({ horizontal: 0 });
+	    			TG.Engines.Game.Player().setMoving({ horizontal: 0 });
 	    		}
 	    		
 	    		// Set Vertical Motion
 	    		if (Math.abs(pad.axes[1]) > TG.Engines.GlobalVars._GamePadThreshold) {
-	    			TG.Engines.Game.GameObjects[0].setMoving({ vertical: pad.axes[1] });
+	    			TG.Engines.Game.Player().setMoving({ vertical: pad.axes[1] });
 	    		} else {
-	    			TG.Engines.Game.GameObjects[0].setMoving({ vertical: 0 });	    			
+	    			TG.Engines.Game.Player().setMoving({ vertical: 0 });	    			
 	    		}
 	    		
 	    		// Run
-	    		TG.Engines.Game.GameObjects[0].setRun(pad.buttons[2]);
+	    		TG.Engines.Game.Player().setRun(pad.buttons[2]);
 
 				// Attack
 				// TODO: Only fire attack once per button push.
-				TG.Engines.Game.GameObjects[0].Attack();
+				TG.Engines.Game.Player().Attack();
 	    	} else {
 	    		TG.Engines.Debug.WriteOutput('no gamepad');
 	    	}

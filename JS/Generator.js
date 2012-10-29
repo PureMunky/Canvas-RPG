@@ -279,8 +279,8 @@ var Generator = (function() {
 			y : (Math.random() % 100) * 300
 		});
 
-		newNPC.setAI(TG.Engines.AI.hostile(GameObjects[0]));
-		//newNPC.setAI(TG.Engines.AI.idle());
+		//newNPC.setAI(TG.Engines.AI.hostile(TG.Engines.Game.Player()));
+		newNPC.setAI(TG.Engines.AI.idle());
 		newNPC.Inventory.Equip(Items.Weapons.Fist());
 
 		return newNPC;
