@@ -83,8 +83,26 @@ var Generator = (function() {
 			Combat : {
 				HP : 1000,
 				MaxHP : 1000
+			},
+			Needs: {
+				Food: 1000.0,
+				Water: 1000.0,
+				Sleep: 1000.0
 			}
 		};
+		that.Sleepy = function () {
+			return (state.Needs.Sleep < 100);
+		};
+		that.Hungry = function () {
+			return (state.Needs.Food < 100);
+		};
+		that.Thirsty = function () {
+			return (state.Needs.Water < 100);
+		};
+		that.Eat = function (amount) {
+			state.Needs.Food += amount;
+		}
+		
 		var inv = new Array();
 		var equipment = new Array();
 		that.title = inTitle;
@@ -131,6 +149,7 @@ var Generator = (function() {
 
 		that.MoveOneStep = function() {
 			_TickClean();
+			_TickNeeds();
 			if (_AI)
 				_AI(that, state.AI);
 
@@ -141,12 +160,18 @@ var Generator = (function() {
 			_position.x = _position.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			_position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			
+			that.setDebugInfo('Food' + state.Needs.Food);
 			return that;
 		};
 		var _TickClean = function() {
 			state.Core.attackCooldown = state.Core.attackCooldown || 0;
 
 			if (state.Core.attackCooldown > 0) state.Core.attackCooldown--;
+		}
+		var _TickNeeds = function() {
+			state.Needs.Food -= (state.Needs.Food > 0.0) ? 1 : 0;
+			state.Needs.Water -= (state.Needs.Water > 0.0) ? .01 : 0;
+			state.Needs.Sleep -= (state.Needs.Sleep > 0.0) ? .01 : 0;
 		}
 
 		that.debugInfo = '';
@@ -257,7 +282,7 @@ var Generator = (function() {
 	    Weapons: {
 	        Fist:  function () { return new oItem('Fist', 5, 10, 10);              },
 	        Sword: function () { return new oItem('Sword', 30, 20, 10);            },
-	        Bow:   function () { return new oItem('Bow', 1000, 1000, 50, 'ranged');   }
+	        Bow:   function () { return new oItem('Bow', 20, 200, 50, 'ranged');   }
 	    }
 	}
 
@@ -280,8 +305,8 @@ var Generator = (function() {
 		});
 
 		//newNPC.setAI(TG.Engines.AI.hostile(TG.Engines.Game.Player()));
-		newNPC.setAI(TG.Engines.AI.idle());
-		newNPC.Inventory.Equip(Items.Weapons.Fist());
+		newNPC.setAI(TG.Engines.AI.normal());
+		newNPC.Inventory.Equip(Items.Weapons.Sword());
 
 		return newNPC;
 	}

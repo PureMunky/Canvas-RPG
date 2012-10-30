@@ -56,7 +56,7 @@ function GameCore(){
 			return Math.sqrt((a * a) + (b * b));
 		},
 		Closest: function (o1, o2, action) {
-			//TODO: add a second object to compare (e.x. Closest(item) or Closest(hostile));
+			//TODO: add a second object to compare (e.x. Closest(item) or Closest(hostile)); Like {food: true}
 			var rtnObject = {title: 'none'};
 			var shortestDistance = 1000;
 			

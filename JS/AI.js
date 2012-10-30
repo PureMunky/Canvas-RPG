@@ -100,8 +100,10 @@ var AI1 = (function(){
 		}
 	};
 	
-	var _toward = function (position) {
+	var _toward = function (position, speed) {
 		//TODO: Fix to move in a straight line instead of 45 degree angles.
+		speed = speed || 1;
+		
 		return function (that, state) {
 			var newMoving = {
 				vertical: 0,
@@ -110,10 +112,10 @@ var AI1 = (function(){
 			
 			var pos = that.getPosition();
 			
-			if (pos.x < position.x) newMoving.horizontal = 1;
-			if (pos.x > position.x) newMoving.horizontal = -1;
-			if (pos.y < position.y) newMoving.vertical = 1;
-			if (pos.y > position.y) newMoving.vertical = -1;
+			if (pos.x < position.x) newMoving.horizontal = speed * 1;
+			if (pos.x > position.x) newMoving.horizontal = speed * -1;
+			if (pos.y < position.y) newMoving.vertical = speed * 1;
+			if (pos.y > position.y) newMoving.vertical = speed * -1;
 			if (pos.x == position.x && pos.y == position.y) that.setAI(function() {});
 			that.setMoving(newMoving);
 		}	
@@ -130,6 +132,29 @@ var AI1 = (function(){
 				_toward(npc.getPosition())(that, state);
 			}
 		}
+	};
+	
+	var _seek = function (object) {
+		return function (that, state) {
+			var o = TG.Engines.Game.Distance.Closest(that, object);
+			if(that.Can.See(o)) {
+				_hostile(o)(that, state);
+			} else {
+				_toward(o.getPosition(), .4)(that, state);	
+			}
+		}
+	}
+	
+	var _normal = function () {
+		return function (that, state) {
+			if (that.Hungry()) {
+				_seek({ food: true })(that, state);
+			}
+			
+			if (that.Sleepy()) {
+				_idle()(that, state);
+			}
+		}	
 	};
 	
 	return {
@@ -150,6 +175,9 @@ var AI1 = (function(){
 		},
 		hostile: function(npc) {
 			return _hostile(npc);
+		},
+		normal: function() {
+			return _normal();
 		}
 	};
 })();
