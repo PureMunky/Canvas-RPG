@@ -99,5 +99,6 @@ function GameCore(){
 		GameObjects[i].Inventory.Equip(TG.Engines.Generate.Item());
 	}
 	
+	GameObjects[5] = TG.Engines.Generate.Plant.Corn();
 	return that;
 }

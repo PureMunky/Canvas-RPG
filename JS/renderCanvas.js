@@ -202,10 +202,33 @@ var Animation = (function () {
 		return _render;
 	}
 	
+	var _Plant = function (inImage, defaultAnimation) {
+		var _render = new oRender(inImage, 16, 16, 0, 0);
+		var _SlowBreeze = new oAnimation();
+		_SlowBreeze.addFrame(new oFrame(0, 0, 40));
+		_SlowBreeze.addFrame(new oFrame(0, 16, 40));
+		_SlowBreeze.addFrame(new oFrame(0, 32, 40));
+		_SlowBreeze.addFrame(new oFrame(0, 48, 40));
+		_SlowBreeze.addFrame(new oFrame(0, 64, 40));
+		_render.addAnimation(_SlowBreeze, 'slowBreeze');
+		
+		var _FastBreeze = new oAnimation();
+		_FastBreeze.addFrame(new oFrame(16, 0, 10));
+		_FastBreeze.addFrame(new oFrame(16, 16, 10));
+		_FastBreeze.addFrame(new oFrame(16, 32, 10));
+		_FastBreeze.addFrame(new oFrame(16, 48, 10));
+		_FastBreeze.addFrame(new oFrame(16, 64, 10));
+		_render.addAnimation(_FastBreeze, 'fastBreeze');
+		
+		return _render;
+	}
 	 
 	return {
 		Player: function (defaultAnimation) {
 			return _Character(TG.Engines.GlobalVars._PlayerImage, defaultAnimation);
+		},
+		Plant: function (defaultAnimation) {
+			return _Plant(TG.Engines.GlobalVars._PlantImage, defaultAnimation);
 		}
 	};
 })();

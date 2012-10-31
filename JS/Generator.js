@@ -222,7 +222,7 @@ var Generator = (function() {
 					state.Core.attackCooldown = w.speed;
 					_render.setAnimation('attackMelee');
 					var hitObjects = TG.Engines.Game.Distance.Within(that, that.Combat.Range(), function(acted) {
-						acted.Combat.HitFor(that.Combat.Damage());
+						acted.Combat.HitFor(that);
 				        that.Inventory.PrimaryWeapon().XPUp();
 					});
 					TG.Engines.Debug.Log(that.title + ' attack with ' + w.title + ' - ' + that.Combat.Damage() + 'dmg');
@@ -236,8 +236,8 @@ var Generator = (function() {
 				var w = that.Inventory.PrimaryWeapon();
 				return (w.range);
 			},
-			HitFor: function(dmg) {
-			    dmg = (dmg - that.Defence.DamageReduction());
+			HitFor: function(attacker) {
+			    var dmg = (attacker.Combat.Damage() - that.Defence.DamageReduction());
 			    
 			    if (dmg >= state.Combat.HP) {
 			        state.Combat.HP = 0;
@@ -257,6 +257,39 @@ var Generator = (function() {
 		};
 	}
 
+	function oPlant(inTitle, inPosition) {
+		var that = this;
+		
+		that.title = inTitle;
+		
+		var _render = TG.Engines.Animation.Plant();
+		_render.setAnimation('slowBreeze');
+		that.getRender = function() {
+			var rtnRender = _render.CurrentFrame();
+			rtnRender.x = _position.x;
+			rtnRender.y = _position.y;
+
+			return rtnRender;
+		}
+		
+		that.MoveOneStep = function () {
+			_render.Tick();
+		}
+		
+		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
+		that.getPosition = function() {
+			return _position;
+		}
+		
+		that.Combat = {
+			HitFor: function(attacker) {
+				if(TG.Engines.Game.Distance.Between(attacker, that) < 30) {
+					attacker.Eat(200);	
+				}
+			}
+		}
+		return that;
+	}
 	function oItem(inTitle, inDamage, inRange, inSpeed, inType) {
 		var that = this;
 
@@ -335,6 +368,16 @@ var Generator = (function() {
 			return rtnFemale;
 		}
 	}
+	
+	var _Corn = function () {
+		var newPlant = new oPlant('Corn', {
+			x : (Math.random() % 100) * 1000,
+			y : (Math.random() % 100) * 300
+		});
+		
+		return newPlant;
+	}
+	
 	function _Item() {
 		var newItem = new oItem();
 
@@ -357,6 +400,11 @@ var Generator = (function() {
 			},
 			Female : function() {
 				return _Sex.female();
+			}
+		}, 
+		Plant: {
+			Corn: function () {
+				return _Corn();
 			}
 		}
 	};
