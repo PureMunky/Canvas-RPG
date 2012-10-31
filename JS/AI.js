@@ -135,6 +135,8 @@ var AI1 = (function(){
 	};
 	
 	var _seek = function (propertyFilter) {
+		// TODO: Seek multiple property types, add priority.
+		// TODO: Allow the AI to scan their inventory for items that match their properties.
 		return function (that, state) {
 			var o = TG.Engines.Game.Distance.Closest(that, propertyFilter);
 			if (o.title != 'none') {
@@ -151,6 +153,7 @@ var AI1 = (function(){
 	var _normal = function () {
 		return function (that, state) {
 			_idle()(that, state);
+			
 			if (that.Hungry()) {
 				_seek('food')(that, state);
 			}

@@ -95,19 +95,19 @@ var Generator = (function() {
 				MaxHP : 1000
 			},
 			Needs: {
-				Food: 1000.0,
-				Water: 1000.0,
-				Sleep: 1000.0
+				Food: 400.0,
+				Water: 400.0,
+				Sleep: 400.0
 			}
 		};
 		that.Sleepy = function () {
-			return (state.Needs.Sleep < 100);
+			return (state.Needs.Sleep <= 400.0);
 		};
 		that.Hungry = function () {
-			return (state.Needs.Food < 100);
+			return (state.Needs.Food <= 400.0);
 		};
 		that.Thirsty = function () {
-			return (state.Needs.Water < 100);
+			return (state.Needs.Water <= 400.0);
 		};
 		that.Eat = function (amount) {
 			state.Needs.Food += amount;
@@ -122,7 +122,7 @@ var Generator = (function() {
 		that.sex = inSex;
 
 		that.toString = function() {
-			return that.title + ' HP: ' + state.Combat.HP + '/' + state.Combat.MaxHP + ' - ' + that.debugInfo;
+			return that.title + ' HP: ' + state.Combat.HP + '/' + state.Combat.MaxHP + that.debugInfo;
 		}
 		
 		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
@@ -182,9 +182,12 @@ var Generator = (function() {
 			if (state.Core.attackCooldown > 0) state.Core.attackCooldown--;
 		}
 		var _TickNeeds = function() {
-			state.Needs.Food -= (state.Needs.Food > 0.0) ? 2 : 0;
-			state.Needs.Water -= (state.Needs.Water > 0.0) ? 1 : 0;
-			state.Needs.Sleep -= (state.Needs.Sleep > 0.0) ? .01 : 0;
+			state.Needs.Food -= (state.Needs.Food > 0.0) ? .1 : 0;
+			state.Needs.Water -= (state.Needs.Water > 0.0) ? .1 : 0;
+			state.Needs.Sleep -= (state.Needs.Sleep > 0.0) ? .1 : 0;
+			
+			if(state.Needs.Food <= 100) that.Combat.ReduceHP(.1);
+			if(state.Needs.Water <= 100) that.Combat.ReduceHP(.1);
 		}
 
 		that.debugInfo = '';
@@ -227,7 +230,8 @@ var Generator = (function() {
 				return equipment[0];
 			}
 		};
-
+		// TODO: Replace Attacking the food/water to consume with an "interact" action.
+		// TODO: Create a "collect" action to pick up food/water without consuming it.
 		that.Combat = {
 			Attack : function() {
 				if (state.Core.attackCooldown <= 0) {
@@ -252,14 +256,17 @@ var Generator = (function() {
 			HitFor: function(attacker) {
 			    var dmg = (attacker.Combat.Damage() - that.Defence.DamageReduction());
 			    
-			    if (dmg >= state.Combat.HP) {
+			    that.Combat.ReduceHP(dmg);
+				
+			},
+			ReduceHP: function(amount) {
+				if (amount >= state.Combat.HP) {
 			        state.Combat.HP = 0;
 			        that.setAI(TG.Engines.AI.still());
 			        _render.setAnimation('dead');
 			    } else {
-			     state.Combat.HP -= dmg;    
+			     state.Combat.HP -= amount;    
 			    }
-				
 			}
 		};
 
@@ -275,8 +282,10 @@ var Generator = (function() {
 		
 		that.title = inTitle;
 		that.toString = function () {
-			return that.title;
+			return that.title + ' ' + amount;
 		};
+		
+		var amount = 3000;
 		
 		var properties = {
 			food: true
@@ -311,6 +320,11 @@ var Generator = (function() {
 		that.Combat = {
 			HitFor: function(attacker) {
 				if(TG.Engines.Game.Distance.Between(attacker, that) < 30) {
+					amount -= 800;
+					if (amount <= 0) {
+						amount = 0;
+						properties.food = false;
+					}
 					attacker.Eat(800);	
 				}
 			}
@@ -323,8 +337,10 @@ var Generator = (function() {
 		
 		that.title = inTitle;
 		that.toString = function () {
-			return that.title;
+			return that.title + ' ' + amount;
 		};
+		
+		var amount = 5000;
 		
 		var properties = {
 			water: true
@@ -359,6 +375,11 @@ var Generator = (function() {
 		that.Combat = {
 			HitFor: function(attacker) {
 				if(TG.Engines.Game.Distance.Between(attacker, that) < 30) {
+					amount -= 700;
+					if (amount <= 0) {
+						amount = 0;
+						properties.water = false;
+					}
 					attacker.Drink(700);	
 				}
 			}

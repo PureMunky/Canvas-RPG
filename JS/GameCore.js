@@ -104,6 +104,7 @@ function GameCore(){
 	GameObjects[5] = TG.Engines.Generate.Plant.Corn();
 	GameObjects[6] = TG.Engines.Generate.Water();
 	GameObjects[7] = TG.Engines.Generate.Water();
+	GameObjects[8] = TG.Engines.Generate.Plant.Corn();
 	
 	return that;
 }
