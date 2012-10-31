@@ -34,7 +34,17 @@ var Generator = (function() {
 
 	function oNPC(inTitle, inSex, inPosition) {
 		var that = this;
-
+		var properties = {
+			food: false
+		};
+		that.getProperties = function (getName) {
+			if(getName) {
+				return properties[getName];
+			} else {
+				return properties;
+			}
+		};
+		
 		var moving = {
 			vertical : 0,
 			horizontal : 0,
@@ -101,6 +111,9 @@ var Generator = (function() {
 		};
 		that.Eat = function (amount) {
 			state.Needs.Food += amount;
+		};
+		that.Drink = function (amount) {
+			state.Needs.Water += amount;
 		}
 		
 		var inv = new Array();
@@ -160,7 +173,7 @@ var Generator = (function() {
 			_position.x = _position.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			_position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			
-			that.setDebugInfo('Food' + state.Needs.Food);
+			that.setDebugInfo('Food' + state.Needs.Food + ' - Water' + state.Needs.Water);
 			return that;
 		};
 		var _TickClean = function() {
@@ -169,8 +182,8 @@ var Generator = (function() {
 			if (state.Core.attackCooldown > 0) state.Core.attackCooldown--;
 		}
 		var _TickNeeds = function() {
-			state.Needs.Food -= (state.Needs.Food > 0.0) ? 1 : 0;
-			state.Needs.Water -= (state.Needs.Water > 0.0) ? .01 : 0;
+			state.Needs.Food -= (state.Needs.Food > 0.0) ? 2 : 0;
+			state.Needs.Water -= (state.Needs.Water > 0.0) ? 1 : 0;
 			state.Needs.Sleep -= (state.Needs.Sleep > 0.0) ? .01 : 0;
 		}
 
@@ -261,6 +274,20 @@ var Generator = (function() {
 		var that = this;
 		
 		that.title = inTitle;
+		that.toString = function () {
+			return that.title;
+		};
+		
+		var properties = {
+			food: true
+		};
+		that.getProperties = function (getName) {
+			if(getName) {
+				return properties[getName];
+			} else {
+				return properties;
+			}
+		};
 		
 		var _render = TG.Engines.Animation.Plant();
 		_render.setAnimation('slowBreeze');
@@ -284,12 +311,61 @@ var Generator = (function() {
 		that.Combat = {
 			HitFor: function(attacker) {
 				if(TG.Engines.Game.Distance.Between(attacker, that) < 30) {
-					attacker.Eat(200);	
+					attacker.Eat(800);	
 				}
 			}
 		}
 		return that;
 	}
+	
+	function oWater(inTitle, inPosition) {
+		var that = this;
+		
+		that.title = inTitle;
+		that.toString = function () {
+			return that.title;
+		};
+		
+		var properties = {
+			water: true
+		};
+		that.getProperties = function (getName) {
+			if(getName) {
+				return properties[getName];
+			} else {
+				return properties;
+			}
+		};
+		
+		var _render = TG.Engines.Animation.Plant();
+		_render.setAnimation('slowBreeze');
+		that.getRender = function() {
+			var rtnRender = _render.CurrentFrame();
+			rtnRender.x = _position.x;
+			rtnRender.y = _position.y;
+
+			return rtnRender;
+		}
+		
+		that.MoveOneStep = function () {
+			_render.Tick();
+		}
+		
+		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
+		that.getPosition = function() {
+			return _position;
+		}
+		
+		that.Combat = {
+			HitFor: function(attacker) {
+				if(TG.Engines.Game.Distance.Between(attacker, that) < 30) {
+					attacker.Drink(700);	
+				}
+			}
+		}
+		return that;
+	}
+	
 	function oItem(inTitle, inDamage, inRange, inSpeed, inType) {
 		var that = this;
 
@@ -339,7 +415,7 @@ var Generator = (function() {
 
 		//newNPC.setAI(TG.Engines.AI.hostile(TG.Engines.Game.Player()));
 		newNPC.setAI(TG.Engines.AI.normal());
-		newNPC.Inventory.Equip(Items.Weapons.Sword());
+		newNPC.Inventory.Equip(Items.Weapons.Fist());
 
 		return newNPC;
 	}
@@ -378,6 +454,15 @@ var Generator = (function() {
 		return newPlant;
 	}
 	
+	var _Water = function () {
+		var newWater = new oWater('Water', {
+			x : (Math.random() % 100) * 1000,
+			y : (Math.random() % 100) * 300
+		});
+		
+		return newWater;
+	}
+	
 	function _Item() {
 		var newItem = new oItem();
 
@@ -406,6 +491,9 @@ var Generator = (function() {
 			Corn: function () {
 				return _Corn();
 			}
+		},
+		Water: function () {
+			return _Water();
 		}
 	};
 })();

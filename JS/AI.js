@@ -134,21 +134,29 @@ var AI1 = (function(){
 		}
 	};
 	
-	var _seek = function (object) {
+	var _seek = function (propertyFilter) {
 		return function (that, state) {
-			var o = TG.Engines.Game.Distance.Closest(that, object);
-			if(that.Can.See(o)) {
-				_hostile(o)(that, state);
-			} else {
-				_toward(o.getPosition(), .4)(that, state);	
+			var o = TG.Engines.Game.Distance.Closest(that, propertyFilter);
+			if (o.title != 'none') {
+				if(that.Can.See(o)) {
+					_hostile(o)(that, state);
+				} else {
+					_toward(o.getPosition(), .4)(that, state);	
+				}	
 			}
+			
 		}
 	}
 	
 	var _normal = function () {
 		return function (that, state) {
+			_idle()(that, state);
 			if (that.Hungry()) {
-				_seek({ food: true })(that, state);
+				_seek('food')(that, state);
+			}
+			
+			if (that.Thirsty()) {
+				_seek('water')(that, state);
 			}
 			
 			if (that.Sleepy()) {

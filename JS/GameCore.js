@@ -46,8 +46,9 @@ function GameCore(){
 	that.Distance = {
 		Between: function(o1, o2) {
 			o2 = o2 || GameObjects[0];
-			p1 = o1.getPosition();
-			p2 = o2.getPosition();
+			var p1 = o1.getPosition();
+			var p2 = o2.getPosition();
+			
 			
 			var a, b;
 			a = Math.abs(p1.x - p2.x);
@@ -55,14 +56,15 @@ function GameCore(){
 			
 			return Math.sqrt((a * a) + (b * b));
 		},
-		Closest: function (o1, o2, action) {
+		Closest: function (o1, propertyFilter, action) {
 			//TODO: add a second object to compare (e.x. Closest(item) or Closest(hostile)); Like {food: true}
 			var rtnObject = {title: 'none'};
 			var shortestDistance = 1000;
 			
 			for(var i = 0; i < GameObjects.length; i++) {
 				var thisDistance = Distance.Between(o1, GameObjects[i]);
-				if(thisDistance < shortestDistance && o1 != GameObjects[i]) {
+				//alert(o1.title + ' - ' + propertyFilter + ' ' + o1.getProperties(propertyFilter));
+				if(thisDistance < shortestDistance && o1 != GameObjects[i] && GameObjects[i].getProperties(propertyFilter)) {
 					if(action) action(GameObjects[i]);
 					shortestDistance = thisDistance;
 					rtnObject = GameObjects[i];
@@ -100,5 +102,8 @@ function GameCore(){
 	}
 	
 	GameObjects[5] = TG.Engines.Generate.Plant.Corn();
+	GameObjects[6] = TG.Engines.Generate.Water();
+	GameObjects[7] = TG.Engines.Generate.Water();
+	
 	return that;
 }

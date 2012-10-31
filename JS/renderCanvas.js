@@ -222,7 +222,7 @@ var Animation = (function () {
 		
 		return _render;
 	}
-	 
+	
 	return {
 		Player: function (defaultAnimation) {
 			return _Character(TG.Engines.GlobalVars._PlayerImage, defaultAnimation);
