@@ -22,6 +22,8 @@
                     //moving.running = true;
                 } else if (event.keyCode == _ATTACKKEY.keyCode) {
 					TG.Engines.Game.Player().Combat.Attack();
+				} else if (event.keyCode == _INTERACTKEY.keyCode) {
+                    TG.Engines.Game.Player().Interact.Perform();
                 } else if (event.keyCode == _PAUSE.keyCode) {
                     TG.Engines.Game.Pause();
                 } else if (event.keyCode == _REWIND.keyCode) {
@@ -69,6 +71,7 @@
     var _RUNKEY = keyboardButton('65', function () { }, function () { });   //A
     var _MENUKEY = keyboardButton('27', function () { }, function () { });
     var _ATTACKKEY = keyboardButton('32', function () { }, function () { }); //[Space]
+    var _INTERACTKEY = keyboardButton('84', function () { }, function () { }); //[Space]
     var _PAUSE = keyboardButton('67', function () { }, function () { }); //C
     var _REWIND = keyboardButton('88', function () { }, function () { }); //X
     var _FORWARD = keyboardButton('86', function () { }, function () { }); //V
