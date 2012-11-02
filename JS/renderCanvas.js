@@ -69,31 +69,42 @@
         
   		//TG.Engines.Debug.WriteOutput(TG.Engines.Game.CurrentHistoryLocation);
   		if (TG.Engines.Game.CurrentHistory()) {
+  		    var viewAbleItemsCount = 0;
             for (var i = 0; i < TG.Engines.Game.CurrentHistory().length; i++) {
             	try {
-            		var r = TG.Engines.Game.CurrentHistory()[i].getRender();
+            	    var r = TG.Engines.Game.CurrentHistory()[i].getRender();
             		
-    	           	ctx.drawImage(r.image,
-    	           		r.imageX,
-    	           		r.imageY,
-    	           		r.width,
-    	           		r.height,
-    	           		r.x - PanLocation.x,
-    	           		r.y - PanLocation.y,
-    	           		r.width,
-    	           		r.height
-    	           	);
-    	           	
-    	           	if(TG.Engines.Game.CurrentHistory()[i].title) {
-    	           		WriteOutput(TG.Engines.Game.CurrentHistory()[i].toString(),
-    	           			r.x + r.width - PanLocation.x,
-    	           			r.y + r.height - PanLocation.y
-    	           		);
-    	           	}
+            		if (r.x - PanLocation.x > 0
+                		    && r.x - PanLocation.x < $('#playArea').width()
+                		    && r.y - PanLocation.y > 0
+                		    && r.y - PanLocation.y < $('#playArea').height()
+            		    ) {
+            		    
+            		    viewAbleItemsCount++;
+        	           	ctx.drawImage(r.image,
+        	           		r.imageX,
+        	           		r.imageY,
+        	           		r.width,
+        	           		r.height,
+        	           		r.x - PanLocation.x,
+        	           		r.y - PanLocation.y,
+        	           		r.width,
+        	           		r.height
+        	           	);
+        	           	
+        	           	if(TG.Engines.Game.CurrentHistory()[i].title) {
+        	           		WriteOutput(TG.Engines.Game.CurrentHistory()[i].toString(),
+        	           			r.x + r.width - PanLocation.x,
+        	           			r.y + r.height - PanLocation.y
+        	           		);
+        	           	}
+        	        }
             	}catch(e) {
     				TG.Engines.Debug.WriteOutput(e);        		
             	}
             }
+            
+            TG.Engines.Debug.WriteOutput(viewAbleItemsCount);
         }
 
     };

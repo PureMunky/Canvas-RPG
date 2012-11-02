@@ -49,22 +49,32 @@ function GameCore(){
 			var p1 = o1.getPosition();
 			var p2 = o2.getPosition();
 			
-			
 			var a, b;
 			a = Math.abs(p1.x - p2.x);
 			b = Math.abs(p1.y - p2.y);
 			
 			return Math.sqrt((a * a) + (b * b));
 		},
+		BetweenforCompare: function(o1, o2) {
+		    o2 = o2 || GameObjects[0];
+            var p1 = o1.getPosition();
+            var p2 = o2.getPosition();
+            
+            var a, b;
+            a = Math.abs(p1.x - p2.x);
+            b = Math.abs(p1.y - p2.y);
+            
+            return (a * a) + (b * b);
+		},
 		Closest: function (o1, propertyFilter, action) {
 			//TODO: add a second object to compare (e.x. Closest(item) or Closest(hostile)); Like {food: true}
 			var rtnObject = {title: 'none'};
-			var shortestDistance = 1000;
+			//var shortestDistance = 1000;
 			
 			for(var i = 0; i < GameObjects.length; i++) {
-				var thisDistance = Distance.Between(o1, GameObjects[i]);
+				var thisDistance = Distance.BetweenforCompare(o1, GameObjects[i]);
 				//alert(o1.title + ' - ' + propertyFilter + ' ' + o1.getProperties(propertyFilter));
-				if(thisDistance < shortestDistance && o1 != GameObjects[i] && GameObjects[i].getProperties(propertyFilter)) {
+				if(o1 != GameObjects[i] && GameObjects[i].getProperties(propertyFilter)) {
 					if(action) action(GameObjects[i]);
 					shortestDistance = thisDistance;
 					rtnObject = GameObjects[i];
@@ -105,6 +115,10 @@ function GameCore(){
 	GameObjects[6] = TG.Engines.Generate.Water();
 	GameObjects[7] = TG.Engines.Generate.Water();
 	GameObjects[8] = TG.Engines.Generate.Plant.Corn();
+	
+	for(var i = 0; i < 500; i++) {
+	   // GameObjects.push(TG.Engines.Generate.NPC('N' + i, TG.Engines.Generate.Sex.Male()));
+	}
 	
 	return that;
 }
