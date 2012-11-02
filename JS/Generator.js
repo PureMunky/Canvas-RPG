@@ -95,20 +95,20 @@ var Generator = (function() {
 				MaxHP : 1000
 			},
 			Needs: {
-				Food: 400.0,
-				Water: 400.0,
-				Sleep: 400.0
+				Food: 430,
+				Water: 450,
+				Sleep: 400
 			},
 			Memory: new Array()
 		};
 		that.Sleepy = function () {
-			return (state.Needs.Sleep <= 400.0);
+			return (state.Needs.Sleep <= 400);
 		};
 		that.Hungry = function () {
-			return (state.Needs.Food <= 400.0);
+			return (state.Needs.Food <= 400);
 		};
 		that.Thirsty = function () {
-			return (state.Needs.Water <= 400.0);
+			return (state.Needs.Water <= 400);
 		};
 		that.Eat = function (amount) {
 			state.Needs.Food += amount;
@@ -121,6 +121,10 @@ var Generator = (function() {
 		var equipment = new Array();
 		that.title = inTitle;
 		that.sex = inSex;
+		
+		that.getInventory = function () {
+			return inv;
+		}
 
 		that.toString = function() {
 			return that.title + ' HP: ' + state.Combat.HP + '/' + state.Combat.MaxHP + that.debugInfo;
@@ -174,7 +178,6 @@ var Generator = (function() {
 			_position.x = _position.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			_position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			
-			that.setDebugInfo('Food' + state.Needs.Food + ' - Water' + state.Needs.Water);
 			return that;
 		};
 		var _TickClean = function() {
@@ -215,6 +218,9 @@ var Generator = (function() {
 			},
 			Attack : function(o) {
 				return (that.Combat.Range() > TG.Engines.Game.Distance.Between(that, o));
+			},
+			Interact: function (o) {
+				return (30 > TG.Engines.Game.Distance.Between(that, o));
 			}
 		}
 
@@ -343,13 +349,16 @@ var Generator = (function() {
 		
 		that.Interact = {
 			Receive: function (performer) {
-				if(TG.Engines.Game.Distance.Between(attacker, that) < 30) {
+				if(TG.Engines.Game.Distance.Between(performer, that) < 30) {
 					amount -= 800;
 					if (amount <= 0) {
 						amount = 0;
 						properties.food = false;
+					} else {
+						performer.Inventory.Give(Items.Consumables.Corn(800))
 					}
-					performer.Inventory.Give(Items.Consumables.Corn(800))
+					
+					
 				}
 			}
 		}
@@ -408,10 +417,26 @@ var Generator = (function() {
 				}
 			}
 		}
+		
+		that.Interact = {
+			Receive: function (performer) {
+				if(TG.Engines.Game.Distance.Between(performer, that) < 30) {
+					amount -= 700;
+					if (amount <= 0) {
+						amount = 0;
+						properties.food = false;
+					} else {
+						performer.Inventory.Give(Items.Consumables.Water(700))	
+					}
+					
+					
+				}
+			}
+		}
 		return that;
 	}
 	
-	function oItem(inTitle, inDamage, inRange, inSpeed, inType, inUse) {
+	function oItem(inTitle, inDamage, inRange, inSpeed, inType, inProperties, inUse) {
 		var that = this;
 
 		that.title = inTitle || 'Fist';
@@ -423,14 +448,32 @@ var Generator = (function() {
 		var level = 1;
 		var XP = 0;
 		
+		var properties = {
+			item: true
+		};
+		properties[inType] = true;
+		
+		that.getProperties = function (getName) {
+			if(getName) {
+				return properties[getName];
+			} else {
+				return properties;
+			}
+		};
+		
 		that.getDamage = function () {
 		    return that.damage * level;
 		}
 		
-		that.Use = inUse || function (target) {
-			if (that.type = 'food') {
-				target.Eat(that.damage);
-			}
+		that.Use = function (target) {
+			switch(that.type) {
+				case 'food':
+					target.Eat(that.damage);
+					break;
+				case 'water': 
+					target.Drink(that.damage);
+					break;
+				}
 		}
 		
 		that.XPUp = function() {
@@ -445,7 +488,8 @@ var Generator = (function() {
 	        Bow:   function () { return new oItem('Bow', 20, 200, 50, 'ranged');}
 	    },
 	    Consumables: {
-	    	Corn: function (amount) { return new oItem('Corn', amount, 0, 0, 'food');}
+	    	Corn: function (amount) { return new oItem('Corn', amount, 0, 0, 'food');},
+	    	Water: function (amount) { return new oItem('Water', amount, 0, 0, 'water');}
 	    }
 	}
 

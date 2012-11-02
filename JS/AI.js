@@ -136,15 +136,29 @@ var AI1 = (function(){
 	
 	var _seek = function (propertyFilter) {
 		// TODO: Seek multiple property types, add priority.
-		// TODO: Allow the AI to scan their inventory for items that match their properties.
+		// TODO: Ask "friends" if they're willing to give an item.
 		return function (that, state) {
+			var inv = that.getInventory();
+			var found = false;
+			for(var i = 0; i < inv.length; i++) {
+				if (inv[i].getProperties(propertyFilter) && !found) {
+					found = true;
+					inv[i].Use(that);
+				}
+			}
+			
 			var o = TG.Engines.Game.Distance.Closest(that, propertyFilter);
-			if (o.title != 'none') {
-				if(that.Can.See(o)) {
-					_hostile(o)(that, state);
+			if (!found && o.title != 'none') {
+				if(!that.Can.See(o)) {
+					_toward(o.getPosition(), .4)(that, state);
+				} else if (that.Can.Interact(o)) {
+					that.Interact.Perform();
 				} else {
-					_toward(o.getPosition(), .4)(that, state);	
-				}	
+					_toward(o.getPosition())(that, state);
+				}
+			} else {
+				// TODO: If the npc can't find an item and still seeks it then they can offer a quest for others to find it for them.
+				_idle()(that, state);
 			}
 			
 		}
@@ -162,9 +176,11 @@ var AI1 = (function(){
 				_seek('water')(that, state);
 			}
 			
+			/*
 			if (that.Sleepy()) {
 				_idle()(that, state);
 			}
+			*/
 		}	
 	};
 	
