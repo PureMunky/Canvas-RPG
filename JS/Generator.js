@@ -82,10 +82,10 @@ var Generator = (function() {
 			perception : 10,
 			magic : 10
 		};
-		
 		that.getDNA = function() {
 			return DNA;
 		}
+		
 		var state = {
 			AI : {},
 			Core : {},
@@ -98,7 +98,8 @@ var Generator = (function() {
 				Food: 400.0,
 				Water: 400.0,
 				Sleep: 400.0
-			}
+			},
+			Memory: new Array()
 		};
 		that.Sleepy = function () {
 			return (state.Needs.Sleep <= 400.0);
@@ -270,6 +271,16 @@ var Generator = (function() {
 			}
 		};
 
+		that.Interact = {
+			Perform: function () {
+				var hitObjects = TG.Engines.Game.Distance.Within(that, 30, function(acted) {
+					acted.Interact.Receive(that);
+				});
+			},
+			Receive: function (performer) {
+				// TODO: Open Dialog
+			}
+		}
 		that.Defence = {
 			DamageReduction : function() {
 				return 0;
@@ -326,6 +337,19 @@ var Generator = (function() {
 						properties.food = false;
 					}
 					attacker.Eat(800);	
+				}
+			}
+		}
+		
+		that.Interact = {
+			Receive: function (performer) {
+				if(TG.Engines.Game.Distance.Between(attacker, that) < 30) {
+					amount -= 800;
+					if (amount <= 0) {
+						amount = 0;
+						properties.food = false;
+					}
+					performer.Inventory.Give(Items.Consumables.Corn(800))
 				}
 			}
 		}
@@ -387,7 +411,7 @@ var Generator = (function() {
 		return that;
 	}
 	
-	function oItem(inTitle, inDamage, inRange, inSpeed, inType) {
+	function oItem(inTitle, inDamage, inRange, inSpeed, inType, inUse) {
 		var that = this;
 
 		that.title = inTitle || 'Fist';
@@ -403,6 +427,12 @@ var Generator = (function() {
 		    return that.damage * level;
 		}
 		
+		that.Use = inUse || function (target) {
+			if (that.type = 'food') {
+				target.Eat(that.damage);
+			}
+		}
+		
 		that.XPUp = function() {
 		    XP++;
 		}
@@ -410,9 +440,12 @@ var Generator = (function() {
 	
 	var Items = {
 	    Weapons: {
-	        Fist:  function () { return new oItem('Fist', 5, 10, 10);              },
-	        Sword: function () { return new oItem('Sword', 30, 20, 10);            },
-	        Bow:   function () { return new oItem('Bow', 20, 200, 50, 'ranged');   }
+	        Fist:  function () { return new oItem('Fist', 5, 10, 10);},
+	        Sword: function () { return new oItem('Sword', 30, 20, 10);},
+	        Bow:   function () { return new oItem('Bow', 20, 200, 50, 'ranged');}
+	    },
+	    Consumables: {
+	    	Corn: function (amount) { return new oItem('Corn', amount, 0, 0, 'food');}
 	    }
 	}
 
