@@ -9,6 +9,15 @@
         TG.Engines.Render.drawCanvas();
     });
 
+    var PanLocation = {
+        x: 0,
+        y: 0
+    }
+	
+	this.MovePanLocation = function (inPosition) {
+	    PanLocation.x = PanLocation.x + inPosition.x;
+	    PanLocation.y = PanLocation.y + inPosition.y;
+	}
 	
     this.FillScreen = function () {
         $('#playArea').width(1);
@@ -43,7 +52,21 @@
     this.drawCanvas = function () {
         requestAnimationFrame(drawCanvas);
         clearCanvas();
-
+        
+        var p = TG.Engines.Game.Player().getPosition();
+        
+        if (p.x < PanLocation.x + TG.Engines.GlobalVars._BorderPadding) {
+            PanLocation.x--;
+        } else if (p.x > PanLocation.x + $('#playArea').width() - TG.Engines.GlobalVars._BorderPadding) {
+            PanLocation.x++;
+        }
+        
+        if (p.y < PanLocation.y + TG.Engines.GlobalVars._BorderPadding) {
+            PanLocation.y--;
+        } else if (p.y > PanLocation.y + $('#playArea').height() - TG.Engines.GlobalVars._BorderPadding) {
+            PanLocation.y++;
+        }
+        
   		//TG.Engines.Debug.WriteOutput(TG.Engines.Game.CurrentHistoryLocation);
   		if (TG.Engines.Game.CurrentHistory()) {
             for (var i = 0; i < TG.Engines.Game.CurrentHistory().length; i++) {
@@ -55,16 +78,16 @@
     	           		r.imageY,
     	           		r.width,
     	           		r.height,
-    	           		r.x,
-    	           		r.y,
+    	           		r.x - PanLocation.x,
+    	           		r.y - PanLocation.y,
     	           		r.width,
     	           		r.height
     	           	);
     	           	
     	           	if(TG.Engines.Game.CurrentHistory()[i].title) {
     	           		WriteOutput(TG.Engines.Game.CurrentHistory()[i].toString(),
-    	           			r.x + r.width,
-    	           			r.y + r.height
+    	           			r.x + r.width - PanLocation.x,
+    	           			r.y + r.height - PanLocation.y
     	           		);
     	           	}
             	}catch(e) {

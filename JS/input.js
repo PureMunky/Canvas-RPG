@@ -28,10 +28,18 @@
                     TG.Engines.Game.Rewind();
                 } else if (event.keyCode == _FORWARD.keyCode) {
                     TG.Engines.Game.Forward();
+                } else if (event.keyCode == _PanDown.keyCode) {
+                    TG.Engines.Render.MovePanLocation({x: 0, y: 1});
+                } else if (event.keyCode == _PanRight.keyCode) {
+                    TG.Engines.Render.MovePanLocation({x: 1, y: 0});
+                } else if (event.keyCode == _PanLeft.keyCode) {
+                    TG.Engines.Render.MovePanLocation({x: -1, y: 0});
+                } else if (event.keyCode == _PanUp.keyCode) {
+                    TG.Engines.Render.MovePanLocation({x: 0, y: -1});
                 }
             }
             
-            TG.Engines.Debug.WriteOutput(event.keyCode);
+            TG.Engines.Debug.Log(event.keyCode);
         });
 
         $(document).keyup(function (event) {
@@ -61,10 +69,15 @@
     var _RUNKEY = keyboardButton('65', function () { }, function () { });   //A
     var _MENUKEY = keyboardButton('27', function () { }, function () { });
     var _ATTACKKEY = keyboardButton('32', function () { }, function () { }); //[Space]
-    var _PAUSE = keyboardButton('67', function () { }, function () { }); //[Space]
-    var _REWIND = keyboardButton('88', function () { }, function () { }); //[Space]
-    var _FORWARD = keyboardButton('86', function () { }, function () { }); //[Space]
+    var _PAUSE = keyboardButton('67', function () { }, function () { }); //C
+    var _REWIND = keyboardButton('88', function () { }, function () { }); //X
+    var _FORWARD = keyboardButton('86', function () { }, function () { }); //V
 
+    var _PanRight = keyboardButton('39'); // Right Arrow
+    var _PanDown = keyboardButton('40'); // Right Arrow
+    var _PanLeft = keyboardButton('37'); // Right Arrow
+    var _PanUp = keyboardButton('38'); // Right Arrow
+    
     var keyboardEntry = false;
 
     function keyboardButton(inKeyCode, inDownAction, inUpAction) {

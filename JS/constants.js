@@ -4,6 +4,7 @@ function GV1() {
     this._STEPTIMER;
     this._PANBOUNDARYPIX = 100;
     this._RUNPERC = 1;
+    this._BorderPadding = 100;
     
     this._PlayerImage = new Image();
     this._PlayerImage.src = 'images/player/player.png';
