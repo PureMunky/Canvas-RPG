@@ -69,12 +69,12 @@ function GameCore(){
 		Closest: function (o1, propertyFilter, action) {
 			//TODO: add a second object to compare (e.x. Closest(item) or Closest(hostile)); Like {food: true}
 			var rtnObject = {title: 'none'};
-			//var shortestDistance = 1000;
+			var shortestDistance = 1000000;
 			
 			for(var i = 0; i < GameObjects.length; i++) {
 				var thisDistance = Distance.BetweenforCompare(o1, GameObjects[i]);
 				//alert(o1.title + ' - ' + propertyFilter + ' ' + o1.getProperties(propertyFilter));
-				if(o1 != GameObjects[i] && GameObjects[i].getProperties(propertyFilter)) {
+				if(o1 != GameObjects[i] && GameObjects[i].getProperties(propertyFilter) && thisDistance < shortestDistance) {
 					if(action) action(GameObjects[i]);
 					shortestDistance = thisDistance;
 					rtnObject = GameObjects[i];
@@ -99,11 +99,11 @@ function GameCore(){
 	};
 	
 	var GameObjects = new Array();
-	GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male());
-	GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male());
-	GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male());
-	GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female());
-	GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female());
+	GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male(), {x: 100, y: 100});
+	GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male(), {x: 100, y: 400});
+	GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male(), {x: 400, y: 400});
+	GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female(), {x: 400, y: 100});
+	GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female(), {x: 600, y: 200});
 	
 	TG.Engines.Relationships.Mate(GameObjects[2], GameObjects[3]); //test mating
 	
@@ -111,10 +111,10 @@ function GameCore(){
 		GameObjects[i].Inventory.Equip(TG.Engines.Generate.Item());
 	}
 	
-	GameObjects[5] = TG.Engines.Generate.Plant.Corn();
-	GameObjects[6] = TG.Engines.Generate.Water();
-	GameObjects[7] = TG.Engines.Generate.Water();
-	GameObjects[8] = TG.Engines.Generate.Plant.Corn();
+	GameObjects[5] = TG.Engines.Generate.Plant.Corn({x: 100, y: 300});
+	GameObjects[6] = TG.Engines.Generate.Water({x: 200, y: 300});
+	GameObjects[7] = TG.Engines.Generate.Water({x: 200, y: 400});
+	GameObjects[8] = TG.Engines.Generate.Plant.Corn({x: 400, y: 200});
 	
 	for(var i = 0; i < 500; i++) {
 	   // GameObjects.push(TG.Engines.Generate.NPC('N' + i, TG.Engines.Generate.Sex.Male()));

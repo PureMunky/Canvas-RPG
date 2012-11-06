@@ -494,22 +494,16 @@ var Generator = (function() {
 	}
 
 // object defaults
-	function _Player(inName, inSex) {
-		var newPlayer = new oNPC(inName, inSex, {
-			x : 0,
-			y : 0
-		});
+	function _Player(inName, inSex, inPosition) {
+		var newPlayer = new oNPC(inName, inSex, inPosition);
 
 		newPlayer.Inventory.Equip(Items.Weapons.Bow());
 
 		return newPlayer;
 	}
 
-	function _NPC(inTitle, inSex) {
-		var newNPC = new oNPC(inTitle, inSex, {
-			x : (Math.random() % 100) * 1000,
-			y : (Math.random() % 100) * 300
-		});
+	function _NPC(inTitle, inSex, inPosition) {
+		var newNPC = new oNPC(inTitle, inSex, inPosition);
 
 		//newNPC.setAI(TG.Engines.AI.hostile(TG.Engines.Game.Player()));
 		newNPC.setAI(TG.Engines.AI.normal());
@@ -543,20 +537,14 @@ var Generator = (function() {
 		}
 	}
 	
-	var _Corn = function () {
-		var newPlant = new oPlant('Corn', {
-			x : (Math.random() % 100) * 1000,
-			y : (Math.random() % 100) * 300
-		});
+	var _Corn = function (inPosition) {
+		var newPlant = new oPlant('Corn', inPosition);
 		
 		return newPlant;
 	}
 	
-	var _Water = function () {
-		var newWater = new oWater('Water', {
-			x : (Math.random() % 100) * 1000,
-			y : (Math.random() % 100) * 300
-		});
+	var _Water = function (inPosition) {
+		var newWater = new oWater('Water', inPosition);
 		
 		return newWater;
 	}
@@ -568,11 +556,11 @@ var Generator = (function() {
 	}
 
 	return {
-		Player : function(inName, inSex) {
-			return _Player(inName, inSex);
+		Player : function(inName, inSex, inPosition) {
+			return _Player(inName, inSex, inPosition);
 		},
-		NPC : function(inTitle, inSex) {
-			return _NPC(inTitle, inSex);
+		NPC : function(inTitle, inSex, inPosition) {
+			return _NPC(inTitle, inSex, inPosition);
 		},
 		Item : function() {
 			return _Item();
@@ -586,12 +574,12 @@ var Generator = (function() {
 			}
 		}, 
 		Plant: {
-			Corn: function () {
-				return _Corn();
+			Corn: function (inPosition) {
+				return _Corn(inPosition);
 			}
 		},
-		Water: function () {
-			return _Water();
+		Water: function (inPosition) {
+			return _Water(inPosition);
 		}
 	};
 })();
