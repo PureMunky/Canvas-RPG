@@ -101,7 +101,6 @@ var AI1 = (function(){
 	};
 	
 	var _toward = function (position, speed) {
-		//TODO: Fix to move in a straight line instead of 45 degree angles.
 		speed = speed || 1;
 		
 		return function (that, state) {
@@ -111,13 +110,20 @@ var AI1 = (function(){
 			}
 			
 			var pos = that.getPosition();
+			var run = (position.x - pos.x);
+			var rise = (position.y - pos.y);
+			var newH = run / (Math.abs(run) + Math.abs(rise));
+			var newV = rise / (Math.abs(run) + Math.abs(rise));
 			
+			/*
 			if (pos.x < position.x) newMoving.horizontal = speed * 1;
 			if (pos.x > position.x) newMoving.horizontal = speed * -1;
 			if (pos.y < position.y) newMoving.vertical = speed * 1;
 			if (pos.y > position.y) newMoving.vertical = speed * -1;
 			if (pos.x == position.x && pos.y == position.y) that.setAI(function() {});
-			that.setMoving(newMoving);
+			*/
+			
+			that.setMoving({vertical: newV, horizontal: newH});
 		}	
 	};
 	

@@ -40,7 +40,7 @@ function GameCore(){
     	return GameObjects[0];
     }
     var RecordHistory = function () {
-        that.History.push(that.GameObjects);
+        //that.History.push(that.GameObjects);
     }
     
 	that.Distance = {
@@ -67,7 +67,6 @@ function GameCore(){
             return (a * a) + (b * b);
 		},
 		Closest: function (o1, propertyFilter, action) {
-			//TODO: add a second object to compare (e.x. Closest(item) or Closest(hostile)); Like {food: true}
 			var rtnObject = {title: 'none'};
 			var shortestDistance = 1000000;
 			

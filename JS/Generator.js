@@ -248,8 +248,7 @@ var Generator = (function() {
 				
 			}
 		};
-		// TODO: Replace Attacking the food/water to consume with an "interact" action.
-		// TODO: Create a "collect" action to pick up food/water without consuming it.
+		
 		that.Combat = {
 			Attack : function() {
 				if (state.Core.attackCooldown <= 0) {
