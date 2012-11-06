@@ -101,9 +101,9 @@ function GameCore(){
 	var GameObjects = new Array();
 	GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male(), {x: 100, y: 100});
 	GameObjects[1] = TG.Engines.Generate.NPC('A', TG.Engines.Generate.Sex.Male(), {x: 100, y: 400});
-	GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male(), {x: 400, y: 400});
-	GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female(), {x: 400, y: 100});
-	GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female(), {x: 600, y: 200});
+	GameObjects[2] = TG.Engines.Generate.NPC('B', TG.Engines.Generate.Sex.Male(), {x: 400, y: 100});
+	GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female(), {x: 420, y: 100});
+	GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female(), {x: 400, y: 120});
 	
 	TG.Engines.Relationships.Mate(GameObjects[2], GameObjects[3]); //test mating
 	
@@ -111,10 +111,10 @@ function GameCore(){
 		GameObjects[i].Inventory.Equip(TG.Engines.Generate.Item());
 	}
 	
-	GameObjects[5] = TG.Engines.Generate.Plant.Corn({x: 100, y: 300});
-	GameObjects[6] = TG.Engines.Generate.Water({x: 200, y: 300});
-	GameObjects[7] = TG.Engines.Generate.Water({x: 200, y: 400});
-	GameObjects[8] = TG.Engines.Generate.Plant.Corn({x: 400, y: 200});
+	GameObjects[5] = TG.Engines.Generate.Plant.Corn({x: 500, y: 100});
+	GameObjects[6] = TG.Engines.Generate.Water({x: 350, y: 100});
+	GameObjects[7] = TG.Engines.Generate.Water({x: 150, y: 400});
+	GameObjects[8] = TG.Engines.Generate.Plant.Corn({x: 150, y: 500});
 	
 	for(var i = 0; i < 500; i++) {
 	   // GameObjects.push(TG.Engines.Generate.NPC('N' + i, TG.Engines.Generate.Sex.Male()));

@@ -235,6 +235,17 @@ var Generator = (function() {
 			PrimaryWeapon : function() {
 				// TODO: when no weapon is equiped default to fists.
 				return equipment[0];
+			},
+			Use: function (inItem) {
+				for (var i = 0; i < inv.length; i++) {
+					var found = false;
+					if (inv[i] == inItem && !found) {
+						found = true;
+						inv.splice(i, 1);
+						inItem.Use(that);
+					}	
+				}
+				
 			}
 		};
 		// TODO: Replace Attacking the food/water to consume with an "interact" action.
@@ -327,6 +338,11 @@ var Generator = (function() {
 		
 		that.MoveOneStep = function () {
 			_render.Tick();
+			
+			amount += .001;
+			
+			properties['food'] = true;
+			
 		}
 		
 		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);

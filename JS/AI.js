@@ -143,7 +143,7 @@ var AI1 = (function(){
 			for(var i = 0; i < inv.length; i++) {
 				if (inv[i].getProperties(propertyFilter) && !found) {
 					found = true;
-					inv[i].Use(that);
+					that.Inventory.Use(inv[i]);
 				}
 			}
 			
