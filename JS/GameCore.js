@@ -5,16 +5,25 @@ TG.Engines.Game = (function(that){
     });
     
 	that.Tick = function () {
-		RecordHistory();
-		
-		for(var i = 0; i < GameObjects.length; i++){
-			GameObjects[i]
-				.MoveOneStep();
+		TG.Engines.Debug.WriteOutput(that.CurrentHistoryLocation);
+		if (timeDirection == 'play') {
+			that.CurrentHistoryLocation++;
+			for(var i = 0; i < GameObjects.length; i++){
+				GameObjects[i]
+					.MoveOneStep();
+			}
+		} else {
+			for(var i = 0; i < GameObjects.length; i++){
+				if(GameObjects[i].SetPositionAt) {
+					GameObjects[i].SetPositionAt(that.CurrentHistoryLocation);	
+				}
+			}
 		}
+		
 	};
 	
 	that.History = new Array();
-	that.CurrentHistoryLocation = 200;
+	that.CurrentHistoryLocation = 0;
 	that.CurrentHistory = function () {
 	    /*
 	    if(that.CurrentHistoryLocation == null || that.History.length < that.CurrentHistoryLocation) {
@@ -26,14 +35,16 @@ TG.Engines.Game = (function(that){
 	   return GameObjects || new Array();
 	}
 	
+	var timeDirection = 'play';
 	that.Pause = function () {
-        that.CurrentHistoryLocation = that.CurrentHistoryLocation == null ? that.History.length - 1 : null;
+		timeDirection = 'pause';
+        //that.CurrentHistoryLocation = that.CurrentHistoryLocation == null ? that.History.length - 1 : null;
     }
     that.Rewind = function () {
-        if(CurrentHistoryLocation != null) CurrentHistoryLocation--;
+        if(that.CurrentHistoryLocation != null) that.CurrentHistoryLocation--;
     }
     that.Forward = function () {
-        if(CurrentHistoryLocation != null) CurrentHistoryLocation++;
+        if(that.CurrentHistoryLocation != null) that.CurrentHistoryLocation++;
     }
     that.Player = function () {
     	return GameObjects[0];

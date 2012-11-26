@@ -134,6 +134,7 @@ TG.Engines.Generate = (function(that) {
 		that.getPosition = function() {
 			return _position;
 		}
+		var _posHistory = new Array();
 		
 		var _render = TG.Engines.Animation.Player();
 		that.getRender = function() {
@@ -165,7 +166,7 @@ TG.Engines.Generate = (function(that) {
 		    if (_render.imageY >= (_render.height * 4)) _render.imageY = 0;
 		}
 
-		that.MoveOneStep = function() {
+		that.MoveOneStep = function() {			
 			_TickClean();
 			_TickNeeds();
 			if (_AI)
@@ -178,8 +179,16 @@ TG.Engines.Generate = (function(that) {
 			_position.x = _position.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			_position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			
+			_posHistory[TG.Engines.Game.CurrentHistoryLocation] = {x: _position.x || 0, y: _position.y || 0};
+			
 			return that;
 		};
+		
+		that.SetPositionAt = function(historyLocation) {
+			_position.x = _posHistory[historyLocation].x;
+			_position.y = _posHistory[historyLocation].y;
+		}
+		
 		var _TickClean = function() {
 			state.Core.attackCooldown = state.Core.attackCooldown || 0;
 
