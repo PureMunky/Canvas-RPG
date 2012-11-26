@@ -1,18 +1,10 @@
 ﻿TG.Engines.Render = (function(that) {
-    $(function () {
-        TG.Engines.Render.FillScreen();
-        $(window).resize(function () {
-            TG.Engines.Render.FillScreen();
-        });
-
-        TG.Engines.Render.ctx = document.getElementById('playArea').getContext('2d');
-        TG.Engines.Render.drawCanvas();
-    });
-
     var PanLocation = {
         x: 0,
         y: 0
     }
+	
+	that.Context = {};
 	
 	that.MovePanLocation = function (inPosition) {
 	    PanLocation.x = PanLocation.x + inPosition.x;
@@ -35,9 +27,9 @@
     that.WriteOutput = function (inOutput, x, y) {
     	x = x || 50;
     	y = y || 30;
-        TG.Engines.Render.ctx.font = "15px Times New Roman";
-        TG.Engines.Render.ctx.fillStyle = "Black";
-        TG.Engines.Render.ctx.fillText(inOutput, x, y);
+        that.Context.font = "15px Times New Roman";
+        that.Context.fillStyle = "Black";
+        that.Context.fillText(inOutput, x, y);
     };
 
     that.Pan = function (vPixels, hPixels) {
@@ -81,7 +73,7 @@
             		    ) {
             		    
             		    viewAbleItemsCount++;
-        	           	TG.Engines.Render.ctx.drawImage(r.image,
+        	           	that.Context.drawImage(r.image,
         	           		r.imageX,
         	           		r.imageY,
         	           		r.width,
@@ -277,3 +269,13 @@ window.requestAnimationFrame = (function () {
             window.setTimeout(callback, 1000 / 60);
         };
 })();
+
+$(function () {
+    TG.Engines.Render.FillScreen();
+    $(window).resize(function () {
+        TG.Engines.Render.FillScreen();
+    });
+
+    TG.Engines.Render.Context = document.getElementById('playArea').getContext('2d');
+    TG.Engines.Render.drawCanvas();
+});
