@@ -1,8 +1,13 @@
 ﻿TG.Engines.Debug = (function(that) {
     var _log = new Array();
     
+    that.debugString = '';
     that.WriteOutput = function (inOutput) {
-        TG.Engines.Render.WriteOutput(inOutput);
+    	if(inOutput) {
+	    	that.debugString = inOutput;
+	    }
+	    
+        TG.Engines.Render.WriteOutput(that.debugString);
     };
     
     that.Log = function (inOutput) {

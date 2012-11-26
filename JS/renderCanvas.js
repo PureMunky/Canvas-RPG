@@ -96,7 +96,7 @@
             	}
             }
             
-            TG.Engines.Debug.WriteOutput(viewAbleItemsCount);
+            TG.Engines.Debug.WriteOutput();
         }
 
     };

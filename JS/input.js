@@ -136,7 +136,7 @@
 				// TODO: Only fire attack once per button push.
 				TG.Engines.Game.Player().Attack();
 	    	} else {
-	    		TG.Engines.Debug.WriteOutput('no gamepad');
+	    		//TG.Engines.Debug.WriteOutput('no gamepad');
 	    	}
     	} catch (e) {
 
