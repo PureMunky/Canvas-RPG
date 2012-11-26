@@ -19,7 +19,7 @@
         return rtnInt;
     }
 
-    this.SetMoving = function (move) {
+    that.SetMoving = function (move) {
         if (move.vertical === 0) moving.vertical = 0;
         if (move.horizontal === 0) moving.horizontal = 0;
 
@@ -27,11 +27,11 @@
         moving.horizontal = move.horizontal ? move.horizontal : moving.horizontal;
     };
 
-    this.SetRun = function (run) {
+    that.SetRun = function (run) {
         moving.running = run;
     };
 
-    this.MoveOneStep = function () {
+    that.MoveOneStep = function () {
         var vPan, hPan, vMove, hMove;
 
         hPan = 0;

@@ -1,14 +1,13 @@
 ﻿var TG = {};
 TG.Engines = {};
-//TODO: Set up core.js to write the includes to the page so default.htm only has to include core.js.
-TG.Engines.GlobalVars = {};
-TG.Engines.Input = {};
-TG.Engines.Action = {};
-TG.Engines.Debug = {};
-TG.Engines.Render = {};
-TG.Engines.Animation = {};
-TG.Engines.AI = {};
-TG.Engines.Generate = {};
-TG.Engines.Relationships = {};
-TG.Engines.Game = {};
 
+document.write('<script src="JS/constants.js" type="text/javascript"></script>');
+document.write('<script src="JS/input.js" type="text/javascript"></script>');
+document.write('<script src="JS/movement.js" type="text/javascript"></script>');
+document.write('<script src="JS/renderCanvas.js" type="text/javascript"></script>');
+document.write('<script src="JS/AI.js" type="text/javascript"></script>');
+document.write('<script src="JS/debug.js" type="text/javascript"></script>');
+document.write('<script src="JS/constants.js" type="text/javascript"></script>');
+document.write('<script src="JS/Generator.js" type="text/javascript"></script>');
+document.write('<script src="JS/Relationships.js" type="text/javascript"></script>');
+document.write('<script src="JS/GameCore.js" type="text/javascript"></script>');
