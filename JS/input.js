@@ -1,4 +1,4 @@
-﻿function InputV1() {
+﻿TG.Engines.Input = (function(that) {
     $(function () {
         $(document).keydown(function (event) {
             if (!keyboardEntry) {
@@ -158,5 +158,5 @@
     // Start the gamepad Polling
     gamepadTick();
     
-    return this;
-};
+    return that	;
+})(TG.Engines.Input || {});

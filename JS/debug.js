@@ -1,16 +1,16 @@
-﻿function DebugFull() {
+﻿TG.Engines.Debug = (function(that) {
     var _log = new Array();
     
-    this.WriteOutput = function (inOutput) {
+    that.WriteOutput = function (inOutput) {
         TG.Engines.Render.WriteOutput(inOutput);
     };
     
-    this.Log = function (inOutput) {
+    that.Log = function (inOutput) {
     	_log.push(inOutput);
     };
 	
-	this.getLog = function () {
+	that.getLog = function () {
 		return _log;
 	}
-    return this;
-};
+    return that;
+})(TG.Engines.Debug || {});

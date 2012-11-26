@@ -1,4 +1,4 @@
-var AI1 = (function(){
+TG.Engines.AI = (function(that){
 	var _still = function () {
 		return function (that) {
 			that.setMoving({horizontal: 0, vertical: 0});
@@ -190,27 +190,13 @@ var AI1 = (function(){
 		}	
 	};
 	
-	return {
-		still: function() {
-			return _still();
-		},
-		idle: function() {
-			return _idle();
-		},
-		wander: function(distance) {
-			return _wander(distance);
-		},
-		pace: function(distance, direction) {
-			return _pace(distance, direction);
-		},
-		toward: function(position) {
-			return _toward(position);
-		},
-		hostile: function(npc) {
-			return _hostile(npc);
-		},
-		normal: function() {
-			return _normal();
-		}
-	};
-})();
+	that.still = function () { return _still(); };
+	that.idle = function () { return _idle(); };
+	that.wander = function (distance) { return _wander(distance); };
+	that.pace = function (distance, direction) { return _pace(distance, direction); };
+	that.toward = function (position) { return _toward(position); };
+	that.hostile = function (npc) { return _hostile(npc); };
+	that.normal = function () { return _normal(); };
+	
+	return that;
+})(TG.Engines.AI || {});

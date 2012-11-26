@@ -1,4 +1,4 @@
-var Generator = (function() {
+TG.Engines.Generate = (function(that) {
 	function oPosition(inX, inY) {
 		this.x = inX;
 		this.y = inY;
@@ -570,7 +570,7 @@ var Generator = (function() {
 		return newItem;
 	}
 
-	return {
+	that = {
 		Player : function(inName, inSex, inPosition) {
 			return _Player(inName, inSex, inPosition);
 		},
@@ -597,4 +597,6 @@ var Generator = (function() {
 			return _Water(inPosition);
 		}
 	};
-})();
+	
+	return that;
+})(TG.Engines.Generate || {});

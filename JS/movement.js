@@ -1,4 +1,4 @@
-﻿function MoveV1() {
+﻿TG.Engines.Action = (function(that) {
     var moving = {
         vertical: 0,
         horizontal: 0,
@@ -99,5 +99,5 @@
         TG.Engines.Render.Move(vMove * getStepPixels(), hMove * getStepPixels());
     };
 
-    return this;
-};
+    return that;
+})(TG.Engines.Action || {});

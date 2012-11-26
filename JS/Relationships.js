@@ -1,6 +1,5 @@
-var Relationships = (function () {
-	return {
-		Mate: function(o1, o2) {
+TG.Engines.Relationships = (function (that) {
+	that.Mate = function(o1, o2) {
 			var m = o1.sex.title == 'male' ? o1 : o2;
 			var f = o1.sex.title == 'male' ? o2 : o1;
 			
@@ -11,6 +10,7 @@ var Relationships = (function () {
 			} else {
 				return false;
 			}
-		}
-	}
-})();
+		};
+		
+	return that;
+})(TG.Engines.Relationships || {});

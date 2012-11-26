@@ -1,9 +1,8 @@
-function GameCore(){
+TG.Engines.Game = (function(that){
 	$(function () {
         //TG.Engines.Render.displayLogin();
         TG.Engines.GlobalVars._STEPTIMER = setInterval(TG.Engines.Game.Tick, 16);
     });
-    var that = this;
     
 	that.Tick = function () {
 		RecordHistory();
@@ -71,8 +70,7 @@ function GameCore(){
 			var shortestDistance = 1000000;
 			
 			for(var i = 0; i < GameObjects.length; i++) {
-				var thisDistance = Distance.BetweenforCompare(o1, GameObjects[i]);
-				//alert(o1.title + ' - ' + propertyFilter + ' ' + o1.getProperties(propertyFilter));
+				var thisDistance = that.Distance.BetweenforCompare(o1, GameObjects[i]);
 				if(o1 != GameObjects[i] && GameObjects[i].getProperties(propertyFilter) && thisDistance < shortestDistance) {
 					if(action) action(GameObjects[i]);
 					shortestDistance = thisDistance;
@@ -86,7 +84,7 @@ function GameCore(){
 			var rtnArray = new Array();
 			
 			for(var i = 0; i < GameObjects.length; i++) {
-				var thisDistance = Distance.Between(o1, GameObjects[i]);
+				var thisDistance = that.Distance.Between(o1, GameObjects[i]);
 				if(thisDistance < distance && o1 != GameObjects[i]) {
 					if(action) action(GameObjects[i]);
 					rtnArray.push(GameObjects[i]);
@@ -120,4 +118,4 @@ function GameCore(){
 	}
 	
 	return that;
-}
+})(TG.Engines.Game || {});

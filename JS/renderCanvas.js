@@ -1,4 +1,4 @@
-﻿function RenderCanvasV1() {
+﻿TG.Engines.Render = (function(that) {
     $(function () {
         TG.Engines.Render.FillScreen();
         $(window).resize(function () {
@@ -14,33 +14,33 @@
         y: 0
     }
 	
-	this.MovePanLocation = function (inPosition) {
+	that.MovePanLocation = function (inPosition) {
 	    PanLocation.x = PanLocation.x + inPosition.x;
 	    PanLocation.y = PanLocation.y + inPosition.y;
 	}
 	
-    this.FillScreen = function () {
+    that.FillScreen = function () {
         $('#playArea').width(1);
         $('#playArea').height(1);
-        SetPlayAreaSize($(document).width(), $(document).height());
+        that.SetPlayAreaSize($(document).width(), $(document).height());
     };
 
-    this.SetPlayAreaSize = function (width, height) {
+    that.SetPlayAreaSize = function (width, height) {
         $('#playArea').width(width);
         $('#playArea').height(height);
         document.getElementById('playArea').setAttribute('width', width + 'px');
         document.getElementById('playArea').setAttribute('height', height + 'px');
     };
 
-    this.WriteOutput = function (inOutput, x, y) {
+    that.WriteOutput = function (inOutput, x, y) {
     	x = x || 50;
     	y = y || 30;
-        ctx.font = "15px Times New Roman";
-        ctx.fillStyle = "Black";
-        ctx.fillText(inOutput, x, y);
+        TG.Engines.Render.ctx.font = "15px Times New Roman";
+        TG.Engines.Render.ctx.fillStyle = "Black";
+        TG.Engines.Render.ctx.fillText(inOutput, x, y);
     };
 
-    this.Pan = function (vPixels, hPixels) {
+    that.Pan = function (vPixels, hPixels) {
     	// TODO: Setup panning
         var p = true;
     };
@@ -49,8 +49,8 @@
         document.getElementById('playArea').width = document.getElementById('playArea').width;
     }
 
-    this.drawCanvas = function () {
-        requestAnimationFrame(drawCanvas);
+    that.drawCanvas = function () {
+        requestAnimationFrame(that.drawCanvas);
         clearCanvas();
         
         var p = TG.Engines.Game.Player().getPosition();
@@ -81,7 +81,7 @@
             		    ) {
             		    
             		    viewAbleItemsCount++;
-        	           	ctx.drawImage(r.image,
+        	           	TG.Engines.Render.ctx.drawImage(r.image,
         	           		r.imageX,
         	           		r.imageY,
         	           		r.width,
@@ -93,7 +93,7 @@
         	           	);
         	           	
         	           	if(TG.Engines.Game.CurrentHistory()[i].title) {
-        	           		WriteOutput(TG.Engines.Game.CurrentHistory()[i].toString(),
+        	           		that.WriteOutput(TG.Engines.Game.CurrentHistory()[i].toString(),
         	           			r.x + r.width - PanLocation.x,
         	           			r.y + r.height - PanLocation.y
         	           		);
@@ -109,13 +109,12 @@
 
     };
 
-    return this;
-};
+    return that;
+})(TG.Engines.Render || {});
 
-var Animation = (function () {
+TG.Engines.Animation = (function (that) {
 	function oRender(inImage, inWidth, inHeight, inImageX, inImageY) {
-	    var that = this;
-	    
+		var that = this;
 		that.image = 	inImage || new Image();
 		that.width = 	inWidth || 16;
 		that.height = 	inHeight || 16;
@@ -257,15 +256,16 @@ var Animation = (function () {
 		return _render;
 	}
 	
-	return {
-		Player: function (defaultAnimation) {
-			return _Character(TG.Engines.GlobalVars._PlayerImage, defaultAnimation);
-		},
-		Plant: function (defaultAnimation) {
-			return _Plant(TG.Engines.GlobalVars._PlantImage, defaultAnimation);
-		}
+	that.Player = function (defaultAnimation) {
+		return _Character(TG.Engines.GlobalVars._PlayerImage, defaultAnimation);
 	};
-})();
+	
+	that.Plant = function (defaultAnimation) {
+		return _Plant(TG.Engines.GlobalVars._PlantImage, defaultAnimation);
+	};
+	
+	return that;
+})(TG.Engines.Animation || {});
 
 window.requestAnimationFrame = (function () {
     return window.requestAnimationFrame ||
