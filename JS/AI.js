@@ -140,7 +140,7 @@ TG.Engines.AI = (function(that){
 		}
 	};
 	
-	var _seek = function (propertyFilter) {
+	var _seek = function (propertyFilter, propertyEquals) {
 		// TODO: Seek multiple property types, add priority.
 		// TODO: Ask "friends" if they're willing to give an item.
 		return function (that, state) {
@@ -153,7 +153,7 @@ TG.Engines.AI = (function(that){
 				}
 			}
 			
-			var o = TG.Engines.Game.Distance.Closest(that, propertyFilter);
+			var o = TG.Engines.Game.Distance.Closest(that, propertyFilter, function () { }, propertyEquals);
 			if (!found && o.title != 'none') {
 				if(!that.Can.See(o)) {
 					_toward(o.getPosition(), .4)(that, state);
@@ -176,10 +176,10 @@ TG.Engines.AI = (function(that){
 			
 			if (that.Hungry()) {
 				_seek('food')(that, state);
-			}
-			
-			if (that.Thirsty()) {
+			} else if (that.Thirsty()) {
 				_seek('water')(that, state);
+			} else {
+				_seek('sexA', that.getProperties('sexB'))(that, state);
 			}
 			
 			/*

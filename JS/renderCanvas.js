@@ -90,6 +90,13 @@
         	           			r.y + r.height - PanLocation.y
         	           		);
         	           	}
+        	           	
+        	           	if(TG.Engines.Game.CurrentHistory()[i].speak) {
+        	           		that.WriteOutput(TG.Engines.Game.CurrentHistory()[i].speak,
+        	           			r.x - PanLocation.x,
+        	           			r.y - PanLocation.y
+        	           		);
+        	           }
         	        }
             	}catch(e) {
     				TG.Engines.Debug.WriteOutput(e);        		

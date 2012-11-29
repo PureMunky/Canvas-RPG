@@ -7,6 +7,9 @@ TG.Engines.Relationships = (function (that) {
 				// TODO: Calculations to determine if female gets pregnant
 				f.sex.state.partnerDNA = m.DNA;
 				f.sex.state.pregnant = true;
+				
+				var s = m.title > f.title ? TG.Engines.Generate.Sex.Male() : TG.Engines.Generate.Sex.Female();
+				
 			} else {
 				return false;
 			}

@@ -35,11 +35,15 @@ TG.Engines.Generate = (function(that) {
 	function oNPC(inTitle, inSex, inPosition) {
 		var that = this;
 		var properties = {
-			food: false
+			food: false,
+			sexA: inSex.title == 'male' ? 'female' : 'male',
+			sexB: inSex.title == 'male' ? 'male' : 'female'
 		};
-		that.getProperties = function (getName) {
+		that.getProperties = function (getName, getEquals) {
+			getEquals = getEquals || true;
+			
 			if(getName) {
-				return properties[getName];
+				return (properties[getName] == getEquals);
 			} else {
 				return properties;
 			}
@@ -141,7 +145,7 @@ TG.Engines.Generate = (function(that) {
 			var rtnRender = _render.CurrentFrame();
 			rtnRender.x = _position.x;
 			rtnRender.y = _position.y;
-
+			
 			return rtnRender;
 		}
 
@@ -214,7 +218,7 @@ TG.Engines.Generate = (function(that) {
 		that.setAI = function(newAI) {
 			_AI = newAI;
 		};
-
+		
 		var stats = {
 			strength : 10,
 			speed : 10,
@@ -304,6 +308,8 @@ TG.Engines.Generate = (function(that) {
 			},
 			Receive: function (performer) {
 				// TODO: Open Dialog
+				that.speak = 'Hello ' + performer.title + ' (from ' + that.title + ')';
+				TG.Engines.Relationships.Mate(that, performer);
 			}
 		}
 		that.Defence = {
@@ -509,6 +515,7 @@ TG.Engines.Generate = (function(that) {
 	    Weapons: {
 	        Fist:  function () { return new oItem('Fist', 5, 10, 10);},
 	        Sword: function () { return new oItem('Sword', 30, 20, 10);},
+	        BigSword: function () { return new oItem('Sword', 30, 50, 10);},
 	        Bow:   function () { return new oItem('Bow', 20, 200, 50, 'ranged');}
 	    },
 	    Consumables: {
@@ -521,7 +528,7 @@ TG.Engines.Generate = (function(that) {
 	function _Player(inName, inSex, inPosition) {
 		var newPlayer = new oNPC(inName, inSex, inPosition);
 
-		newPlayer.Inventory.Equip(Items.Weapons.Bow());
+		newPlayer.Inventory.Equip(Items.Weapons.BigSword());
 
 		return newPlayer;
 	}

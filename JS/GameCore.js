@@ -73,6 +73,10 @@ TG.Engines.Game = (function(that){
         //that.History.push(that.GameObjects);
     }
     
+    that.AddObject = function (o) {
+    	GameObjects.push(o);
+    }
+    
 	that.Distance = {
 		Between: function(o1, o2) {
 			o2 = o2 || GameObjects[0];
@@ -96,13 +100,13 @@ TG.Engines.Game = (function(that){
             
             return (a * a) + (b * b);
 		},
-		Closest: function (o1, propertyFilter, action) {
+		Closest: function (o1, propertyFilter, action, propertyEquals) {
 			var rtnObject = {title: 'none'};
 			var shortestDistance = 1000000;
 			
 			for(var i = 0; i < GameObjects.length; i++) {
 				var thisDistance = that.Distance.BetweenforCompare(o1, GameObjects[i]);
-				if(o1 != GameObjects[i] && GameObjects[i].getProperties(propertyFilter) && thisDistance < shortestDistance) {
+				if(o1 != GameObjects[i] && GameObjects[i].getProperties(propertyFilter, propertyEquals) && thisDistance < shortestDistance) {
 					if(action) action(GameObjects[i]);
 					shortestDistance = thisDistance;
 					rtnObject = GameObjects[i];
@@ -133,7 +137,7 @@ TG.Engines.Game = (function(that){
 	GameObjects[3] = TG.Engines.Generate.NPC('C', TG.Engines.Generate.Sex.Female(), {x: 420, y: 100});
 	GameObjects[4] = TG.Engines.Generate.NPC('D', TG.Engines.Generate.Sex.Female(), {x: 400, y: 120});
 	
-	TG.Engines.Relationships.Mate(GameObjects[2], GameObjects[3]); //test mating
+	//TG.Engines.Relationships.Mate(GameObjects[2], GameObjects[3]); //test mating
 	
 	for(var i = 0; i < GameObjects.length; i++) {
 		GameObjects[i].Inventory.Equip(TG.Engines.Generate.Item());
