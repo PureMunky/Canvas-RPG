@@ -170,16 +170,29 @@ TG.Engines.AI = (function(that){
 		}
 	}
 	
+	var _sleep = function () {
+		// TODO: Fall asleep : set state.consious = 'Sleeping';
+		_idle()(that, state);
+	}
+	
 	var _normal = function () {
 		return function (that, state) {
 			_idle()(that, state);
 			
 			if (that.Hungry()) {
+				TG.Engines.Debug.Log(that.title + ' seeks food.');
 				_seek('food')(that, state);
 			} else if (that.Thirsty()) {
+				TG.Engines.Debug.Log(that.title + ' seeks water.');
 				_seek('water')(that, state);
-			} else {
+			} else if (that.Is.Horny()){
+				TG.Engines.Debug.Log(that.title + ' seeks sex.');
 				_seek('sexA', that.getProperties('sexB'))(that, state);
+			} else if (that.Sleepy()) {
+				TG.Engines.Debug.Log(that.title + ' seeks sleep.');
+				_sleep()(that, state);
+			} else {
+				
 			}
 			
 			/*

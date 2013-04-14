@@ -101,9 +101,11 @@ TG.Engines.Generate = (function(that) {
 			Needs: {
 				Food: 430,
 				Water: 450,
-				Sleep: 400
+				Sleep: 400,
+				Sex: 400
 			},
-			Memory: new Array()
+			Memory: new Array(),
+			consious: 'awake'
 		};
 		that.Sleepy = function () {
 			return (state.Needs.Sleep <= 400);
@@ -120,6 +122,12 @@ TG.Engines.Generate = (function(that) {
 		that.Drink = function (amount) {
 			state.Needs.Water += amount;
 		}
+		that.Is = {
+			Horny: function () {
+				return (state.Needs.Sex <= 200);
+			}
+			
+		};
 		
 		var inv = new Array();
 		var equipment = new Array();
@@ -202,6 +210,7 @@ TG.Engines.Generate = (function(that) {
 			state.Needs.Food -= (state.Needs.Food > 0.0) ? .1 : 0;
 			state.Needs.Water -= (state.Needs.Water > 0.0) ? .1 : 0;
 			state.Needs.Sleep -= (state.Needs.Sleep > 0.0) ? .1 : 0;
+			state.Needs.Sex -= (state.Needs.Sex > 0.0) ? .1 : 0;
 			
 			if(state.Needs.Food <= 100) that.Combat.ReduceHP(.1, 'Starvation');
 			if(state.Needs.Water <= 100) that.Combat.ReduceHP(.1, 'Dehydration');
