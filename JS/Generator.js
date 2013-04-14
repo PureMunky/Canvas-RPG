@@ -131,7 +131,7 @@ TG.Engines.Generate = (function(that) {
 		}
 
 		that.toString = function() {
-			return that.title + ' HP: ' + state.Combat.HP + '/' + state.Combat.MaxHP + that.debugInfo;
+			return that.title + ' HP: ' + Math.round(state.Combat.HP) + '/' + Math.round(state.Combat.MaxHP) + that.debugInfo;
 		}
 		
 		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
@@ -203,8 +203,8 @@ TG.Engines.Generate = (function(that) {
 			state.Needs.Water -= (state.Needs.Water > 0.0) ? .1 : 0;
 			state.Needs.Sleep -= (state.Needs.Sleep > 0.0) ? .1 : 0;
 			
-			if(state.Needs.Food <= 100) that.Combat.ReduceHP(.1);
-			if(state.Needs.Water <= 100) that.Combat.ReduceHP(.1);
+			if(state.Needs.Food <= 100) that.Combat.ReduceHP(.1, 'Starvation');
+			if(state.Needs.Water <= 100) that.Combat.ReduceHP(.1, 'Dehydration');
 		}
 
 		that.debugInfo = '';
@@ -289,8 +289,9 @@ TG.Engines.Generate = (function(that) {
 			    that.Combat.ReduceHP(dmg);
 				
 			},
-			ReduceHP: function(amount) {
+			ReduceHP: function(amount, source) {
 				if (amount >= state.Combat.HP) {
+					that.Interact.Say(source);
 			        state.Combat.HP = 0;
 			        that.setAI(TG.Engines.AI.still());
 			        _render.setAnimation('dead');
@@ -329,11 +330,11 @@ TG.Engines.Generate = (function(that) {
 	}
 
 	function oPlant(inTitle, inPosition) {
-		var that = this;
+		var that = {};
 		
 		that.title = inTitle;
 		that.toString = function () {
-			return that.title + ' ' + amount;
+			return that.title + ' ' + Math.round(amount);
 		};
 		
 		var amount = 3000;
@@ -389,6 +390,7 @@ TG.Engines.Generate = (function(that) {
 		that.Interact = {
 			Receive: function (performer) {
 				if(TG.Engines.Game.Distance.Between(performer, that) < 30) {
+					performer.Interact.Say(Comm.eat);
 					amount -= 800;
 					if (amount <= 0) {
 						amount = 0;
@@ -409,7 +411,7 @@ TG.Engines.Generate = (function(that) {
 		
 		that.title = inTitle;
 		that.toString = function () {
-			return that.title + ' ' + amount;
+			return that.title + ' ' + Math.round(amount);
 		};
 		
 		var amount = 5000;
@@ -437,6 +439,9 @@ TG.Engines.Generate = (function(that) {
 		
 		that.MoveOneStep = function () {
 			_render.Tick();
+			amount += .001;
+			
+			properties['water'] = true;
 		}
 		
 		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
@@ -460,6 +465,7 @@ TG.Engines.Generate = (function(that) {
 		that.Interact = {
 			Receive: function (performer) {
 				if(TG.Engines.Game.Distance.Between(performer, that) < 30) {
+					performer.Interact.Say(Comm.drink);
 					amount -= 700;
 					if (amount <= 0) {
 						amount = 0;

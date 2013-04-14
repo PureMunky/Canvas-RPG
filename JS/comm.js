@@ -41,5 +41,11 @@ var Comm = {
 					self.Say('hmmm...');
 			}
 		}
+	},
+	drink: {
+		say: 'Slurp'
+	},
+	eat: {
+		say: 'Yum'
 	}
 };
