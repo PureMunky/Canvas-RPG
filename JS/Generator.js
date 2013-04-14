@@ -303,13 +303,22 @@ TG.Engines.Generate = (function(that) {
 		that.Interact = {
 			Perform: function () {
 				var hitObjects = TG.Engines.Game.Distance.Within(that, 30, function(acted) {
-					acted.Interact.Receive(that);
+					acted.Interact.Receive(that, that.Interact.Say(Comm.greetingpositive));
 				});
 			},
-			Receive: function (performer) {
+			Receive: function (performer, conversation) {
 				// TODO: Open Dialog
-				that.speak = 'Hello ' + performer.title + ' (from ' + that.title + ')';
+				// that.Interact.Say('Hello ' + performer.title + ' (from ' + that.title + ')');
+				that.Interact.Say(conversation);
 				TG.Engines.Relationships.Mate(that, performer);
+			},
+			Say: function (saying) {
+				if(typeof saying == 'string') {
+					that.speak = saying;
+				} else if(typeof saying == 'object') {
+					that.speak = saying.say;
+				}
+				return saying;
 			}
 		}
 		that.Defence = {

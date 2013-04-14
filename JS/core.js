@@ -12,3 +12,4 @@ document.write('<script src="JS/Generator.js" type="text/javascript"></script>')
 document.write('<script src="JS/Relationships.js" type="text/javascript"></script>');
 document.write('<script src="JS/Chrono.js" type="text/javascript"></script>');
 document.write('<script src="JS/GameCore.js" type="text/javascript"></script>');
+document.write('<script src="JS/comm.js" type="text/javascript"></script>');
