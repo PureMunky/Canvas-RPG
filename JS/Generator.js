@@ -207,11 +207,16 @@ TG.Engines.Generate = (function(that) {
 			if (state.Core.attackCooldown > 0) state.Core.attackCooldown--;
 		}
 		var _TickNeeds = function() {
-			state.Needs.Food -= (state.Needs.Food > 0.0) ? .1 : 0;
-			state.Needs.Water -= (state.Needs.Water > 0.0) ? .1 : 0;
-			state.Needs.Sleep -= (state.Needs.Sleep > 0.0) ? .1 : 0;
-			state.Needs.Sex -= (state.Needs.Sex > 0.0) ? .1 : 0;
-			
+			if(state.consious == 'sleeping') {
+				state.Needs.Food -= (state.Needs.Food > 0.0) ? .01 : 0;
+				state.Needs.Water -= (state.Needs.Water > 0.0) ? .01 : 0;
+				state.Needs.Sleep += (state.Needs.Sleep < 1000.0) ? 1 : 0;
+			} else {
+				state.Needs.Food -= (state.Needs.Food > 0.0) ? .1 : 0;
+				state.Needs.Water -= (state.Needs.Water > 0.0) ? .1 : 0;
+				state.Needs.Sleep -= (state.Needs.Sleep > 0.0) ? .1 : 0;
+				state.Needs.Sex -= (state.Needs.Sex > 0.0) ? .1 : 0;
+			}
 			if(state.Needs.Food <= 100) that.Combat.ReduceHP(.1, 'Starvation');
 			if(state.Needs.Water <= 100) that.Combat.ReduceHP(.1, 'Dehydration');
 		}
