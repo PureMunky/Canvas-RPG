@@ -95,9 +95,10 @@ TG.Engines.Generate = (function(that) {
 			Core : {},
 			Environment : {},
 			Combat : {
-				HP : 1000,
-				MaxHP : 1000,
-				Energy : 1000
+				HP : 1000.0,
+				MaxHP : 1000.0,
+				Energy : 100.0,
+				MaxEnergy : 100.0
 			},
 			Needs: {
 				Food: 150,
@@ -219,7 +220,7 @@ TG.Engines.Generate = (function(that) {
 				state.Needs.Sex -= (state.Needs.Sex > 0.0) ? .1 : 0;
 			}
 			
-			if (state.Combat.Energy < 1000.0) {
+			if (state.Combat.Energy < state.Combat.MaxEnergy) {
 				var baseEnergy = .1;
 				
 				if(state.Needs.Food > 700) baseEnergy += .1;
@@ -228,7 +229,7 @@ TG.Engines.Generate = (function(that) {
 				
 				state.Combat.Energy += baseEnergy;
 				
-				if(state.Combat.Energy > 1000.0) state.Combat.Energy = 1000.0;
+				if(state.Combat.Energy > state.Combat.MaxEnergy) state.Combat.Energy = state.Combat.MaxEnergy;
 			}
 			
 			
@@ -327,12 +328,9 @@ TG.Engines.Generate = (function(that) {
 			        that.setAI(TG.Engines.AI.still());
 			        _render.setAnimation('dead');
 			    } else {
-			    	if(state.Combat.Energy >= (amount))
-			    	{
-			    		state.Combat.Energy -= (amount);
-			    	} else {
-				    	state.Combat.HP -= amount;	
-			    	}    
+			    	var enPerc = (state.Combat.Energy / state.Combat.MaxEnergy);
+		    		state.Combat.Energy -= (amount * enPerc);
+			    	state.Combat.HP -= (amount * (1 - enPerc));
 			    }
 			}
 		};
