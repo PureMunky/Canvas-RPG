@@ -172,8 +172,7 @@ TG.Engines.AI = (function(that){
 	
 	var _sleep = function () {
 		return function (that, state) {
-			if(state.consious != 'sleeping') alert(that.title + ' fell asleep');
-			
+			that.Interact.Say('Zzzz...');
 			state.consious = 'sleeping'; // TODO: Fall asleep : set state.consious = 'Sleeping';
 			_idle()(that, state);
 		}
@@ -186,14 +185,17 @@ TG.Engines.AI = (function(that){
 			if (that.Hungry()) {
 				TG.Engines.Debug.Log(that.title + ' seeks food.');
 				state.consious = 'awake';
+				that.Interact.Say('I\'m hungry...');
 				_seek('food')(that, state);
 			} else if (that.Thirsty()) {
 				TG.Engines.Debug.Log(that.title + ' seeks water.');
 				state.consious = 'awake';
+				that.Interact.Say('I\'m thirsty...');
 				_seek('water')(that, state);
 			} else if (that.Is.Horny()){
 				TG.Engines.Debug.Log(that.title + ' seeks sex.');
 				state.consious = 'awake';
+				that.Interact.Say('Brown chicken brown cow..');
 				_seek('sexA', that.getProperties('sexB'))(that, state);
 			} else if (that.Sleepy()) {
 				TG.Engines.Debug.Log(that.title + ' seeks sleep.');
@@ -201,6 +203,7 @@ TG.Engines.AI = (function(that){
 			} else {
 				if(state.consious == 'sleeping' && state.Needs.Sleep > 900) {
 					state.consious = 'awake';
+					that.Interact.Say('');
 				}
 			}
 		}	
