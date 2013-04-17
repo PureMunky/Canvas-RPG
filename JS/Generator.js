@@ -96,13 +96,14 @@ TG.Engines.Generate = (function(that) {
 			Environment : {},
 			Combat : {
 				HP : 1000,
-				MaxHP : 1000
+				MaxHP : 1000,
+				Energy : 1000
 			},
 			Needs: {
-				Food: 430,
-				Water: 450,
-				Sleep: 400,
-				Sex: 400
+				Food: 150,
+				Water: 150,
+				Sleep: 150,
+				Sex: 1000
 			},
 			Memory: new Array(),
 			consious: 'awake'
@@ -139,7 +140,7 @@ TG.Engines.Generate = (function(that) {
 		}
 
 		that.toString = function() {
-			return that.title + ' HP: ' + Math.round(state.Combat.HP) + '/' + Math.round(state.Combat.MaxHP) + that.debugInfo;
+			return that.title + ' HP: ' + Math.round(state.Combat.HP) + '/' + Math.round(state.Combat.MaxHP) + ' En: ' + Math.round(state.Combat.Energy) + that.debugInfo;
 		}
 		
 		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
@@ -217,6 +218,20 @@ TG.Engines.Generate = (function(that) {
 				state.Needs.Sleep -= (state.Needs.Sleep > 0.0) ? .1 : 0;
 				state.Needs.Sex -= (state.Needs.Sex > 0.0) ? .1 : 0;
 			}
+			
+			if (state.Combat.Energy < 1000.0) {
+				var baseEnergy = .1;
+				
+				if(state.Needs.Food > 700) baseEnergy += .1;
+				if(state.Needs.Water > 700) baseEnergy += .1;
+				if(state.Needs.Sleep > 700) baseEnergy += .1;
+				
+				state.Combat.Energy += baseEnergy;
+				
+				if(state.Combat.Energy > 1000.0) state.Combat.Energy = 1000.0;
+			}
+			
+			
 			if(state.Needs.Food <= 100) that.Combat.ReduceHP(.1, 'Starvation');
 			if(state.Needs.Water <= 100) that.Combat.ReduceHP(.1, 'Dehydration');
 		}
@@ -304,13 +319,20 @@ TG.Engines.Generate = (function(that) {
 				
 			},
 			ReduceHP: function(amount, source) {
-				if (amount >= state.Combat.HP) {
+				if (state.Combat.HP == 0) {
+					// legitimately blank to prevent HP reduction logic from firing if there is no HP for it to effect
+				} else if (amount >= state.Combat.HP) {
 					that.Interact.Say(source);
 			        state.Combat.HP = 0;
 			        that.setAI(TG.Engines.AI.still());
 			        _render.setAnimation('dead');
 			    } else {
-			     state.Combat.HP -= amount;    
+			    	if(state.Combat.Energy >= (amount))
+			    	{
+			    		state.Combat.Energy -= (amount);
+			    	} else {
+				    	state.Combat.HP -= amount;	
+			    	}    
 			    }
 			}
 		};
@@ -379,7 +401,7 @@ TG.Engines.Generate = (function(that) {
 			
 			amount += .001;
 			
-			properties['food'] = true;
+			if(amount > 1) properties['food'] = true; // TODO: determine a good threshold for when a food source regains it's "food" status.
 			
 		}
 		
