@@ -573,7 +573,7 @@ TG.Engines.Generate = (function(that) {
 	    }
 	}
 
-// object defaults
+    // object defaults
 	function _Player(inName, inSex, inPosition) {
 		var newPlayer = new oNPC(inName, inSex, inPosition);
 
@@ -585,7 +585,6 @@ TG.Engines.Generate = (function(that) {
 	function _NPC(inTitle, inSex, inPosition) {
 		var newNPC = new oNPC(inTitle, inSex, inPosition);
 
-		//newNPC.setAI(TG.Engines.AI.hostile(TG.Engines.Game.Player()));
 		newNPC.setAI(TG.Engines.AI.normal());
 		newNPC.Inventory.Equip(Items.Weapons.Fist());
 
