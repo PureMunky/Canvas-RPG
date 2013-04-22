@@ -156,9 +156,5 @@ TG.Engines.Game = (function(that){
 	GameObjects[15] = TG.Engines.Generate.Plant.Corn({x: 1000, y: 400});
 	GameObjects[16] = TG.Engines.Generate.Plant.Corn({x: 1000, y: 450});
 	
-	for(var i = 0; i < 500; i++) {
-	   // GameObjects.push(TG.Engines.Generate.NPC('N' + i, TG.Engines.Generate.Sex.Male()));
-	}
-	
 	return that;
 })(TG.Engines.Game || {});
