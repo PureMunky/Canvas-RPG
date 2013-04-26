@@ -1,4 +1,5 @@
-TG.Engines.Game = (function(that){
+'use strict';
+TG.Engines.Game = (function (that) {
 	$(function () {
         //TG.Engines.Render.displayLogin();
         TG.Engines.GlobalVars._STEPTIMER = setInterval(TG.Engines.Game.Tick, 16);

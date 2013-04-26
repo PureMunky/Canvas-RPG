@@ -1,4 +1,5 @@
-TG.Engines.AI = (function(that){
+'use strict';
+TG.Engines.AI = (function (that) {
 	var _still = function () {
 		return function (that) {
 			that.setMoving({horizontal: 0, vertical: 0});

@@ -1,4 +1,5 @@
-﻿TG.Engines.Action = (function(that) {
+﻿'use strict';
+TG.Engines.Action = (function (that) {
     var moving = {
         vertical: 0,
         horizontal: 0,

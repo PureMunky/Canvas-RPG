@@ -1,4 +1,5 @@
-﻿var TG = {};
+﻿'use strict';
+var TG = {};
 TG.Engines = {};
 
 document.write('<script src="JS/constants.js" type="text/javascript"></script>');

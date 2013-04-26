@@ -1,3 +1,4 @@
+'use strict';
 function rObject(imgSrc, imgWidth, imgHeight, posX, posY) {
 	var that = this;
 	

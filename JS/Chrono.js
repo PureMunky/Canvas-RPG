@@ -1,3 +1,4 @@
+'use strict';
 TG.Engines.Chronos = (function (that) {
 	
 	var _focusTarget = {};

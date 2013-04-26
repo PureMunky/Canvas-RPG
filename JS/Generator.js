@@ -1,4 +1,5 @@
-TG.Engines.Generate = (function(that) {
+'use strict';
+TG.Engines.Generate = (function (that) {
 	function oPosition(inX, inY) {
 		this.x = inX;
 		this.y = inY;

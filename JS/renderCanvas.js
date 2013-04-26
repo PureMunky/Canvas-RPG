@@ -1,4 +1,5 @@
-﻿TG.Engines.Render = (function(that) {
+﻿'use strict';
+TG.Engines.Render = (function (that) {
     var PanLocation = {
         x: 0,
         y: 0
@@ -9,7 +10,7 @@
 	that.MovePanLocation = function (inPosition) {
 	    PanLocation.x = PanLocation.x + inPosition.x;
 	    PanLocation.y = PanLocation.y + inPosition.y;
-	}
+	};
 	
     that.FillScreen = function () {
         $('#playArea').width(1);

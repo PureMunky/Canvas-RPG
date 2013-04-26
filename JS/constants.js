@@ -1,4 +1,5 @@
-﻿//GV1
+﻿'use strict';
+//GV1
 
 TG.Engines.GlobalVars = (function(that) {
 	that._STEPPIXELS = .5;

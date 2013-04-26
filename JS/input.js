@@ -1,4 +1,5 @@
-﻿TG.Engines.Input = (function(that) {
+﻿'use strict';
+TG.Engines.Input = (function (that) {
     $(function () {
         $(document).keydown(function (event) {
             if (!keyboardEntry) {

@@ -1,4 +1,5 @@
-﻿TG.Engines.Debug = (function(that) {
+﻿'use strict';
+TG.Engines.Debug = (function (that) {
     var _log = new Array();
     
     that.debugString = '';

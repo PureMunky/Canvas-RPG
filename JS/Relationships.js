@@ -1,3 +1,4 @@
+'use strict';
 TG.Engines.Relationships = (function (that) {
 	that.Mate = function(o1, o2) {
 			var m = o1.sex.title == 'male' ? o1 : o2;
