@@ -104,12 +104,11 @@ TG.Engines.Input = (function (that) {
     
     $(function () {
     	//TODO: Set click event to be context sensitive (e.x. click on an enemy turns player hostile and attacks enemy).
-    	/*
     	document.getElementById('playArea').addEventListener('click', function(e) {
 	        var clickPos = {x: e.offsetX, y: e.offsetY};
-	        TG.Engines.Game.GameObjects[0].setAI(TG.Engines.AI.toward(clickPos));
+	        TG.Engines.Game.Player().setAI(TG.Engines.AI.toward(clickPos));
 	    }, false);
-	    */
+	    
     });
     
     function gamepadTick() {
