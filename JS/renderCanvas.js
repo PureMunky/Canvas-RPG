@@ -235,6 +235,32 @@ TG.Engines.Animation = (function (that) {
 		return _render;
 	}
 	
+	var _CharacterDemo = function (inImage, defaultAnimation) {
+		var _render = new oRender(inImage, 32, 32, 0, 0);
+		var _Walk = new oAnimation();
+		_Walk.addFrame(new oFrame(0, null, 20));
+		_Walk.addFrame(new oFrame(32, null, 20));
+		_Walk.addFrame(new oFrame(64, null, 20));
+		_Walk.addFrame(new oFrame(32, null, 20));
+		_render.addAnimation(_Walk, 'walk');
+		
+		var _Idle = new oAnimation();
+		_Idle.addFrame(new oFrame(32, 0, 100));
+		_Idle.addFrame(new oFrame(32, 0, 100));
+		_render.addAnimation(_Idle, 'idle');
+		
+		var _AttackMelee = new oAnimation(true);
+		_AttackMelee.addFrame(new oFrame(null, 64, 10));
+		_AttackMelee.addFrame(new oFrame(null, 80, 10));
+		_render.addAnimation(_AttackMelee, 'attackMelee');
+		
+		var _Dead = new oAnimation();
+		_Dead.addFrame(new oFrame(64, 0, 1000));
+		_render.addAnimation(_Dead, 'dead');
+		
+		return _render;
+	}
+	
 	var _Plant = function (inImage, defaultAnimation) {
 		var _render = new oRender(inImage, 16, 16, 0, 0);
 		var _SlowBreeze = new oAnimation();
@@ -260,6 +286,17 @@ TG.Engines.Animation = (function (that) {
 		return _Character(TG.Engines.GlobalVars._PlayerImage, defaultAnimation);
 	};
 	
+	that.Demo = function (defaultAnimation) {
+		return _CharacterDemo(TG.Engines.GlobalVars._PlayerImageDemo, defaultAnimation);
+	}
+	
+	that.NPCMale = function (defaulAnimation) {
+		return _CharacterDemo(TG.Engines.GlobalVars._NPCMale, defaulAnimation);
+	}
+	that.NPCFemale = function (defaulAnimation) {
+		return _CharacterDemo(TG.Engines.GlobalVars._NPCFemale, defaulAnimation);
+	}
+		
 	that.Plant = function (defaultAnimation) {
 		return _Plant(TG.Engines.GlobalVars._PlantImage, defaultAnimation);
 	};

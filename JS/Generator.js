@@ -151,7 +151,7 @@ TG.Engines.Generate = (function (that) {
 		}
 		var _posHistory = new Array();
 		
-		var _render = TG.Engines.Animation.Player();
+		var _render = inTitle == 'Player' ? TG.Engines.Animation.Demo() : (inSex == 'male') ? TG.Engines.Animation.NPCMale() : TG.Engines.Animation.NPCFemale();
 		that.getRender = function() {
 			var rtnRender = _render.CurrentFrame();
 			rtnRender.x = _position.x;
@@ -162,13 +162,17 @@ TG.Engines.Generate = (function (that) {
 
 		that.setFacing = function(direction) {
 			if (direction.horizontal > 0 && direction.horizontal > Math.abs(direction.vertical)) {
-			    _render.imageX = 0;
+			    // DOWN
+			    _render.imageY = 64;
 			} else if (direction.horizontal < 0 && Math.abs(direction.horizontal) > Math.abs(direction.vertical)) {
-				_render.imageX = 32;
+				// LEFT
+				_render.imageY = 32;
 			} else if (direction.vertical > 0) {
-			    _render.imageX = 16;
+				// Down
+			    _render.imageY = 0;
 			} else if (direction.vertical < 0) {
-			    _render.imageX = 48;
+				// UP
+			    _render.imageY = 96;
 			}
 		};
 		
