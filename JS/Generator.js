@@ -95,6 +95,7 @@ TG.Engines.Generate = (function (that) {
 			AI : {},
 			Core : {},
 			Environment : {},
+			TickCount: 0, 
 			Combat : {
 				HP : 1000.0,
 				MaxHP : 1000.0,
@@ -151,7 +152,9 @@ TG.Engines.Generate = (function (that) {
 		}
 		var _posHistory = new Array();
 		
-		var _render = inTitle == 'Player' ? TG.Engines.Animation.Demo() : (inSex == 'male') ? TG.Engines.Animation.NPCMale() : TG.Engines.Animation.NPCFemale();
+		var _render = (inTitle == 'Player') ? TG.Engines.Animation.Demo() : (inSex == 'male') ? TG.Engines.Animation.NPCMale() : TG.Engines.Animation.NPCFemale();
+		if(inTitle == 'Pony') _render = TG.Engines.Animation.NPCPony();
+		
 		that.getRender = function() {
 			var rtnRender = _render.CurrentFrame();
 			rtnRender.x = _position.x;
@@ -188,10 +191,15 @@ TG.Engines.Generate = (function (that) {
 		that.MoveOneStep = function() {			
 			_TickClean();
 			_TickNeeds();
-			if (_AI)
-				_AI(that, state.AI);
-
+			state.TickCount = (state.TickCount >= 50) ? 0 : state.TickCount + 1;
+			
+			if(state.TickCount == 0) {
+				if (_AI)
+					_AI(that, state.AI);
+			}
+			
 			that.setFacing(moving);
+            
             //that.incAnimationFrame(4);
            	_render.Tick();
            	
@@ -199,7 +207,6 @@ TG.Engines.Generate = (function (that) {
 			_position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			
 			_posHistory[TG.Engines.Game.CurrentHistoryLocation] = clone(_position); //{x: _position.x || 0, y: _position.y || 0};
-			
 			return that;
 		};
 		

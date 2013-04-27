@@ -6,6 +6,7 @@ TG.Engines.Input = (function (that) {
                 event.preventDefault();
 				//TODO: smooth out when pressing two opposing directions at the same time (e.x. Left and Right).
 				//TODO: add ability to click/touch where to move to (for phone/tablet).
+				TG.Engines.Game.Player().setAI();
                 if (event.keyCode == _UPKEY.keyCode) {
                     //TG.Engines.Action.SetMoving({ vertical: -1 });
                     TG.Engines.Game.Player().setMoving({ vertical: -1 });

@@ -296,7 +296,11 @@ TG.Engines.Animation = (function (that) {
 	that.NPCFemale = function (defaulAnimation) {
 		return _CharacterDemo(TG.Engines.GlobalVars._NPCFemale, defaulAnimation);
 	}
-		
+	
+	that.NPCPony = function (defaulAnimation) {
+		return _CharacterDemo(TG.Engines.GlobalVars._NPCPony, defaulAnimation);
+	}
+	
 	that.Plant = function (defaultAnimation) {
 		return _Plant(TG.Engines.GlobalVars._PlantImage, defaultAnimation);
 	};

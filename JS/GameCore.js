@@ -156,6 +156,7 @@ TG.Engines.Game = (function (that) {
 	GameObjects[14] = TG.Engines.Generate.Plant.Corn({x: 1000, y: 350});
 	GameObjects[15] = TG.Engines.Generate.Plant.Corn({x: 1000, y: 400});
 	GameObjects[16] = TG.Engines.Generate.Plant.Corn({x: 1000, y: 450});
+	GameObjects[17] = TG.Engines.Generate.NPC('Pony', TG.Engines.Generate.Sex.Female(), {x: 800, y: 100});
 	
 	return that;
 })(TG.Engines.Game || {});

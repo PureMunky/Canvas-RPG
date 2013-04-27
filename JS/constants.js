@@ -20,7 +20,10 @@ TG.Engines.GlobalVars = (function(that) {
     
     that._NPCFemale = new Image();
     that._NPCFemale.src = 'images/npc/female.png';
-    
+
+    that._NPCPony = new Image();
+    that._NPCPony.src = 'images/npc/pony_princess.png';
+        
     that._PlantImage = new Image();
     that._PlantImage.src = 'images/scenery/plant.png';
     
