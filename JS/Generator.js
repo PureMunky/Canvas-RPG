@@ -152,6 +152,7 @@ TG.Engines.Generate = (function (that) {
 		}
 		var _posHistory = new Array();
 		
+		// TODO: improve how to determine what render an npc gets
 		var _render = (inTitle == 'Player') ? TG.Engines.Animation.Demo() : (inSex == 'male') ? TG.Engines.Animation.NPCMale() : TG.Engines.Animation.NPCFemale();
 		if(inTitle == 'Pony') _render = TG.Engines.Animation.NPCPony();
 		
