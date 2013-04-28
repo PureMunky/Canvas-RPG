@@ -115,7 +115,14 @@ TG.Engines.Render = (function (that) {
 TG.Engines.Animation = (function (that) {
 	function oRender(inImage, inWidth, inHeight, inImageX, inImageY) {
 		var that = this;
-		that.image = 	inImage || new Image();
+		
+		if(typeof inImage == 'string') {
+			that.image = new Image();
+			that.image.src = inImage;
+		} else {
+			that.image = 	inImage || new Image();	
+		}
+		
 		that.width = 	inWidth || 16;
 		that.height = 	inHeight || 16;
 		that.imageX = 	inImageX || 0;
