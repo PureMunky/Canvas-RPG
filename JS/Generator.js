@@ -1,10 +1,13 @@
-'use strict';
 TG.Engines.Generate = (function (that) {
-	function oPosition(inX, inY) {
+    'use strict';
+
+    // Generic position object
+    function oPosition(inX, inY) {
 		this.x = inX;
 		this.y = inY;
 	}
 	
+    // Generic Game object
 	function oGameObject(inX, inY, inHeight, inWidth) {
 		var that = this;
 		
@@ -24,6 +27,7 @@ TG.Engines.Generate = (function (that) {
 		}
 	}
 
+    // Generic sex object.
 	function oSex(title) {
 		var that = this;
 		that.title = title;
@@ -33,13 +37,18 @@ TG.Engines.Generate = (function (that) {
 		}
 	}
 
+    // Generic NPC Object
 	function oNPC(inTitle, inSex, inPosition) {
 		var that = this;
+
+        // various properties of an NPC.
 		var properties = {
 			food: false,
 			sexA: inSex.title == 'male' ? 'female' : 'male',
 			sexB: inSex.title == 'male' ? 'male' : 'female'
 		};
+
+        // Gets and tests a property for data.
 		that.getProperties = function (getName, getEquals) {
 			getEquals = getEquals || true;
 			
@@ -50,6 +59,7 @@ TG.Engines.Generate = (function (that) {
 			}
 		};
 		
+        // Data about the npc's movement.
 		var moving = {
 			vertical : 0,
 			horizontal : 0,
@@ -60,6 +70,7 @@ TG.Engines.Generate = (function (that) {
 			running : false
 		};
 		
+        // Set movement.
 		that.setMoving = function(move) {
 			if (move.vertical === 0)
 				moving.vertical = 0;
@@ -77,20 +88,27 @@ TG.Engines.Generate = (function (that) {
 			    _render.setAnimation('idle');
 			}
 		};
+
+        // Set if NPC is running.
 		that.setRun = function(run) {
 			moving.running = run;
 		};
 
+        // General stats for the NPC.
 		var DNA = {
 			strength : 10,
 			speed : 10,
 			perception : 10,
 			magic : 10
 		};
+
+        // get DNA
 		that.getDNA = function() {
 			return DNA;
 		}
 		
+	    // state for the NPC
+        // This should probably be broken up into different state types.
 		var state = {
 			AI : {},
 			Core : {},
@@ -111,21 +129,33 @@ TG.Engines.Generate = (function (that) {
 			Memory: new Array(),
 			consious: 'awake'
 		};
+
+        // returns if the npc needs to sleep.
 		that.Sleepy = function () {
 			return (state.Needs.Sleep <= 400);
 		};
+        
+        // returns if the npc needs to eat.
 		that.Hungry = function () {
 			return (state.Needs.Food <= 400);
 		};
+
+        // returns if the npc needs to drink.
 		that.Thirsty = function () {
 			return (state.Needs.Water <= 400);
 		};
+
+        // Eats the amount specified.
 		that.Eat = function (amount) {
 			state.Needs.Food += amount;
 		};
+
+        // Drinks the ammount specified.
 		that.Drink = function (amount) {
 			state.Needs.Water += amount;
 		}
+
+        // generic Is function for various needs.
 		that.Is = {
 			Horny: function () {
 				return (state.Needs.Sex <= 200);
@@ -133,29 +163,45 @@ TG.Engines.Generate = (function (that) {
 			
 		};
 		
+        // inventory array.
 		var inv = new Array();
+
+        // equipment
 		var equipment = new Array();
+
+        // NPC's title/name
 		that.title = inTitle;
+
+        // NPC's sex
 		that.sex = inSex;
 		
+        // returns the inventory.
 		that.getInventory = function () {
 			return inv;
 		}
 
+        // display for the NPC
 		that.toString = function() {
 			return that.title + ' HP: ' + Math.round(state.Combat.HP) + '/' + Math.round(state.Combat.MaxHP) + ' En: ' + Math.round(state.Combat.Energy) + that.debugInfo;
 		}
 		
+        // current position
 		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
+
+        // gets the current position
 		that.getPosition = function() {
 			return _position;
 		}
+
+        // stores the history of the npc's position
 		var _posHistory = new Array();
 		
 		// TODO: improve how to determine what render an npc gets
+        // Specify what render sheet to use for the npc.
 		var _render = (inTitle == 'Player') ? TG.Engines.Animation.Demo() : (inSex == 'male') ? TG.Engines.Animation.NPCMale() : TG.Engines.Animation.NPCFemale();
 		if(inTitle == 'Pony') _render = TG.Engines.Animation.NPCPony();
 		
+        // returns the current render information.
 		that.getRender = function() {
 			var rtnRender = _render.CurrentFrame();
 			rtnRender.x = _position.x;
@@ -164,6 +210,7 @@ TG.Engines.Generate = (function (that) {
 			return rtnRender;
 		}
 
+        // sets the direction the NPC is facing
 		that.setFacing = function(direction) {
 			if (direction.horizontal > 0 && direction.horizontal > Math.abs(direction.vertical)) {
 			    // DOWN
@@ -180,47 +227,59 @@ TG.Engines.Generate = (function (that) {
 			}
 		};
 		
+        // sets the current frame of animation.
 		that.setAnimationFrame = function (inFrameNumber) {
 		    _render.imageY = inFrameNumber * _render.height;
 		}
 		
+        // increments the animation frame to the next frame.
 		that.incAnimationFrame = function (inTotalFrames) {
 		    _render.imageY += _render.height;
 		    if (_render.imageY >= (_render.height * 4)) _render.imageY = 0;
 		}
 
+        // what to execute on a single tick of the clock
 		that.MoveOneStep = function() {			
 			_TickClean();
 			_TickNeeds();
 			state.TickCount = (state.TickCount >= 50) ? 0 : state.TickCount + 1;
 			
+            // evaluate the current state of AI every so many ticks.
 			if(state.TickCount == 0) {
 				if (_AI)
 					_AI(that, state.AI);
 			}
 			
+            // correct the facing if the movement has changed.
 			that.setFacing(moving);
             
             //that.incAnimationFrame(4);
            	_render.Tick();
            	
+            // Update the position of the render.
 			_position.x = _position.x + (moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			_position.y = _position.y + (moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * (moving.running ? 1 + TG.Engines.GlobalVars._RUNPERC : 1));
 			
+            // write the position to history.
 			_posHistory[TG.Engines.Game.CurrentHistoryLocation] = clone(_position); //{x: _position.x || 0, y: _position.y || 0};
+
 			return that;
 		};
 		
+        // resets the position back to it was a previous time.
 		that.SetPositionAt = function(historyLocation) {
 			_position.x = _posHistory[historyLocation].x;
 			_position.y = _posHistory[historyLocation].y;
 		}
 		
+        // cleans up 
 		var _TickClean = function() {
 			state.Core.attackCooldown = state.Core.attackCooldown || 0;
 
 			if (state.Core.attackCooldown > 0) state.Core.attackCooldown--;
 		}
+
+        // increments the NPC's needs
 		var _TickNeeds = function() {
 			if(state.consious == 'sleeping') {
 				state.Needs.Food -= (state.Needs.Food > 0.0) ? .01 : 0;
@@ -250,24 +309,32 @@ TG.Engines.Generate = (function (that) {
 			if(state.Needs.Water <= 100) that.Combat.ReduceHP(.1, 'Dehydration');
 		}
 
+        // debug info for this NPC
 		that.debugInfo = '';
 		that.setDebugInfo = function(txt) {
 			that.debugInfo = txt;
 			return that;
 		}
+
+        // current AI for the NPC
 		var _AI = function(that) {
 
 		};
+
+        // Sets a new AI
 		that.setAI = function(newAI) {
 			_AI = newAI;
 		};
 		
+        // Stats for the npc
 		var stats = {
 			strength : 10,
 			speed : 10,
 			perception : 10,
 			magic : 10
 		}
+
+        // Determines ability to perform actions
 		that.Can = {
 			See : function(o) {
 				return (stats.perception * 10 ) > TG.Engines.Game.Distance.Between(that, o);
@@ -280,6 +347,7 @@ TG.Engines.Generate = (function (that) {
 			}
 		}
 
+        // Inventory object
 		that.Inventory = {
 			Give : function(item) {
 				inv.push(item);
@@ -305,6 +373,7 @@ TG.Engines.Generate = (function (that) {
 			}
 		};
 		
+        // Combat functions
 		that.Combat = {
 			Attack : function() {
 				if (state.Core.attackCooldown <= 0) {
@@ -348,6 +417,7 @@ TG.Engines.Generate = (function (that) {
 			}
 		};
 
+        // Interaction actions
 		that.Interact = {
 			Perform: function () {
 				var hitObjects = TG.Engines.Game.Distance.Within(that, 30, function(acted) {
@@ -369,6 +439,8 @@ TG.Engines.Generate = (function (that) {
 				return saying;
 			}
 		}
+
+        // Defense properties
 		that.Defence = {
 			DamageReduction : function() {
 				return 0;
@@ -376,21 +448,33 @@ TG.Engines.Generate = (function (that) {
 		};
 	}
 
+    // Generic plant object
 	function oPlant(inTitle, inPosition) {
 		var that = {};
 		
+        // plant title/name
 		that.title = inTitle;
+
+        // string representation of object
 		that.toString = function () {
 			return that.title + ' ' + Math.round(amount);
 		};
 		
+        // value for current state
 		var amount = 3000;
+
+        // number of ticks
 		var tickCount = 0;
+
+        // current direction of reproduction
 		var reproduceDirection = 1;
 		
+        // current properties
 		var properties = {
 			food: true
 		};
+
+        // tests and return property
 		that.getProperties = function (getName) {
 			if(getName) {
 				return properties[getName];
@@ -399,6 +483,7 @@ TG.Engines.Generate = (function (that) {
 			}
 		};
 		
+        // current render of the plant.
 		var _render = TG.Engines.Animation.Plant();
 		_render.setAnimation('slowBreeze');
 		that.getRender = function() {
@@ -409,6 +494,7 @@ TG.Engines.Generate = (function (that) {
 			return rtnRender;
 		}
 		
+        // occurs at every tick of the game
 		that.MoveOneStep = function () {
 		    tickCount++;
 
@@ -424,9 +510,9 @@ TG.Engines.Generate = (function (that) {
 			}
 
 			if(amount > 1) properties['food'] = true; // TODO: determine a good threshold for when a food source regains it's "food" status.
-			
 		}
 
+        // reproduction function
 		function _reproduce() {
 		    var pos = { x: _position.x + 40, y: _position.y + 40 };
 		    var d = 20; // distance
@@ -443,11 +529,13 @@ TG.Engines.Generate = (function (that) {
 		    TG.Engines.Game.AddObject(new oPlant(that.title, pos));
 		}
 
+        // current position of the plant
 		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
 		that.getPosition = function() {
 			return _position;
 		}
 		
+        // Combat properties for the plant.
 		that.Combat = {
 			HitFor: function(attacker) {
 				if(TG.Engines.Game.Distance.Between(attacker, that) < 30) {
@@ -461,6 +549,7 @@ TG.Engines.Generate = (function (that) {
 			}
 		}
 		
+        // Interaction actions
 		that.Interact = {
 			Receive: function (performer) {
 				if(TG.Engines.Game.Distance.Between(performer, that) < 30) {
@@ -480,6 +569,7 @@ TG.Engines.Generate = (function (that) {
 		return that;
 	}
 	
+    // generice water object
 	function oWater(inTitle, inPosition) {
 		var that = this;
 		
