@@ -166,6 +166,7 @@
         var rtnRender = _render.CurrentFrame();
         rtnRender.x = _position.x;
         rtnRender.y = _position.y;
+        rtnRender.DisplayTitle = true;
 
         return rtnRender;
     }

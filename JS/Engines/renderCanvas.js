@@ -85,13 +85,15 @@ TG.Engines.Render = (function (that) {
         	           		r.height
         	           	);
         	           	
-        	           	if(TG.Engines.Game.CurrentHistory()[i].title) {
+                        // Write title/name
+        	           	if(TG.Engines.Game.CurrentHistory()[i].title && r.DisplayTitle) {
         	           		that.WriteOutput(TG.Engines.Game.CurrentHistory()[i].toString(),
         	           			r.x + r.width - PanLocation.x,
         	           			r.y + r.height - PanLocation.y
         	           		);
         	           	}
         	           	
+                        // Write current spoken words.
         	           	if(TG.Engines.Game.CurrentHistory()[i].speak) {
         	           		that.WriteOutput(TG.Engines.Game.CurrentHistory()[i].speak,
         	           			r.x - PanLocation.x,
@@ -127,6 +129,7 @@ TG.Engines.Animation = (function (that) {
 		that.height = 	inHeight || 16;
 		that.imageX = 	inImageX || 0;
 		that.imageY = 	inImageY || 0;
+		that.DisplayTitle = false;
 		
 		that.Animations = new Array();
 		var PrimaryAnimation = 'walk';
