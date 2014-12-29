@@ -7,10 +7,7 @@ TG.Test = (function () {
 
     // Returns a random position.
     function _getRndPos() {
-        return {
-            x: Math.floor(Math.random() * 1000),
-            y: Math.floor(Math.random() * 1000)
-        };
+        return new TG.Objects.Position(Math.floor(Math.random() * 1000), Math.floor(Math.random() * 1000));
     };
 
     // generate objects based on the passed count
