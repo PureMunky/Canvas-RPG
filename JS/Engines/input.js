@@ -8,20 +8,15 @@ TG.Engines.Input = (function (that) {
 				//TODO: add ability to click/touch where to move to (for phone/tablet).
 				TG.Engines.Game.Player().setAI();
                 if (event.keyCode == _UPKEY.keyCode) {
-                    //TG.Engines.Action.SetMoving({ vertical: -1 });
                     TG.Engines.Game.Player().setMoving({ vertical: -1 });
                 } else if (event.keyCode == _RIGHTKEY.keyCode) {
                     TG.Engines.Game.Player().setMoving({ horizontal: 1 });
-                    //moving.horizontal = 1;
                 } else if (event.keyCode == _DOWNKEY.keyCode) {
                     TG.Engines.Game.Player().setMoving({ vertical: 1 });
-                    //moving.vertical = 1;
                 } else if (event.keyCode == _LEFTKEY.keyCode) {
                     TG.Engines.Game.Player().setMoving({ horizontal: -1 });
-                    //moving.horizontal = -1;
                 } else if (event.keyCode == _RUNKEY.keyCode) {
                     TG.Engines.Game.Player().setRun(true);
-                    //moving.running = true;
                 } else if (event.keyCode == _ATTACKKEY.keyCode) {
 					TG.Engines.Game.Player().Combat.Attack();
 				} else if (event.keyCode == _INTERACTKEY.keyCode) {
@@ -33,13 +28,13 @@ TG.Engines.Input = (function (that) {
                 } else if (event.keyCode == _FORWARD.keyCode) {
                     TG.Engines.Game.Forward();
                 } else if (event.keyCode == _PanDown.keyCode) {
-                    TG.Engines.Render.MovePanLocation({x: 0, y: 1});
+                    TG.Engines.Render.MovePanLocation({x: 0, y: 20});
                 } else if (event.keyCode == _PanRight.keyCode) {
-                    TG.Engines.Render.MovePanLocation({x: 1, y: 0});
+                    TG.Engines.Render.MovePanLocation({x: 20, y: 0});
                 } else if (event.keyCode == _PanLeft.keyCode) {
-                    TG.Engines.Render.MovePanLocation({x: -1, y: 0});
+                    TG.Engines.Render.MovePanLocation({x: -20, y: 0});
                 } else if (event.keyCode == _PanUp.keyCode) {
-                    TG.Engines.Render.MovePanLocation({ x: 0, y: -1 });
+                    TG.Engines.Render.MovePanLocation({ x: 0, y: -20 });
                 } else if (event.keyCode == _TestButton.keyCode) {
                     TG.Test.Perform();
                 }
@@ -61,7 +56,6 @@ TG.Engines.Input = (function (that) {
                     TG.Engines.Game.Player().setMoving({ horizontal: 0 });
                 } else if (event.keyCode == _RUNKEY.keyCode) {
                     TG.Engines.Game.Player().setRun(false);
-                    //moving.running = false;
                 }
             }
             //WriteOutput(event.keyCode);
