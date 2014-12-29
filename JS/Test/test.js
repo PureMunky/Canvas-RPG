@@ -41,11 +41,11 @@ TG.Test = (function () {
     // Initiates the test object.
     that.Setup = function (inGameObjects) {
         GameObjects = inGameObjects;
-        _StartHostile();
+        _Start();
     };
 
     // Sample setup for random generation.
-    function _Start () {
+    function _Start() {
         _PopulateObjects(10, 10, 10);
 
         // Create a pony for Ashley. :)

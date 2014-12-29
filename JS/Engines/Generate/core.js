@@ -570,157 +570,16 @@ TG.Engines.Generate = (function (that) {
 	}
 	
     // generice water object
-	function oWater(inTitle, inPosition) {
-		var that = this;
-		
-		that.title = inTitle;
-		that.toString = function () {
-			return that.title + ' ' + Math.round(amount);
-		};
-		
-		var amount = 5000;
-		
-		var properties = {
-			water: true
-		};
-		that.getProperties = function (getName) {
-			if(getName) {
-				return properties[getName];
-			} else {
-				return properties;
-			}
-		};
-		
-		var _render = TG.Engines.Animation.Plant();
-		_render.setAnimation('slowBreeze');
-		that.getRender = function() {
-			var rtnRender = _render.CurrentFrame();
-			rtnRender.x = _position.x;
-			rtnRender.y = _position.y;
-
-			return rtnRender;
-		}
-		
-		that.MoveOneStep = function () {
-			_render.Tick();
-			amount += .001;
-			
-			properties['water'] = true;
-		}
-		
-		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
-		that.getPosition = function() {
-			return _position;
-		}
-		
-		that.Combat = {
-			HitFor: function(attacker) {
-				if(TG.Engines.Game.Distance.Between(attacker, that) < 30) {
-					amount -= 700;
-					if (amount <= 0) {
-						amount = 0;
-						properties.water = false;
-					}
-					attacker.Drink(700);	
-				}
-			}
-		}
-		
-		that.Interact = {
-			Receive: function (performer) {
-				if(TG.Engines.Game.Distance.Between(performer, that) < 30) {
-					performer.Interact.Say(TG.Content.Comm.drink);
-					amount -= 700;
-					if (amount <= 0) {
-						amount = 0;
-						properties.food = false;
-					} else {
-						performer.Inventory.Give(Items.Consumables.Water(700))	
-					}
-					
-					
-				}
-			}
-		}
-		return that;
-	}
 	
-    // generic item type
-	function oItem(inTitle, inDamage, inRange, inSpeed, inType, inProperties, inUse) {
-		var that = this;
-
-		that.title = inTitle || 'Fist';
-		that.damage = inDamage || 5;
-		that.range = inRange || 10;
-		that.speed = inSpeed || 10;
-		that.type = inType || 'melee';
-		
-		var level = 1;
-		var XP = 0;
-		
-		var properties = {
-			item: true
-		};
-		properties[inType] = true;
-		
-		that.getProperties = function (getName) {
-			if(getName) {
-				return properties[getName];
-			} else {
-				return properties;
-			}
-		};
-		
-		that.getDamage = function () {
-		    return that.damage * level;
-		}
-		
-		that.Use = function (target) {
-			switch(that.type) {
-				case 'food':
-					target.Eat(that.damage);
-					break;
-				case 'water': 
-					target.Drink(that.damage);
-					break;
-				}
-		}
-		
-		that.XPUp = function() {
-		    XP++;
-		}
-	}
 	
 	var Items = {
-	    Weapons: {
-	        Fist:  function () { return new oItem('Fist', 5, 10, 10);},
-	        Sword: function () { return new oItem('Sword', 30, 20, 10);},
-	        BigSword: function () { return new oItem('Sword', 30, 50, 10);},
-	        Bow:   function () { return new oItem('Bow', 20, 200, 50, 'ranged');}
-	    },
 	    Consumables: {
-	    	Corn: function (amount) { return new oItem('Corn', amount, 0, 0, 'food');},
-	    	Water: function (amount) { return new oItem('Water', amount, 0, 0, 'water');}
+	    	Corn: function (amount) { return new TG.Objects.Item('Corn', amount, 0, 0, 'food');},
+	    	Water: function (amount) { return new TG.Objects.Item('Water', amount, 0, 0, 'water');}
 	    }
 	}
 
-    // object defaults
-	function _Player(inName, inSex, inPosition) {
-		var newPlayer = new oNPC(inName, inSex, inPosition);
 
-		newPlayer.Inventory.Equip(Items.Weapons.BigSword());
-
-		return newPlayer;
-	}
-
-	function _NPC(inTitle, inSex, inPosition) {
-		var newNPC = new oNPC(inTitle, inSex, inPosition);
-
-		newNPC.setAI(TG.Engines.AI.normal());
-		newNPC.Inventory.Equip(Items.Weapons.Fist());
-
-		return newNPC;
-	}
 
 	var _Sex = {
 		male : function() {
@@ -753,25 +612,15 @@ TG.Engines.Generate = (function (that) {
 		return newPlant;
 	}
 	
-	var _Water = function (inPosition) {
-		var newWater = new oWater('Water', inPosition);
-		
-		return newWater;
-	}
+
 	
 	function _Item() {
-		var newItem = new oItem();
+		var newItem = new TG.Objects.Item();
 
 		return newItem;
 	}
 
 	that = {
-		Player : function(inName, inSex, inPosition) {
-			return _Player(inName, inSex, inPosition);
-		},
-		NPC : function(inTitle, inSex, inPosition) {
-			return _NPC(inTitle, inSex, inPosition);
-		},
 		Item : function() {
 			return _Item();
 		},
@@ -787,9 +636,6 @@ TG.Engines.Generate = (function (that) {
 			Corn: function (inPosition) {
 				return _Corn(inPosition);
 			}
-		},
-		Water: function (inPosition) {
-			return _Water(inPosition);
 		}
 	};
 	

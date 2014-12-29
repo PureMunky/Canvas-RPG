@@ -117,7 +117,7 @@ TG.Engines.Input = (function (that) {
     });
     
     function gamepadTick() {
-    	var pad = navigator.webkitGetGamepads()[0];
+    	var pad = navigator.getGamepads()[0];
     	try {
     		if (pad) {
     			// Set Horizontal Motion
