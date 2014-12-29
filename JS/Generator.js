@@ -385,6 +385,8 @@ TG.Engines.Generate = (function (that) {
 		};
 		
 		var amount = 3000;
+		var tickCount = 0;
+		var reproduceDirection = 1;
 		
 		var properties = {
 			food: true
@@ -408,14 +410,39 @@ TG.Engines.Generate = (function (that) {
 		}
 		
 		that.MoveOneStep = function () {
+		    tickCount++;
+
 			_render.Tick();
 			
 			amount += .001;
 			
+			if (tickCount >= 3000 && reproduceDirection < 9) {
+			    tickCount = 0;
+
+			    _reproduce();
+			    reproduceDirection++;
+			}
+
 			if(amount > 1) properties['food'] = true; // TODO: determine a good threshold for when a food source regains it's "food" status.
 			
 		}
-		
+
+		function _reproduce() {
+		    var pos = { x: _position.x + 40, y: _position.y + 40 };
+		    var d = 20; // distance
+
+		    if (reproduceDirection == 1) { pos.y -= d; }
+		    if (reproduceDirection == 2) { pos.x += d; pos.y -= d; }
+		    if (reproduceDirection == 3) { pos.x += d; }
+		    if (reproduceDirection == 4) { pos.x += d; pos.y += d; }
+		    if (reproduceDirection == 5) { pos.y += d; }
+		    if (reproduceDirection == 6) { pos.x -= d; pos.y += d; }
+		    if (reproduceDirection == 7) { pos.x -= d; }
+		    if (reproduceDirection == 8) { pos.x -= d; pos.y -= d; }
+
+		    TG.Engines.Game.AddObject(new oPlant(that.title, pos));
+		}
+
 		var _position = new oPosition(inPosition ? inPosition.x : 0, inPosition ? inPosition.y : 0);
 		that.getPosition = function() {
 			return _position;
