@@ -39,7 +39,9 @@ TG.Engines.Input = (function (that) {
                 } else if (event.keyCode == _PanLeft.keyCode) {
                     TG.Engines.Render.MovePanLocation({x: -1, y: 0});
                 } else if (event.keyCode == _PanUp.keyCode) {
-                    TG.Engines.Render.MovePanLocation({x: 0, y: -1});
+                    TG.Engines.Render.MovePanLocation({ x: 0, y: -1 });
+                } else if (event.keyCode == _TestButton.keyCode) {
+                    TG.Test.Perform();
                 }
             }
             
@@ -83,6 +85,8 @@ TG.Engines.Input = (function (that) {
     var _PanLeft = keyboardButton('37'); // Right Arrow
     var _PanUp = keyboardButton('38'); // Right Arrow
     
+    var _TestButton = keyboardButton('71'); // G
+
     var keyboardEntry = false;
 
     function keyboardButton(inKeyCode, inDownAction, inUpAction) {

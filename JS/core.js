@@ -3,6 +3,8 @@ var TG = {};
 TG.Engines = {};
 
 document.write('<script src="JS/constants.js" type="text/javascript"></script>');
+document.write('<script src="JS/save.js" type="text/javascript"></script>');
+document.write('<script src="JS/test.js" type="text/javascript"></script>');
 document.write('<script src="JS/input.js" type="text/javascript"></script>');
 document.write('<script src="JS/movement.js" type="text/javascript"></script>');
 document.write('<script src="JS/renderCanvas.js" type="text/javascript"></script>');
