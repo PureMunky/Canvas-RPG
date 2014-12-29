@@ -61,9 +61,9 @@
                 amount -= 700;
                 if (amount <= 0) {
                     amount = 0;
-                    properties.food = false;
+                    properties.food = false;    
                 } else {
-                    performer.Inventory.Give(Items.Consumables.Water(700))
+                    performer.Inventory.Give(TG.Engines.Generate.Consumables.Water(700))
                 }
 
 

@@ -24,7 +24,7 @@ TG.Test = (function () {
 
         // Give everyone a sword?
         for (i = 0; i < GameObjects.length; i++) {
-            GameObjects[i].Inventory.Equip(TG.Engines.Generate.Item());
+            GameObjects[i].Inventory.Equip(TG.Engines.Generate.Weapons.Sword());
         }
 
         // Generate Test Food
@@ -77,7 +77,7 @@ TG.Test = (function () {
 
     // Gennerates a random food.
     that.PopFood = function () {
-        GameObjects.push(TG.Engines.Generate.Plant.Corn(_getRndPos()));
+        GameObjects.push(TG.Engines.Generate.Plants.Corn(_getRndPos()));
     };
 
     // Gennerates a random water. 
