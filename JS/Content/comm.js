@@ -1,5 +1,5 @@
 'use strict';
-var Comm = {
+TG.Content.Comm = {
 	greetingpositive: {
 		say: 'Hello!',
 		requirement: function (target) {

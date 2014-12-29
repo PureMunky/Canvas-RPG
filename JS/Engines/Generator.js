@@ -421,7 +421,7 @@ TG.Engines.Generate = (function (that) {
 		that.Interact = {
 			Perform: function () {
 				var hitObjects = TG.Engines.Game.Distance.Within(that, 30, function(acted) {
-					acted.Interact.Receive(that, that.Interact.Say(Comm.greetingpositive));
+					acted.Interact.Receive(that, that.Interact.Say(TG.Content.Comm.greetingpositive));
 				});
 			},
 			Receive: function (performer, conversation) {
@@ -553,7 +553,7 @@ TG.Engines.Generate = (function (that) {
 		that.Interact = {
 			Receive: function (performer) {
 				if(TG.Engines.Game.Distance.Between(performer, that) < 30) {
-					performer.Interact.Say(Comm.eat);
+					performer.Interact.Say(TG.Content.Comm.eat);
 					amount -= 800;
 					if (amount <= 0) {
 						amount = 0;
@@ -629,7 +629,7 @@ TG.Engines.Generate = (function (that) {
 		that.Interact = {
 			Receive: function (performer) {
 				if(TG.Engines.Game.Distance.Between(performer, that) < 30) {
-					performer.Interact.Say(Comm.drink);
+					performer.Interact.Say(TG.Content.Comm.drink);
 					amount -= 700;
 					if (amount <= 0) {
 						amount = 0;
@@ -645,6 +645,7 @@ TG.Engines.Generate = (function (that) {
 		return that;
 	}
 	
+    // generic item type
 	function oItem(inTitle, inDamage, inRange, inSpeed, inType, inProperties, inUse) {
 		var that = this;
 
