@@ -136,7 +136,6 @@ TG.Engines.Game = (function (that) {
 	GameObjects[0] = TG.Engines.Generate.Player('Player', TG.Engines.Generate.Sex.Male(), {x: 100, y: 100});
 
 	TG.Test.Setup(GameObjects);
-	TG.Test.Starter(GameObjects);
 
 	return that;
 })(TG.Engines.Game || {});

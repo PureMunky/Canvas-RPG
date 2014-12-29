@@ -70,7 +70,7 @@ TG.Engines.AI = (function (that) {
 	}
 	
 	var _pace = function (distance, direction) {
-		var distance = distance || 100;
+		var distance = distance || 20;
 		var newMoving = direction || {
 			vertical: 0,
 			horizontal: 1
