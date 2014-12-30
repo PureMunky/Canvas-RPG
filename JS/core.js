@@ -5,34 +5,51 @@ TG.Content = {};
 TG.Objects = {};
 TG.Objects.Animation = {};
 
-document.write('<script src="JS/Content/constants.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/Animation/Frame.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/Animation/Render.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/Animation/Sequence.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/Position.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/Projectile.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/Item.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/NPC.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/Plant.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/Water.js" type="text/javascript"></script>');
-document.write('<script src="JS/Objects/Sex.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/save.js" type="text/javascript"></script>');
-document.write('<script src="JS/Test/test.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/input.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/movement.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/renderCanvas.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/AI.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/debug.js" type="text/javascript"></script>');
-document.write('<script src="JS/Content/constants.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Generate/core.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Generate/Consumables.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Generate/Weapons.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Generate/Plants.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Generate/Player.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Generate/NPC.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Generate/Water.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Generate/Sex.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Relationships.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/Chrono.js" type="text/javascript"></script>');
-document.write('<script src="JS/Engines/GameCore.js" type="text/javascript"></script>');
-document.write('<script src="JS/Content/comm.js" type="text/javascript"></script>');
+(function () {
+    var i = 0,
+        scripts = [];
+
+    // Content
+    scripts.push('JS/Content/comm.js');
+    scripts.push('JS/Content/constants.js');
+
+    // Objects
+    scripts.push('JS/Objects/Animation/Frame.js');
+    scripts.push('JS/Objects/Animation/Render.js');
+    scripts.push('JS/Objects/Animation/Sequence.js');
+    scripts.push('JS/Objects/Position.js');
+    scripts.push('JS/Objects/Projectile.js');
+    scripts.push('JS/Objects/Item.js');
+    scripts.push('JS/Objects/NPC.js');
+    scripts.push('JS/Objects/Plant.js');
+    scripts.push('JS/Objects/Water.js');
+    scripts.push('JS/Objects/Sex.js');
+
+    // Test Scripts
+    scripts.push('JS/Test/test.js');
+
+    // Engines
+    scripts.push('JS/Engines/save.js');
+    scripts.push('JS/Engines/input.js');
+    scripts.push('JS/Engines/movement.js');
+    scripts.push('JS/Engines/renderCanvas.js');
+    scripts.push('JS/Engines/AI.js');
+    scripts.push('JS/Engines/debug.js');
+    scripts.push('JS/Engines/Generate/core.js');
+    scripts.push('JS/Engines/Generate/Consumables.js');
+    scripts.push('JS/Engines/Generate/Weapons.js');
+    scripts.push('JS/Engines/Generate/Plants.js');
+    scripts.push('JS/Engines/Generate/Player.js');
+    scripts.push('JS/Engines/Generate/NPC.js');
+    scripts.push('JS/Engines/Generate/Water.js');
+    scripts.push('JS/Engines/Generate/Sex.js');
+    scripts.push('JS/Engines/Relationships.js');
+    scripts.push('JS/Engines/Chrono.js');
+    scripts.push('JS/Engines/GameCore.js');
+
+    // Write scripts to the page.
+    for (i = 0; i < scripts.length; i++) {
+        document.write('<script src="' + scripts[i] + '" type="text/javascript"></script>');
+    }
+}());
+
