@@ -1,5 +1,6 @@
 ﻿TG.Objects.Water = function (inTitle, inPosition) {
-    var that = this;
+    var that = {},
+        _delete = false;
 
     that.title = inTitle;
     that.toString = function () {
@@ -11,6 +12,11 @@
     var properties = {
         water: true
     };
+
+    that.getDelete = function () {
+        return _delete;
+    };
+
     that.getProperties = function (getName) {
         if (getName) {
             return properties[getName];
@@ -30,6 +36,8 @@
     }
 
     that.MoveOneStep = function () {
+        if (amount <= 0) _delete = true;
+
         _render.Tick();
         amount += .001;
 
