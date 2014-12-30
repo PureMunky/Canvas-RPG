@@ -15,12 +15,19 @@ TG.Engines.Game = (function (that) {
 		}
 		
 		GameObjects[0].MoveOneStep();
-		
+		var deleteIds = [];
+
 		if (timeSpeed > 0) {
 			for(var t = 0; t < timeSpeed; t++) {
-				for(var i = 1; i < GameObjects.length; i++){
-					GameObjects[i]
-						.MoveOneStep();
+			    for (var i = 1; i < GameObjects.length; i++) {
+			        (function (i) {
+			            GameObjects[i]
+                            .MoveOneStep();
+
+			            if (GameObjects[i].getDelete && GameObjects[i].getDelete()) {
+			                deleteIds.push(i);
+			            }
+			        })(i);
 				}
 			}
 		} else {
@@ -30,7 +37,10 @@ TG.Engines.Game = (function (that) {
 				}
 			}
 		}
-		
+
+		for (var d = 0; d < deleteIds.length; d++) {
+		    GameObjects.splice(deleteIds[d], 1);
+		}
 	};
 	
 	that.History = new Array();
@@ -84,11 +94,14 @@ TG.Engines.Game = (function (that) {
 			var p1 = o1.getPosition();
 			var p2 = o2.getPosition();
 			
-			var a, b;
-			a = Math.abs(p1.x - p2.x);
-			b = Math.abs(p1.y - p2.y);
-			
-			return Math.sqrt((a * a) + (b * b));
+			return that.Distance.BetweenPos(p1, p2);
+		},
+		BetweenPos: function (p1, p2) {
+		    var a, b;
+		    a = Math.abs(p1.x - p2.x);
+		    b = Math.abs(p1.y - p2.y);
+
+		    return Math.sqrt((a * a) + (b * b));
 		},
 		BetweenforCompare: function(o1, o2) {
 		    o2 = o2 || GameObjects[0];

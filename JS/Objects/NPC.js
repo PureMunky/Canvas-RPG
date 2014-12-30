@@ -30,6 +30,10 @@
         running: false
     };
 
+    that.getMoving = function () {
+        return moving;
+    };
+
     // Set movement.
     that.setMoving = function (move) {
         if (move.vertical === 0)

@@ -6,6 +6,7 @@ TG.Objects = {};
 
 document.write('<script src="JS/Content/constants.js" type="text/javascript"></script>');
 document.write('<script src="JS/Objects/Position.js" type="text/javascript"></script>');
+document.write('<script src="JS/Objects/Projectile.js" type="text/javascript"></script>');
 document.write('<script src="JS/Objects/Item.js" type="text/javascript"></script>');
 document.write('<script src="JS/Objects/NPC.js" type="text/javascript"></script>');
 document.write('<script src="JS/Objects/Plant.js" type="text/javascript"></script>');

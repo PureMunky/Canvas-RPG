@@ -82,9 +82,21 @@ TG.Test = (function () {
         GameObjects.push(TG.Engines.Generate.Water(_getRndPos()));
     };
 
+    // Test projectile creation.
+    that.PopProj = function () {
+        var pos = TG.Engines.Game.Player().getPosition();
+        var moving = TG.Engines.Game.Player().getMoving();
+
+        pos = new TG.Objects.Position(pos.x, pos.y);
+        //moving = new TG.Objects.Moving(moving.horizontal, moving.vertical);
+
+        GameObjects.push(new TG.Objects.Projectile('Arrow', pos, { horizontal: moving.horizontal, vertical: moving.vertical }, 10, 1000));
+    };
+
     // Test action that is mapped to a key press "G"
     that.Perform = function () {
-        that.PopNPC();
+        //that.PopNPC();
+        that.PopProj();
     };
 
     return that;
