@@ -3,8 +3,12 @@ var TG = {};
 TG.Engines = {};
 TG.Content = {};
 TG.Objects = {};
+TG.Objects.Animation = {};
 
 document.write('<script src="JS/Content/constants.js" type="text/javascript"></script>');
+document.write('<script src="JS/Objects/Animation/Frame.js" type="text/javascript"></script>');
+document.write('<script src="JS/Objects/Animation/Render.js" type="text/javascript"></script>');
+document.write('<script src="JS/Objects/Animation/Sequence.js" type="text/javascript"></script>');
 document.write('<script src="JS/Objects/Position.js" type="text/javascript"></script>');
 document.write('<script src="JS/Objects/Projectile.js" type="text/javascript"></script>');
 document.write('<script src="JS/Objects/Item.js" type="text/javascript"></script>');
