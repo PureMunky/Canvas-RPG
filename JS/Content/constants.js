@@ -18,6 +18,7 @@ TG.Engines.GlobalVars = (function(that) {
     that._NPCPony = 'images/npc/pony_princess.png';
         
     that._PlantImage = 'images/scenery/plant.png';
+    that._WaterImage = 'images/scenery/water.png';
     
     that._GamePadThreshold = .2;
     

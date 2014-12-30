@@ -19,7 +19,7 @@
         }
     };
 
-    var _render = TG.Engines.Animation.Plant();
+    var _render = TG.Engines.Animation.Water();
     _render.setAnimation('slowBreeze');
     that.getRender = function () {
         var rtnRender = _render.CurrentFrame();

@@ -10,6 +10,10 @@ TG.Test = (function () {
         return new TG.Objects.Position(Math.floor(Math.random() * 1000), Math.floor(Math.random() * 1000));
     };
 
+    function _getRndNum(max) {
+        return Math.floor(Math.random() * max);
+    };
+
     // generate objects based on the passed count
     function _PopulateObjects(NPCCount, FoodCount, WaterCount) {
         var i = 0;
@@ -90,7 +94,7 @@ TG.Test = (function () {
         pos = new TG.Objects.Position(pos.x, pos.y);
         //moving = new TG.Objects.Moving(moving.horizontal, moving.vertical);
 
-        GameObjects.push(new TG.Objects.Projectile('Arrow', pos, { horizontal: moving.horizontal, vertical: moving.vertical }, 10, 1000));
+        GameObjects.push(new TG.Objects.Projectile('Arrow', pos, { horizontal: moving.horizontal, vertical: moving.vertical }, _getRndNum(20), _getRndNum(1000)));
     };
 
     // Test action that is mapped to a key press "G"

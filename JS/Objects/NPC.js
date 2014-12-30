@@ -30,6 +30,10 @@
         running: false
     };
 
+    that.getDelete = function () {
+        return (state.Combat.HP <= 0);
+    };
+
     that.getMoving = function () {
         return moving;
     };

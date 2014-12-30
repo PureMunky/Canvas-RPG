@@ -41,12 +41,13 @@ TG.Objects.Projectile = function (inTitle, inPosition, inMoving, inSpeed, inRang
             _delete = true;
         }
 
-        _render.Tick();
+        if (!_delete) {
+            _render.Tick();
 
-        // Update the position of the render.
-        _position.x = _position.x + (_moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * _speed);
-        _position.y = _position.y + (_moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * _speed);
-
+            // Update the position of the render.
+            _position.x = _position.x + (_moving.horizontal * TG.Engines.GlobalVars._STEPPIXELS * _speed);
+            _position.y = _position.y + (_moving.vertical * TG.Engines.GlobalVars._STEPPIXELS * _speed);
+        }
         return that;
     };
 

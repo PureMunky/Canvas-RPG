@@ -52,7 +52,7 @@ TG.Objects.Plant = function (inTitle, inPosition) {
 
         amount += .001;
 
-        if (tickCount >= 3000 && reproduceDirection < 9) {
+        if (tickCount >= 20000 && reproduceDirection < 9) {
             tickCount = 0;
 
             _reproduce();
