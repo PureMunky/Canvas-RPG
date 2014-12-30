@@ -1,6 +1,7 @@
 ﻿// Generic plant object
 TG.Objects.Plant = function (inTitle, inPosition) {
-    var that = {};
+    var that = {},
+        _delete = false;
 
     // plant title/name
     that.title = inTitle;
@@ -22,6 +23,11 @@ TG.Objects.Plant = function (inTitle, inPosition) {
     // current properties
     var properties = {
         food: true
+    };
+
+    // Check if the object should be removed.
+    that.getDelete = function () {
+        return _delete;
     };
 
     // tests and return property
@@ -46,20 +52,24 @@ TG.Objects.Plant = function (inTitle, inPosition) {
 
     // occurs at every tick of the game
     that.MoveOneStep = function () {
-        tickCount++;
+        if (amount <= 0) _delete = true;
 
-        _render.Tick();
+        if (!_delete) {
+            tickCount++;
 
-        amount += .001;
+            _render.Tick();
 
-        if (tickCount >= 20000 && reproduceDirection < 9) {
-            tickCount = 0;
+            amount += .001;
 
-            _reproduce();
-            reproduceDirection++;
+            if (tickCount >= 20000 && reproduceDirection < 9) {
+                tickCount = 0;
+
+                _reproduce();
+                reproduceDirection++;
+            }
+
+            if (amount > 1) properties['food'] = true; // TODO: determine a good threshold for when a food source regains it's "food" status.
         }
-
-        if (amount > 1) properties['food'] = true; // TODO: determine a good threshold for when a food source regains it's "food" status.
     }
 
     // reproduction function
