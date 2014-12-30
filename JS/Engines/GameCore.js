@@ -14,7 +14,7 @@ TG.Engines.Game = (function (that) {
 			timeSpeed = 0;
 		}
 		
-		GameObjects[0].MoveOneStep();
+		GameObjects[0].Tick();
 		var deleteIds = [];
 
 		if (timeSpeed > 0) {
@@ -22,7 +22,7 @@ TG.Engines.Game = (function (that) {
 			    for (var i = 1; i < GameObjects.length; i++) {
 			        (function (i) {
 			            GameObjects[i]
-                            .MoveOneStep();
+                            .Tick();
 
 			            if (GameObjects[i].getDelete && GameObjects[i].getDelete()) {
 			                deleteIds.push(i);

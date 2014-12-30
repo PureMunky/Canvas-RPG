@@ -34,6 +34,7 @@ TG.Objects.Animation = {};
     scripts.push('JS/Engines/movement.js');
     scripts.push('JS/Engines/renderCanvas.js');
     scripts.push('JS/Engines/AI.js');
+    scripts.push('JS/Engines/Combat.js');
     scripts.push('JS/Engines/debug.js');
     scripts.push('JS/Engines/Generate/core.js');
     scripts.push('JS/Engines/Generate/Consumables.js');

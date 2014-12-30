@@ -51,7 +51,7 @@ TG.Objects.Plant = function (inTitle, inPosition) {
     }
 
     // occurs at every tick of the game
-    that.MoveOneStep = function () {
+    that.Tick = function () {
         if (amount <= 0) _delete = true;
 
         if (!_delete) {

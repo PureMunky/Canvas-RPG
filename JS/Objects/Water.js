@@ -35,7 +35,7 @@
         return rtnRender;
     }
 
-    that.MoveOneStep = function () {
+    that.Tick = function () {
         if (amount <= 0) _delete = true;
 
         _render.Tick();

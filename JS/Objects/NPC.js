@@ -98,6 +98,10 @@
         consious: 'awake'
     };
 
+    that.getState = function () {
+        return state;
+    }
+
     // returns if the npc needs to sleep.
     that.Sleepy = function () {
         return (state.Needs.Sleep <= 400);
@@ -208,8 +212,9 @@
     }
 
     // what to execute on a single tick of the clock
-    that.MoveOneStep = function () {
-        _TickClean();
+    that.Tick = function () {
+        //that.Combat.Tick();
+        //_TickClean();
         _TickNeeds();
         state.TickCount = (state.TickCount >= 50) ? 0 : state.TickCount + 1;
 
@@ -341,6 +346,9 @@
 
         }
     };
+
+    
+    //that.Combat = TG.Engines.Combat.Assign(that);
 
     // Combat functions
     that.Combat = {

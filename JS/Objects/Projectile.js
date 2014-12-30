@@ -30,7 +30,7 @@ TG.Objects.Projectile = function (inTitle, inPosition, inMoving, inSpeed, inRang
         return _delete;
     };
 
-    that.MoveOneStep = function () {
+    that.Tick = function () {
         // Delete if not moving.
         if (!_delete && _moving.horizontal == 0 && _moving.vertical == 0) {
             _delete = true;

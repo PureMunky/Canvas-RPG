@@ -32,7 +32,7 @@ TG.Engines.Action = (function (that) {
         moving.running = run;
     };
 
-    that.MoveOneStep = function () {
+    that.Tick = function () {
         var vPan, hPan, vMove, hMove;
 
         hPan = 0;
