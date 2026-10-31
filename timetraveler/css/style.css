@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --bg: #0e1117;
   --panel: #161a23;
   --panel-2: #1d2230;
@@ -33,7 +34,7 @@ button, input, select { font: inherit; color: inherit; }
 .brand { font-family: var(--serif); font-size: 20px; letter-spacing: .06em; }
 .world-controls { display: flex; align-items: center; gap: 6px; }
 .world-controls label { color: var(--muted); }
-.world-controls input { width: 110px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+.world-controls input { width: 130px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
 .top-actions { margin-left: auto; display: flex; gap: 6px; }
 
 .btn {
@@ -204,3 +205,5 @@ button, input, select { font: inherit; color: inherit; }
   .top-actions { margin-left: 0; }
   .compute-status { width: 100%; margin-left: 0; }
 }
+
+.toast .code { display: block; margin-top: 6px; padding: 4px 6px; background: var(--bg); border-radius: 4px; font-size: 12px; user-select: all; word-break: break-all; }

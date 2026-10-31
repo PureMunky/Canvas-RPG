@@ -753,14 +753,27 @@
       app.needsRender = true;
     });
 
-    $('btn-new').onclick = function () { newWorld(parseInt($('seed').value, 10) || 0); app.playing = true; syncPlay(); };
+    // The World box takes a plain number or a full timeline code (seed=…&iv=…).
+    $('btn-new').onclick = function () {
+      var v = $('seed').value.trim();
+      if (v.indexOf('seed=') >= 0) {
+        var p = Timeline.decode(v);
+        newWorld(p.seed || 0, p.interventions);
+        if (p.interventions.length) toast('Timeline restored: ' + p.interventions.length + ' change' + (p.interventions.length > 1 ? 's' : '') + ' replayed.');
+      } else newWorld(parseInt(v, 10) || 0);
+      app.playing = true; syncPlay();
+    };
     $('btn-random').onclick = function () { newWorld(Math.floor(Math.random() * 1e6)); app.playing = true; syncPlay(); };
     $('seed').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btn-new').click(); });
     $('btn-link').onclick = function () {
-      var url = location.href.split('#')[0] + '#' + Timeline.encode(app.world.seed, app.cur.interventions);
-      var done = function () { toast('Link copied. Anyone who opens it will see exactly this history.'); };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function () { prompt('Copy this link:', url); });
-      else prompt('Copy this link:', url);
+      var code = Timeline.encode(app.world.seed, app.cur.interventions);
+      var show = function (msg) { toast(msg + '<br><code class="code">' + esc(code) + '</code>'); };
+      var done = function () { show('Timeline code copied. Paste it into the World box to replay exactly this history.'); };
+      var fail = function () { show('Copy this code and paste it into the World box to replay this history:'); };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, fail);
+        else fail();
+      } catch (e) { fail(); }
     };
     $('btn-help').onclick = function () { $('help').hidden = false; };
     $('btn-help-close').onclick = function () { $('help').hidden = true; app.playing = true; syncPlay(); try { localStorage.setItem('chronoscope-help', '1'); } catch (e) { /* ignore */ } };

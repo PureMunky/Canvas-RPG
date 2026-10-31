@@ -23,7 +23,7 @@ node timetraveler/tools/chronicle.js 1 3000   # print a world's full history hea
 | Compare timelines | "vs" dropdown, *Divergence* map mode, *Only changes* in the chronicle |
 | Follow a people | Inspect tool → click a realm, or double-click a band in the chart |
 | Undo | Ctrl+Z |
-| Share | *Copy link*: the URL is `#seed=…&iv=…`, which is the entire timeline |
+| Share | *Share timeline* copies a code like `seed=1&iv=700.plague.80.49`, which is the entire timeline. Paste it into the World box (or append it to the URL as `#…` when running locally) |
 
 Interventions: bless or salt the land, seed a new people, send a prophet,
 gift knowledge, release plague, smite, raise mountains, flood land, raise land
