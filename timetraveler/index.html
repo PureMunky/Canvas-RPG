@@ -12,7 +12,7 @@
     <div class="brand"><span class="glyph">⧗</span> Chronoscope</div>
     <div class="world-controls">
       <label for="seed">World</label>
-      <input id="seed" type="text" spellcheck="false" autocomplete="off" aria-label="World number or timeline code" placeholder="number or code">
+      <input id="seed" type="text" spellcheck="false" autocomplete="off" aria-label="World number or timeline code" placeholder="number or code" title="A world number starts a new story; a timeline code opens it in sandbox mode">
       <button id="btn-new" class="btn">Create</button>
       <button id="btn-random" class="btn" title="Random world">⚄</button>
     </div>
@@ -74,11 +74,15 @@
         <div class="tool-hint" id="tool-hint"></div>
       </div>
       <div class="tabs" role="tablist">
-        <button class="tab active" data-tab="chronicle">Chronicle</button>
+        <button class="tab active" data-tab="journal">Journal</button>
+        <button class="tab" data-tab="chronicle">Chronicle</button>
         <button class="tab" data-tab="timelines">Timelines</button>
         <button class="tab" data-tab="realm">Realm</button>
       </div>
-      <div class="panel" id="panel-chronicle">
+      <div class="panel" id="panel-journal">
+        <div id="journal"></div>
+      </div>
+      <div class="panel" id="panel-chronicle" hidden>
         <div class="filters">
           <label><input type="checkbox" id="f-major" checked> Major events</label>
           <label id="f-changes-wrap"><input type="checkbox" id="f-changes"> Only changes</label>
@@ -96,6 +100,15 @@
 
   <div class="toast" id="toast" hidden></div>
 
+  <div class="modal story" id="story" hidden>
+    <div class="modal-card story-card" role="dialog" aria-modal="true" aria-labelledby="story-title">
+      <div class="story-kicker" id="story-kicker"></div>
+      <h2 id="story-title"></h2>
+      <div class="story-body" id="story-body"></div>
+      <div class="story-actions" id="story-actions"></div>
+    </div>
+  </div>
+
   <div class="modal" id="help" hidden>
     <div class="modal-card">
       <h2><span class="glyph">⧗</span> Chronoscope</h2>
@@ -103,6 +116,7 @@
       <p><b>You can change that, one deed at a time.</b> Walk the land, learn what the people know, carry it to others, dig canals, rally a village, nurse the sick, or slip into a capital and kill a king. Each deed is small. History decides how far it spreads.</p>
       <h3>Playing as a person</h3>
       <ul>
+        <li><b>Age and health:</b> you age only while you live through years (walking, deeds, resting, Play), not while you travel in time. Plague, famine, wilderness, sea voyages and border strife hurt you; living among people heals you. Choose which years of history to spend your life on.</li>
         <li><b>Walk:</b> click the map, or use WASD / arrow keys. Walking a province takes about two months; crossing sea by boat takes half a year.</li>
         <li><b>Deeds</b> (keys 1–8) act where you stand and take a year. Greyed-out deeds tell you why they won't work here.</li>
         <li><b>Rest</b> (R) lets a year pass. Press Play to let time flow on its own.</li>
@@ -125,12 +139,13 @@
         <li><b>Plague and climate:</b> crowded cities breed epidemics; regional droughts and golden ages come and go.</li>
       </ul>
       <p class="keys">WASD/arrows walk · 1–8 deeds · R rest · Space play/pause · , and . step a year (Shift ×10) · Z close/world view · M map mode · Ctrl+Z undo · Esc walk</p>
-      <button class="btn primary" id="btn-help-close">Begin</button>
+      <div class="story-actions"><button class="btn primary" id="btn-help-close">Close</button><button class="btn" id="btn-sandbox" title="Skip the story: no aging, every power unlocked">Sandbox mode (no story)</button></div>
     </div>
   </div>
 
   <script src="js/sim.js"></script>
   <script src="js/timeline.js"></script>
+  <script src="js/story.js"></script>
   <script src="js/ui.js"></script>
 </body>
 </html>

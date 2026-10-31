@@ -243,3 +243,30 @@ button, input, select { font: inherit; color: inherit; }
 @media (max-width: 480px) {
   .hotbar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* ---------- story ---------- */
+.story-card { max-width: 620px; border-color: var(--gold-dim); }
+.story-kicker { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.story-body { font-family: var(--serif); font-size: 15.5px; line-height: 1.6; }
+.story-body p { margin: 0 0 12px; }
+.story-body .vision { border-left: 2px solid var(--gold); padding: 6px 12px; font-style: italic; background: rgba(216,170,78,.06); }
+.story-body .lore-head { margin-bottom: 4px; color: var(--muted); font-style: italic; }
+.story-body ul.lore { list-style: none; padding: 0; margin: 0 0 12px; font-size: 14px; }
+.story-body ul.lore li { padding: 2px 0; }
+.story-body ul.lore .t, .journal .t { color: var(--gold); font-family: var(--sans); font-size: 11px; margin-right: 6px; font-variant-numeric: tabular-nums; }
+.story-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.objective { border: 1px solid var(--gold-dim); background: rgba(216,170,78,.07); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 13px; }
+.objective .label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); display: block; margin-bottom: 2px; }
+.objective .status { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+.objective .status.good { color: var(--new); }
+.objective .status.bad { color: var(--erased); }
+.journal { list-style: none; margin: 0; padding: 0; font-family: var(--serif); font-size: 14px; }
+.journal li { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.journal li:last-child { border-bottom: 0; }
+.vitals { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; }
+.vitals .hbar { flex: 1; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; min-width: 60px; }
+.vitals .hbar div { height: 100%; transition: width .3s; }
+.reasons { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.reasons .pos { color: var(--new); }
+.reasons .neg { color: var(--erased); }
+.locked { opacity: .45; }

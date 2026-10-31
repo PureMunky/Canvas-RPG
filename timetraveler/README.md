@@ -13,6 +13,36 @@ node timetraveler/test/run.js                 # determinism + time-travel tests
 node timetraveler/tools/chronicle.js 1 3000   # print a world's full history headless
 ```
 
+## Story mode (default)
+
+Each new world starts a story:
+
+1. **Prologue, year 1000.** You are twenty, born in a village of a realm chosen at random among those alive in year 1000 whose fall is foretold within a few centuries. The opening describes your people from the actual simulation: their land (river people, hill clans, seafarers…), size, age of technology, temperament (their solidarity), two customs, their ruler, their neighbours, and what their elders remember from the chronicle. The future is hidden and time travel is locked.
+2. **Coming of age.** Walk to the capital (gold star) and swear the oath, spend a year learning, then help your people with a deed.
+3. **The Chronoscope.** A stranger gives you the instrument and you see your realm's real fall in this timeline (for example "Year 1127. The last stronghold of Tharian falls to Jenithriis."), with a hint at the cause. **Quest: your realm must still stand 50 years after its foretold fall.** Time travel unlocks, and the Journal tracks your realm's fate in whatever timeline you are in.
+4. **Victory** unlocks the god-like Powers. **Death** ends a life: your deeds stay in the timeline and you can live again.
+
+### Aging and health
+
+You age only while living through years (walking, deeds, resting, Play), never while travelling in time, so a life of about 50 years has to be spent where it matters. Each year your health changes with your surroundings:
+
+| Where you spend the year | Health |
+| --- | --- |
+| Among people / in a capital | +3 / +2 more |
+| Wilderness / at sea | −3 / −5 |
+| Famine | −8 |
+| Plague on your tile / next door | −22 / −7 (survive it and you're immune for 25 years) |
+| Harsh climate / kind weather | −3 / +1 |
+| Mountains / desert without a river | −2 / −3 |
+| Border with another realm | −2 |
+| Age over 45 | −0.25 per year over 45; maximum health falls after 50 |
+
+A quiet life at home ends around 65–85. Below 30 health you walk at two-thirds speed.
+
+The quests are hard but winnable. In world 1 (Tharian vs Jenithriis), a search of 52 single deeds found 6 that save the realm, all of them by killing the Jenithriis ruler while that realm was still fragile (years 1000–1050). Combinations of deeds open more paths.
+
+**Sandbox mode** (in the help screen, or by opening a timeline code) skips the story: no aging, every power unlocked.
+
 ## Playing as a person
 
 You are one traveller loose in time. A camera follows you through the world in
@@ -115,6 +145,7 @@ timetraveler/
   css/style.css
   js/sim.js         deterministic simulation (pure, runs in Node and the browser)
   js/timeline.js    keyframes, branches, views, divergence, chronicle diff, links
+  js/story.js       home realm, prologue text, prophecy, quest fate, health rules
   js/ui.js          canvas map, history chart, playback, panels
   test/run.js       determinism & time-travel tests
   tools/chronicle.js headless history printer for tuning

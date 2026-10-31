@@ -32,9 +32,11 @@
     world: null, view: null, cview: null, cur: null, cmp: null,
     tick: 0, playing: false, speed: 10, acc: 0, last: 0,
     tool: 'walk', mode: 'realms', camera: 'close', selected: 0, hover: -1,
-    person: { x: 0, y: 0, knowledge: null, target: -1, timeAcc: 0, lastStep: 0, stalled: false },
+    person: { x: 0, y: 0, knowledge: null, target: -1, timeAcc: 0, lastStep: 0, stalled: false,
+      age: 20, health: 100, life: 1, immuneUntil: 0, reasons: [], dead: false },
+    story: { mode: 'story', stage: 'loading', unlocked: false, home: null, journal: [], prophecy: null, quest: '' },
     needsRender: true, chartDirty: true, chartDrawn: 0, panelsAt: 0, chronKey: '', tlKey: '',
-    flash: null, tab: 'chronicle', chartMax: 1, impact: null
+    flash: null, tab: 'journal', chartMax: 1, impact: null
   };
 
   // ---------------------------------------------------------------------------
@@ -60,8 +62,12 @@
   // ---------------------------------------------------------------------------
   // World lifecycle
   // ---------------------------------------------------------------------------
-  function newWorld(seed, interventions) {
+  function newWorld(seed, interventions, mode) {
     seed = seed >>> 0;
+    var st = app.story;
+    st.mode = mode || 'story'; st.unlocked = st.mode === 'sandbox'; st.stage = st.mode === 'story' ? 'loading' : 'free';
+    st.home = null; st.journal = []; st.prophecy = null; st.quest = '';
+    var p0 = app.person; p0.age = 20; p0.health = 100; p0.life = 1; p0.immuneUntil = 0; p0.reasons = []; p0.dead = false;
     app.world = new Timeline.World(seed, { horizon: HORIZON, kfEvery: KF, maxCached: 4 });
     app.view = new Timeline.View(app.world);
     app.cview = new Timeline.View(app.world);
@@ -77,9 +83,17 @@
     });
     if (app.cur !== app.world.root) app.cmp = app.world.root;
     placePerson();
+    buildToolbar();
     invalidateAll();
     updateHash();
+    if (st.mode === 'story') {
+      app.playing = false; syncPlay();
+      showStory({ kicker: 'World ' + seed, title: 'A world is being born', html: '<p>Peoples are settling the land, raising their first villages, and fighting their first wars. Your story begins in the year ' + Story.START_YEAR + '.</p><p class="muted" id="birth-progress">Year 0</p>', buttons: [] });
+    }
   }
+
+  function locked() { return app.story.mode === 'story' && !app.story.unlocked; }
+  function lockedToast() { toast('You cannot travel in time. <i>Not yet.</i>'); }
 
   /** Start beside the first people of this world. */
   function placePerson() {
@@ -110,14 +124,14 @@
   function spendTime(years) {
     var p = app.person;
     if (app.tick >= HORIZON) { toast('You have reached the end of recorded time. Drag the chart to travel back.'); return false; }
-    if (p.timeAcc >= 1) return false;
+    if (p.dead || p.timeAcc >= 1) return false;
     p.timeAcc += years;
     payTime();
     return true;
   }
   function payTime() {
     var p = app.person, b = app.cur;
-    while (p.timeAcc >= 1 && app.tick < b.computedTo && app.tick < HORIZON) { p.timeAcc -= 1; app.tick++; app.needsRender = true; }
+    while (p.timeAcc >= 1 && app.tick < b.computedTo && app.tick < HORIZON && !p.dead) { p.timeAcc -= 1; app.tick++; app.needsRender = true; liveYear(); }
     if (app.tick >= HORIZON) p.timeAcc = Math.min(p.timeAcc, 0.99);
     p.stalled = p.timeAcc >= 1;
   }
@@ -162,6 +176,7 @@
   function doDeed(id) {
     var s = app.view.s, p = app.person, def = toolDef(id);
     if (!s || app.view.tick !== app.tick) return;
+    if (p.dead) return;
     if (p.stalled) { toast('Wait a moment: the future is still being written.'); return; }
     var why = Sim.deedBlocker(s, id, p.x, p.y, p.knowledge);
     if (why) { toast(esc(why)); return; }
@@ -171,6 +186,7 @@
       p.knowledge = { tech: s.cTech[c], sig: s.cSig[c], year: app.tick };
       toast('You spend a year among the ' + esc(name) + ' and learn the ways of the ' + Sim.AGES[Sim.ageOf(s.cTech[c])].name + '.');
       spendTime(DEED_COST);
+      storyDeed(id, s.cSig[c]);
       return;
     }
     var before = localSnapshot(s, i);
@@ -185,8 +201,9 @@
     var after = localSnapshot(app.view.seek(app.cur, app.tick), i);
     var effect = describeEffect(id, before, after);
     toast(esc(notes[id]) + (effect ? ' ' + effect : '') +
-      (forkedFrom ? '<br><span class="muted">This begins a new timeline, <b>' + esc(app.cur.name) + '</b>, branching from ' + esc(forkedFrom.name) + '.</span>' : ''));
+      (forkedFrom && !locked() ? '<br><span class="muted">This begins a new timeline, <b>' + esc(app.cur.name) + '</b>, branching from ' + esc(forkedFrom.name) + '.</span>' : ''));
     spendTime(DEED_COST);
+    storyDeed(id, before.sig);
   }
 
   function describeEffect(id, a, b) {
@@ -227,10 +244,250 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Story: prologue, the vision, the quest; aging and death
+  // ---------------------------------------------------------------------------
+  function showStory(o) {
+    $('story-kicker').textContent = o.kicker || '';
+    $('story-title').textContent = o.title;
+    $('story-body').innerHTML = o.html;
+    var acts = $('story-actions');
+    acts.innerHTML = '';
+    (o.buttons || []).forEach(function (b, k) {
+      var el = document.createElement('button');
+      el.className = 'btn' + (k === 0 ? ' primary' : '');
+      el.textContent = b.label;
+      el.onclick = function () { $('story').hidden = true; if (b.fn) b.fn(); };
+      acts.appendChild(el);
+    });
+    $('story').hidden = false;
+    var first = acts.querySelector('button');
+    if (first) first.focus();
+  }
+  function journal(html) { app.story.journal.push({ t: app.tick, html: html, life: app.person.life }); app.panelsAt = 0; }
+  function homeCiv(s) {
+    var h = app.story.home;
+    if (!h || !s) return -1;
+    for (var c = 0; c < s.g[1]; c++) if (s.cSig[c] === h.sig && s.cAlive[c] && s.sTiles[c] > 0) return c;
+    return -1;
+  }
+
+  function beginStory() {
+    var st = app.story, root = app.world.root;
+    setTick(Story.START_YEAR, true);
+    var s = app.view.seek(root, app.tick);
+    var pick = Story.pickHome(root, s, Math.random);
+    if (!pick) { st.mode = 'sandbox'; st.unlocked = true; st.stage = 'free'; $('story').hidden = true; buildToolbar(); return; }
+    var birth = Story.pickBirthplace(s, pick.c, Math.random);
+    var p = app.person;
+    p.x = birth % W; p.y = (birth / W) | 0; p.target = -1; p.timeAcc = 0;
+    var tale = Story.homeStory(s, pick.c, root, app.tick, birth);
+    st.home = { sig: pick.sig, name: tale.name, ruler: tale.ruler };
+    st.stage = 'goCapital';
+    app.selected = 0;
+    setCamera('close');
+    journal('You come of age in a village of the <b>' + esc(tale.name) + '</b>.');
+    showStory({ kicker: 'Prologue · Year ' + app.tick, title: 'Child of the ' + tale.name, html: tale.html +
+      '<p><b>Custom demands that every youth of age present themselves to the ruler.</b> Walk to the capital (marked with a gold star): click the map or use WASD.</p>',
+      buttons: [{ label: 'Set out' }] });
+    invalidateAll();
+  }
+
+  /** Called after any deed (or Learn) succeeds. */
+  function storyDeed(id, sigHere) {
+    var st = app.story;
+    if (!st.home || sigHere !== st.home.sig) return;
+    if (st.stage === 'learn' && id === 'learn') {
+      st.stage = 'help';
+      journal('You learn the customs and crafts of your people.');
+      toast('Your people need hands. <b>Help them</b>: dig irrigation (1), rally them (2), or tend the sick (3).');
+    } else if (st.stage === 'help' && (id === 'irrigate' || id === 'rally' || id === 'heal' || id === 'settle')) {
+      st.stage = 'awaitVision';
+      journal('You labour beside your people, and they come to know your name.');
+    }
+  }
+
+  function storyFrame() {
+    var st = app.story, s = app.view.s;
+    if (st.stage === 'loading') {
+      var el = document.getElementById('birth-progress');
+      if (el) el.textContent = 'Year ' + app.world.root.computedTo + ' of ' + (Story.START_YEAR + 600) + '…';
+      if (app.world.root.computedTo >= Story.START_YEAR + 600) beginStory();
+      return;
+    }
+    if (!s || app.view.tick !== app.tick || app.person.dead) return;
+    if (st.stage === 'goCapital') {
+      var c = homeCiv(s);
+      if (c >= 0 && s.cCap[c] === app.person.y * W + app.person.x) {
+        st.stage = 'learn';
+        journal('You kneel before ' + esc(st.home.ruler) + ' in the capital and swear the oath of your people.');
+        showStory({ kicker: 'Prologue · Year ' + app.tick, title: 'The oath', html:
+          '<p>The hall is smoky and loud. When your name is called you kneel before <b>' + esc(st.home.ruler) + '</b>, and you swear the oath your parents swore.</p>' +
+          '<p>The ruler studies you. "Learn our ways before you serve them."</p>' +
+          '<p><b>Spend a year learning among your people</b> (the Learn deed, key 5). Every deed takes a year of your life, and your health depends on where you spend it.</p>',
+          buttons: [{ label: 'Continue' }] });
+      }
+    } else if (st.stage === 'awaitVision') {
+      if (app.cur.computedTo >= HORIZON && app.person.timeAcc < 1) showVision();
+    } else if (st.stage === 'quest') {
+      checkQuest();
+    }
+  }
+
+  function showVision() {
+    var st = app.story, pr = Story.prophecy(app.cur, st.home.sig, app.tick);
+    st.unlocked = true;
+    buildToolbar();
+    if (!pr) {
+      st.stage = 'won';
+      journal('A stranger shows you the Chronoscope. Your people\'s end is not written in it.');
+      showStory({ kicker: 'Year ' + app.tick, title: 'The Chronoscope', html: '<p>A stranger in a grey cloak presses a brass instrument into your hands. In its glass you see centuries pass, and the banners of the <b>' + esc(st.home.name) + '</b> never fall.</p><p>History is yours to wander. Every power of the instrument is now open to you.</p>', buttons: [{ label: 'Wander' }] });
+      return;
+    }
+    st.prophecy = pr; st.stage = 'quest';
+    journal('A stranger gives you the Chronoscope and shows you the fall of your people in the year ' + pr.end + '.');
+    var yearsAway = pr.end - app.tick;
+    showStory({ kicker: 'Chapter one · Year ' + app.tick, title: 'The Chronoscope', html:
+      '<p>That night a stranger in a grey cloak waits by your door. Without a word they press a brass instrument into your hands, cold and humming, and walk into the dark.</p>' +
+      '<p>In its glass you see the years run like water. Villages grow and burn. Then, ' + yearsAway + ' years from now:</p>' +
+      '<p class="vision">Year ' + pr.end + '. ' + esc(pr.vision) + '</p>' +
+      '<p>' + pr.hint + '</p>' +
+      '<p><b>Save the ' + esc(st.home.name) + ': they must still stand in the year ' + pr.target + '.</b></p>' +
+      '<p>The Chronoscope lets you travel through time: drag the history chart, or use , and . to step. <b>Travelling does not age you; living does.</b> You have one life, perhaps fifty years. Spend them where they matter. If you act in the past, history rewrites itself, and the Journal tells you whether your people still fall.</p>',
+      buttons: [{ label: 'Take up the Chronoscope' }] });
+    invalidateAll();
+  }
+
+  function checkQuest() {
+    var st = app.story, pr = st.prophecy, b = app.cur;
+    if (!pr) return;
+    if (b.computedTo <= pr.target) { st.quest = 'reading'; return; }
+    if (Story.present(b, st.home.sig, pr.target)) {
+      st.quest = 'saved'; st.stage = 'won';
+      buildToolbar();
+      var f = Story.fate(b, st.home.sig, Story.START_YEAR);
+      journal('<b>The ' + esc(st.home.name) + ' endure past the year ' + pr.target + '.</b>');
+      showStory({ kicker: 'Year ' + app.tick + ' · ' + esc(b.name), title: 'History rewritten', html:
+        '<p>You look into the Chronoscope and the year ' + pr.end + ' passes like any other. The banners of the <b>' + esc(st.home.name) + '</b> still fly in ' + pr.target + '.</p>' +
+        '<p>' + (f.end ? 'In this timeline they last until the year ' + f.end + ' (' + (f.end - pr.end) + ' years longer than foretold).' : 'In this timeline they are still standing in the year ' + HORIZON + '.') + '</p>' +
+        (app.impact ? '<p>Your deeds changed ' + fmtPop(app.impact.lives) + ' lives compared with ' + esc(app.cmp ? app.cmp.name : 'the original history') + '.</p>' : '') +
+        '<p>The Chronoscope\'s other powers are open to you now: plague, flood, mountains. History is yours to wander.</p>',
+        buttons: [{ label: 'Wander through time' }] });
+    } else {
+      var f2 = Story.fate(b, st.home.sig, Story.START_YEAR);
+      st.quest = 'fallen:' + (f2.end != null ? f2.end : '?');
+    }
+  }
+
+  function liveYear() {
+    if (app.story.mode !== 'story' || app.story.stage === 'loading') return;
+    var p = app.person, s = app.view.s;
+    if (p.dead || !s) return;
+    var r = Story.healthYear(s, p.y * W + p.x, p.age, p.age < p.immuneUntil);
+    p.age += 1;
+    p.health = Math.min(Story.maxHealth(p.age), p.health + r.delta);
+    p.reasons = r.reasons;
+    if (r.exposed && p.age >= p.immuneUntil && p.health > 0) { p.immuneUntil = p.age + 25; toast('You survive the sickness. You will not catch it again for many years.'); }
+    if (p.health <= 0) die(r.reasons);
+  }
+
+  function die(reasons) {
+    var p = app.person, st = app.story, s = app.view.s;
+    p.dead = true; p.health = 0; p.target = -1;
+    app.playing = false; syncPlay();
+    var worst = reasons.filter(function (x) { return x[1] < 0; }).sort(function (a, b) { return a[1] - b[1]; })[0];
+    var cause = worst ? { plague: 'of plague', 'plague nearby': 'of the plague that swept your district', famine: 'of hunger', age: 'of old age', 'at sea': 'at sea', wilderness: 'alone in the wilderness', 'harsh climate': 'in a bitter season', 'desert heat': 'of thirst in the desert', 'border strife': 'in a border skirmish', 'thin mountain air': 'in the high passes' }[worst[0]] || 'of hardship' : 'of hardship';
+    var i = p.y * W + p.x, c = s ? s.owner[i] : -1;
+    journal('You die ' + cause + ' at the age of ' + p.age + (c >= 0 ? ', among the ' + esc(Sim.civName(s.cSig[c])) : '') + '.');
+    showStory({ kicker: 'Year ' + app.tick, title: 'Your life ends', html:
+      '<p>You die ' + cause + ' at the age of ' + p.age + ' in the year ' + app.tick + (c >= 0 ? ', among the <b>' + esc(Sim.civName(s.cSig[c])) + '</b>' : '') + '.</p>' +
+      '<p>What you did still stands: every deed of this life remains written into its timeline.</p>' +
+      (st.stage === 'quest' ? '<p>Your people\'s fate is still undecided. The Chronoscope can find another bearer.</p>' : ''),
+      buttons: [{ label: 'Live again', fn: liveAgain }, { label: 'New world', fn: function () { newWorld(Math.floor(Math.random() * 1e6)); } }] });
+  }
+
+  function liveAgain() {
+    var p = app.person, s = app.view.s, st = app.story;
+    p.life++; p.age = 20; p.health = 100; p.dead = false; p.immuneUntil = 0; p.reasons = []; p.timeAcc = 0; p.knowledge = null;
+    var c = homeCiv(s), spot = -1;
+    if (c >= 0) spot = Story.pickBirthplace(s, c, Math.random);
+    else for (var k = 0; k < 200 && spot < 0; k++) { var i = Math.floor(Math.random() * N); if (s.pop[i] > 0) spot = i; }
+    if (spot >= 0) { p.x = spot % W; p.y = (spot / W) | 0; }
+    journal('Life ' + p.life + ' begins: you wake, twenty years old, ' + (c >= 0 ? 'among the ' + esc(st.home.name) : 'far from your people') + ', with the Chronoscope in your pack.');
+    app.needsRender = true; app.panelsAt = 0;
+  }
+
+  function objectiveTile(s) {
+    var st = app.story, c = homeCiv(s);
+    if ((st.stage === 'goCapital' || st.stage === 'quest') && c >= 0) return s.cCap[c];
+    return -1;
+  }
+
+  function objectiveHTML() {
+    var st = app.story, pr = st.prophecy;
+    if (st.mode !== 'story') return '';
+    var t = '', status = '', cls = '';
+    switch (st.stage) {
+      case 'loading': return '';
+      case 'goCapital': t = 'Walk to the capital of the ' + esc(st.home.name) + ' (the gold star) and present yourself to ' + esc(st.home.ruler) + '.'; break;
+      case 'learn': t = 'Spend a year learning among your people: the Learn deed (5).'; break;
+      case 'help': t = 'Help your people: dig irrigation (1), rally them (2) or tend the sick (3) in their lands.'; break;
+      case 'awaitVision': t = 'Rest (R) or go about your life…'; break;
+      case 'quest':
+        t = 'Save the ' + esc(st.home.name) + ': they must still stand in the year ' + pr.target + '. Foretold fall: ' + pr.end + '.';
+        if (st.quest === 'reading') status = 'The Chronoscope is reading this timeline… (year ' + app.cur.computedTo + ')';
+        else if (st.quest.indexOf('fallen:') === 0) {
+          var y = st.quest.slice(7); cls = 'bad';
+          status = 'In this timeline (' + esc(app.cur.name) + ') they still fall in the year ' + y + (y !== '?' && +y !== pr.end ? ' (' + (+y > pr.end ? '+' : '') + (+y - pr.end) + ' years)' : '') + '.';
+        }
+        break;
+      case 'won': t = 'You saved the ' + esc(st.home.name) + '. Wander through history as you please.'; cls = 'good'; break;
+      default: return '';
+    }
+    return '<div class="objective"><span class="label">' + (st.stage === 'quest' ? 'Quest' : st.stage === 'won' ? 'Fulfilled' : 'Prologue') + '</span>' + t +
+      (status ? '<span class="status ' + cls + '">' + status + '</span>' : '') + '</div>';
+  }
+
+  function renderJournal() {
+    var st = app.story, html = objectiveHTML();
+    if (st.mode !== 'story') html += '<p class="muted">Sandbox: no story in this world. Choose a world number and press Create to start a new life with a story.</p>';
+    html += '<ol class="journal">' + st.journal.slice().reverse().map(function (j) {
+      return '<li><span class="t">Y' + j.t + '</span>' + j.html + '</li>';
+    }).join('') + '</ol>';
+    $('journal').innerHTML = html;
+  }
+
+  function drawObjective(ctx, s, ox, oy, ts, close) {
+    var tile = objectiveTile(s);
+    if (tile < 0) return;
+    var x = (tile % W - ox) * ts + ts / 2, y = (((tile / W) | 0) - oy) * ts + ts / 2;
+    var cw = mapCanvas.width, ch = mapCanvas.height, pulse = Math.sin(performance.now() / 250) * 2;
+    if (close && (x < 0 || y < 0 || x > cw || y > ch)) {
+      // arrow at the screen edge pointing toward the goal
+      var px = (app.person.x - ox) * ts + ts / 2, py = (app.person.y - oy) * ts + ts / 2;
+      var a = Math.atan2(y - py, x - px), ex = Math.max(24, Math.min(cw - 24, cw / 2 + Math.cos(a) * cw)), ey = Math.max(24, Math.min(ch - 24, ch / 2 + Math.sin(a) * ch));
+      ctx.save(); ctx.translate(ex, ey); ctx.rotate(a);
+      ctx.fillStyle = '#d8aa4e'; ctx.strokeStyle = '#1a1408'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-8, -9); ctx.lineTo(-3, 0); ctx.lineTo(-8, 9); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+      return;
+    }
+    var r = (close ? 11 : 7) + pulse;
+    ctx.fillStyle = '#ffd36b'; ctx.strokeStyle = '#1a1408'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (var k = 0; k < 10; k++) {
+      var ang = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * 0.45 : r;
+      var sx = x + Math.cos(ang) * rr, sy = y - (close ? ts * 0.55 : 0) + Math.sin(ang) * rr;
+      if (k) ctx.lineTo(sx, sy); else ctx.moveTo(sx, sy);
+    }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+
+  // ---------------------------------------------------------------------------
   // Walking
   // ---------------------------------------------------------------------------
   function stepToward(now) {
     var p = app.person;
+    if (p.dead) { p.target = -1; return; }
     if (p.target < 0 || now - p.lastStep < 60) return;
     var tx = p.target % W, ty = (p.target / W) | 0;
     if (tx === p.x && ty === p.y) { p.target = -1; return; }
@@ -241,8 +498,8 @@
 
   function moveTo(nx, ny) {
     var p = app.person, s = app.view.s;
-    if (nx < 0 || ny < 0 || nx >= W || ny >= H || !s) return false;
-    var cost = Sim.isLand(s.terrain[ny * W + nx]) ? STEP_COST : SEA_COST;
+    if (nx < 0 || ny < 0 || nx >= W || ny >= H || !s || p.dead) return false;
+    var cost = (Sim.isLand(s.terrain[ny * W + nx]) ? STEP_COST : SEA_COST) * (p.health < 30 ? 1.5 : 1);
     if (p.stalled || !spendTime(cost)) return false;
     p.x = nx; p.y = ny;
     app.needsRender = true;
@@ -366,6 +623,7 @@
     ctx.fillStyle = '#ffe9a8'; ctx.strokeStyle = '#1a1408'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(px0, py0, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     drawTarget(ctx, 0, 0, S);
+    drawObjective(ctx, s, 0, 0, S, false);
     if (app.hover >= 0) {
       var r = radiusOf(app.tool), hx = app.hover % W, hy = (app.hover / W) | 0;
       ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1;
@@ -467,6 +725,7 @@
       ctx.fillStyle = '#f4ecd8'; ctx.fillText(l.text, l.x, l.y);
     });
     drawTarget(ctx, cam.x, cam.y, TS);
+    drawObjective(ctx, s, cam.x, cam.y, TS, true);
     drawPerson(ctx, (app.person.x - cam.x) * TS + TS / 2, (app.person.y - cam.y) * TS + TS / 2);
     if (app.hover >= 0) {
       var r = app.tool === 'walk' ? 0 : radiusOf(app.tool), hx = app.hover % W - cam.x, hy = ((app.hover / W) | 0) - cam.y;
@@ -647,7 +906,8 @@
     if (cmp) for (t = 0; t < cmp.computedTo; t++) if (cmp.popHist[t] > max) max = cmp.popHist[t];
     app.chartMax = max;
     var scale = (h - top - 2) / max, colW = w / (HORIZON / SAMPLE), sel = app.selected;
-    var n = Math.min(b.samples.length, Math.ceil(b.computedTo / SAMPLE));
+    var known = locked() ? Math.min(b.computedTo, app.tick + 1) : b.computedTo;
+    var n = Math.min(b.samples.length, Math.ceil(known / SAMPLE));
     for (var k = 0; k < n; k++) {
       var arr = b.samples[k];
       if (!arr) continue;
@@ -661,7 +921,7 @@
       }
     }
     ctx.globalAlpha = 1;
-    if (cmp && cmp.computedTo > 0) {
+    if (cmp && cmp.computedTo > 0 && !locked()) {
       ctx.strokeStyle = 'rgba(240,235,220,.8)'; ctx.lineWidth = 1.5 * dpr; ctx.setLineDash([4 * dpr, 3 * dpr]);
       ctx.beginPath();
       for (t = 0; t < cmp.computedTo; t += SAMPLE) {
@@ -670,13 +930,13 @@
       }
       ctx.stroke(); ctx.setLineDash([]);
     }
-    var fx = b.computedTo / HORIZON * w;
+    var fx = known / HORIZON * w;
     if (fx < w) {
       ctx.fillStyle = 'rgba(255,255,255,.035)'; ctx.fillRect(fx, 0, w - fx, h);
       ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
       for (var hx = fx - h; hx < w; hx += 10 * dpr) { ctx.beginPath(); ctx.moveTo(Math.max(fx, hx), hx < fx ? h - (fx - hx) : h); ctx.lineTo(hx + h, 0); ctx.stroke(); }
       ctx.fillStyle = 'rgba(216,170,78,.8)'; ctx.font = 'italic ' + 12 * dpr + 'px Georgia, serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      if (w - fx > 160 * dpr) ctx.fillText('the future is being written…', fx + 10 * dpr, h / 2);
+      if (w - fx > 160 * dpr) ctx.fillText(locked() ? 'the future is hidden from you…' : 'the future is being written…', fx + 10 * dpr, h / 2);
     }
     ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.font = 10 * dpr + 'px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     for (t = 500; t < HORIZON; t += 500) { var gx = t / HORIZON * w; ctx.fillRect(gx, 0, 1, 4 * dpr); ctx.fillText(String(t), gx, 4 * dpr); }
@@ -741,7 +1001,7 @@
     $('age').textContent = worldAge(s);
     $('year-stats').textContent = fmtPop(pop) + ' people · ' + states + ' realms';
     var div = $('divergence');
-    if (app.cmp && app.impact) {
+    if (app.cmp && app.impact && !locked()) {
       div.hidden = false;
       $('div-label').innerHTML = 'Compared with ' + esc(app.cmp.name) + ': <b>' + fmtPop(app.impact.lives) + '</b> lives changed · <b>' +
         (app.impact.owners * 100).toFixed(1) + '%</b> of lands ruled differently';
@@ -764,6 +1024,16 @@
     html += '.';
     if (p.knowledge) html += '<br><span class="muted">You carry the knowledge of the ' + esc(Sim.civName(p.knowledge.sig)) + ': ' + Sim.AGES[Sim.ageOf(p.knowledge.tech)].name + ' (' + p.knowledge.tech + ').</span>';
     if (p.stalled) html += '<br><span class="muted">Waiting for the future to be written…</span>';
+    if (app.story.mode === 'story' && app.story.stage !== 'loading') {
+      var hc = p.health >= 55 ? 'var(--new)' : p.health >= 25 ? 'var(--gold)' : 'var(--erased)';
+      html += '<div class="vitals"><span>Age <b>' + p.age + '</b></span><span>' + (p.dead ? 'dead' : Story.condition(p.health)) + '</span>' +
+        '<div class="hbar" title="Health ' + Math.round(p.health) + ' of ' + Story.maxHealth(p.age) + '"><div style="width:' + Math.max(0, p.health) + '%;background:' + hc + '"></div></div>' +
+        '<span>' + Math.round(p.health) + '</span></div>';
+      if (p.reasons.length) html += '<div class="reasons">Last year: ' + p.reasons.map(function (r) {
+        return '<span class="' + (r[1] >= 0 ? 'pos' : 'neg') + '">' + esc(r[0]) + ' ' + (r[1] >= 0 ? '+' : '') + r[1] + '</span>';
+      }).join(' · ') + '</div>';
+      if (p.life > 1) html += '<div class="reasons">Life ' + p.life + '</div>';
+    }
     $('you').innerHTML = html;
   }
 
@@ -779,6 +1049,8 @@
   }
 
   function updateBranchLine() {
+    $('branch-line').hidden = locked();
+    if (locked()) return;
     var w = app.world, html = '<span class="muted">Timeline:</span> <b>' + esc(app.cur.name) + '</b>';
     var opts = '<option value="-1">nothing</option>' + w.branches.filter(function (b) { return b !== app.cur && !b.deleted; }).map(function (b) {
       return '<option value="' + b.id + '"' + (app.cmp === b ? ' selected' : '') + '>' + esc(b.name) + '</option>';
@@ -811,7 +1083,7 @@
   function renderChronicle(force) {
     var b = app.cur, cmp = app.cmp;
     var major = $('f-major').checked, onlyChanges = cmp && $('f-changes').checked;
-    var key = [b.id, b.version, b.events.length, b.interventions.length, cmp ? cmp.id + ':' + cmp.events.length : '-', major, onlyChanges, Math.floor(app.tick / 5)].join('|');
+    var key = [locked(), b.id, b.version, b.events.length, b.interventions.length, cmp ? cmp.id + ':' + cmp.events.length : '-', major, onlyChanges, Math.floor(app.tick / 5)].join('|');
     if (!force && key === app.chronKey) return;
     app.chronKey = key;
     var upTo = cmp ? Math.min(b.computedTo, cmp.computedTo) : 0;
@@ -822,6 +1094,7 @@
       var e = rows[k].e, diff = rows[k].diff;
       if (major && !e.major && !diff) continue;
       if (onlyChanges && !diff) continue;
+      if (locked() && e.t > app.tick) continue;
       var cls = [e.t > app.tick ? 'future' : '', diff].join(' ');
       if (nowIdx < 0 && e.t > app.tick) nowIdx = count;
       var tag = diff === 'mine' ? '' : diff ? '<span class="tag ' + diff + '">' + diff + '</span>' : '';
@@ -842,6 +1115,7 @@
 
   function renderTimelines(force) {
     var w = app.world;
+    if (locked()) { $('timelines').innerHTML = '<p class="muted">There is only one history, the one you are living.</p>'; app.tlKey = ''; return; }
     var key = w.branches.map(function (b) { return b.id + ':' + b.interventions.length + ':' + Math.floor(b.computedTo / 100) + (b.deleted ? 'd' : ''); }).join(',') + '|' + app.cur.id + '|' + (app.cmp ? app.cmp.id : '-');
     if (!force && key === app.tlKey) return;
     app.tlKey = key;
@@ -917,6 +1191,7 @@
     el.innerHTML = html;
     el.querySelectorAll('[data-jump]').forEach(function (btn) { btn.onclick = function () { app.playing = false; syncPlay(); setTick(+btn.dataset.jump); }; });
     $('btn-unselect').onclick = function () { app.selected = 0; invalidateAll(); renderRealm(); };
+    el.querySelectorAll('[data-jump]').forEach(function (btn) { if (locked()) btn.hidden = true; });
     if ($('btn-goto-cap')) $('btn-goto-cap').onclick = function () { app.person.target = s.cCap[c]; setTool('walk'); };
     var cv = $('realm-spark'), ctx = cv.getContext('2d'), maxv = peak || 1;
     ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, cv.height);
@@ -928,7 +1203,7 @@
   function setTab(tab) {
     app.tab = tab;
     document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === tab); });
-    ['chronicle', 'timelines', 'realm'].forEach(function (p) { $('panel-' + p).hidden = p !== tab; });
+    ['journal', 'chronicle', 'timelines', 'realm'].forEach(function (p) { $('panel-' + p).hidden = p !== tab; });
     app.panelsAt = 0; app.chronKey = ''; app.tlKey = '';
   }
 
@@ -979,7 +1254,7 @@
     if (app.cmp) w.touch(app.cmp, kept);
 
     // background computation of the future
-    var budget = document.hidden ? 0 : 10, t0 = performance.now();
+    var budget = document.hidden ? 0 : app.story.stage === 'loading' ? 40 : 10, t0 = performance.now();
     if (!w.isComplete(b)) { w.compute(b, budget); app.chartDirty = true; }
     if (app.cmp && !w.isComplete(app.cmp) && performance.now() - t0 < budget) { w.compute(app.cmp, budget - (performance.now() - t0)); app.chartDirty = true; }
 
@@ -990,12 +1265,14 @@
       if (adv > 0) {
         app.acc -= adv;
         var target = Math.min(app.tick + adv, b.computedTo);
-        if (target > app.tick) { app.tick = target; app.needsRender = true; }
+        while (app.tick < target && !app.person.dead) { app.tick++; app.needsRender = true; liveYear(); }
         if (app.tick >= HORIZON) { app.playing = false; syncPlay(); }
       }
     }
     // and while you walk or work
     payTime();
+    storyFrame();
+    if (locked() && app.view.tick !== app.tick) app.chartDirty = true;
     if (app.view.s && app.view.tick === app.tick && !app.person.stalled) stepToward(now);
 
     var overlay = $('map-overlay');
@@ -1023,10 +1300,12 @@
 
     if (now - app.panelsAt > 300) {
       app.panelsAt = now;
-      $('compute-status').textContent = w.isComplete(b) ? 'Future known to year ' + HORIZON : 'Writing the future… year ' + b.computedTo;
+      $('compute-status').textContent = locked() ? '' : w.isComplete(b) ? 'Future known to year ' + HORIZON : 'Writing the future… year ' + b.computedTo;
+      if (app.story.stage === 'quest') checkQuest();
       updateBranchLine();
       if (app.view.s) { updateYou(app.view.s); updateHotbar(app.view.s); }
-      if (app.tab === 'chronicle') renderChronicle();
+      if (app.tab === 'journal') renderJournal();
+      else if (app.tab === 'chronicle') renderChronicle();
       else if (app.tab === 'timelines') renderTimelines();
       else renderRealm();
     }
@@ -1044,9 +1323,11 @@
   }
   function buildToolbar() {
     var tb = $('toolbar');
+    var powers = app.story.mode === 'sandbox' || app.story.stage === 'won';
+    if (!powers && POWERS.some(function (t) { return t.id === app.tool; })) app.tool = 'walk';
     tb.innerHTML = BASE_TOOLS.map(function (t) { return toolButton(t); }).join('') +
-      '<div class="toolbar-label" title="Act as a god instead of a person">Powers</div>' +
-      POWERS.map(function (t) { return toolButton(t, ' power'); }).join('');
+      (powers ? '<div class="toolbar-label" title="Act as a god instead of a person">Powers</div>' +
+      POWERS.map(function (t) { return toolButton(t, ' power'); }).join('') : '');
     tb.querySelectorAll('.tool').forEach(function (btn) { btn.onclick = function () { setTool(btn.dataset.tool); }; });
   }
   function buildHotbar() {
@@ -1101,6 +1382,7 @@
 
     var dragging = false;
     chart.addEventListener('pointerdown', function (e) {
+      if (locked()) { lockedToast(); return; }
       dragging = true; chart.setPointerCapture(e.pointerId);
       app.playing = false; syncPlay(); app.person.target = -1; setTick(chartTickAt(e.clientX));
     });
@@ -1122,13 +1404,14 @@
     chart.addEventListener('pointerleave', function () { $('chart-tip').hidden = true; });
 
     $('btn-play').onclick = function () {
-      if (app.tick >= HORIZON) setTick(0, true);
+      if (app.person.dead) return;
+      if (app.tick >= HORIZON) { if (locked()) return; setTick(0, true); }
       app.playing = !app.playing; syncPlay();
     };
-    $('btn-start').onclick = function () { setTick(0); };
-    $('btn-end').onclick = function () { setTick(app.cur.computedTo); };
-    $('btn-back').onclick = function (e) { app.playing = false; syncPlay(); setTick(app.tick - (e.shiftKey ? 10 : 1)); };
-    $('btn-fwd').onclick = function (e) { app.playing = false; syncPlay(); setTick(app.tick + (e.shiftKey ? 10 : 1)); };
+    $('btn-start').onclick = function () { if (locked()) return lockedToast(); setTick(0); };
+    $('btn-end').onclick = function () { if (locked()) return lockedToast(); setTick(app.cur.computedTo); };
+    $('btn-back').onclick = function (e) { if (locked()) return lockedToast(); app.playing = false; syncPlay(); setTick(app.tick - (e.shiftKey ? 10 : 1)); };
+    $('btn-fwd').onclick = function (e) { if (locked()) return lockedToast(); app.playing = false; syncPlay(); setTick(app.tick + (e.shiftKey ? 10 : 1)); };
     $('speed').onchange = function () { app.speed = +this.value; };
     $('btn-camera').onclick = function () { setCamera(app.camera === 'close' ? 'world' : 'close'); };
     $('f-major').onchange = $('f-changes').onchange = function () { renderChronicle(true); };
@@ -1137,6 +1420,7 @@
     $('chronicle').addEventListener('click', function (e) {
       var li = e.target.closest('li[data-t]');
       if (!li) return;
+      if (locked()) return;
       app.playing = false; syncPlay();
       setTick(+li.dataset.t);
       if (+li.dataset.x >= 0) app.flash = { x: +li.dataset.x, y: +li.dataset.y, until: performance.now() + 1500 };
@@ -1147,11 +1431,12 @@
       var v = $('seed').value.trim();
       if (v.indexOf('seed=') >= 0) {
         var p = Timeline.decode(v);
-        newWorld(p.seed || 0, p.interventions);
+        newWorld(p.seed || 0, p.interventions, 'sandbox');
         if (p.interventions.length) toast('Timeline restored: ' + p.interventions.length + ' deed' + (p.interventions.length > 1 ? 's' : '') + ' replayed.');
       } else newWorld(parseInt(v, 10) || 0);
     };
     $('btn-random').onclick = function () { newWorld(Math.floor(Math.random() * 1e6)); };
+    $('help').querySelector('#btn-sandbox').onclick = function () { $('help').hidden = true; newWorld(app.world.seed, [], 'sandbox'); };
     $('seed').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btn-new').click(); });
     $('btn-link').onclick = function () {
       var code = Timeline.encode(app.world.seed, app.cur.interventions);
@@ -1179,6 +1464,8 @@
         return;
       }
       var step = e.shiftKey ? 10 : 1;
+      if (!$('story').hidden) { if (e.key === 'Enter' || e.key === 'Escape') { var sb = $('story-actions').querySelector('button'); if (sb) sb.click(); } return; }
+      if (locked() && (key === ',' || key === '.' || key === '<' || key === '>' || e.key === 'Home' || e.key === 'End')) { lockedToast(); return; }
       if (e.key === ' ') { e.preventDefault(); $('btn-play').click(); }
       else if (key === ',' || key === '<') { app.playing = false; syncPlay(); setTick(app.tick - step); }
       else if (key === '.' || key === '>') { app.playing = false; syncPlay(); setTick(app.tick + step); }
@@ -1202,12 +1489,10 @@
   function boot() {
     wire();
     var parsed = Timeline.decode(location.hash);
-    newWorld(parsed.seed != null ? parsed.seed : 1, parsed.interventions);
+    var sandbox = parsed.interventions.length > 0;
+    newWorld(parsed.seed != null ? parsed.seed : Math.floor(Math.random() * 1e6), parsed.interventions, sandbox ? 'sandbox' : 'story');
     sizeChart();
     syncPlay();
-    var seen = false;
-    try { seen = localStorage.getItem('chronoscope-help') === '2'; } catch (e) { /* ignore */ }
-    if (!seen) $('help').hidden = false;
     requestAnimationFrame(frame);
   }
   boot();

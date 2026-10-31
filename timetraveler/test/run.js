@@ -104,6 +104,24 @@ console.log('       one life of 4 deeds changes ' + (TL.divergence(v2.seek(life,
 var code = TL.decode(TL.encode(11, life.interventions));
 check('teach carries its knowledge in the timeline code', code.interventions[3].v === 5000);
 
+console.log('Story');
+var St = require('../js/story.js');
+var w3 = new TL.World(1, { horizon: 1600 });
+while (w3.compute(w3.root, 1000)) {}
+var s3 = new TL.View(w3).seek(w3.root, 1000), seq = 0.5, rnd = function () { seq = (seq * 7 + 0.31) % 1; return seq; };
+var home3 = St.pickHome(w3.root, s3, rnd);
+check('a home realm alive in year 1000 is chosen', home3 && s3.sTiles[home3.c] >= 15);
+var f3 = St.fate(w3.root, home3.sig, 1000);
+check('its fall is foretold within a few centuries', f3.end > 1060 && f3.end < 1450, 'end ' + f3.end);
+var tale = St.homeStory(s3, home3.c, w3.root, 1000, St.pickBirthplace(s3, home3.c, rnd));
+check('the prologue names the realm and its ruler', tale.html.indexOf(tale.name) >= 0 && /(King|Queen|Chief|Prince)/.test(tale.ruler));
+var pr = St.prophecy(w3.root, home3.sig, 1002);
+check('the prophecy gives a year and a goal 50 years later', pr && pr.target === pr.end + 50 && pr.vision.length > 10);
+var quiet = St.healthYear(s3, s3.cCap[home3.c], 30, false), old = St.healthYear(s3, s3.cCap[home3.c], 80, false);
+check('a year in the capital heals the young, old age wears you down', quiet.delta > 0 && old.delta < quiet.delta && St.maxHealth(80) < 100);
+var seaTile = -1; for (i = 0; i < Sim.N && seaTile < 0; i++) if (!Sim.isLand(s3.terrain[i])) seaTile = i;
+check('a year at sea hurts', St.healthYear(s3, seaTile, 30, false).delta < 0);
+
 console.log('Sharing');
 var enc = TL.encode(7, br.interventions), dec = TL.decode('#' + enc);
 check('timeline encodes to a link and back', dec.seed === 7 && dec.interventions.length === 1 && dec.interventions[0].x === iv.x && dec.interventions[0].type === 'tribe');
