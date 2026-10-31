@@ -13,13 +13,45 @@ node timetraveler/test/run.js                 # determinism + time-travel tests
 node timetraveler/tools/chronicle.js 1 3000   # print a world's full history headless
 ```
 
+## Playing as a person
+
+You are one traveller loose in time. A camera follows you through the world in
+close view (houses, castles, forests, rivers), with a minimap; press **Z** for the
+whole-world view.
+
+- **Walk:** click the map or use WASD/arrows. A province takes about two months on foot; sea takes half a year by boat.
+- **Deeds** (keys 1–8) act where you stand and take a year each. A greyed-out deed explains why it won't work here.
+
+| Deed | Effect (all local: your province and its neighbours) |
+| --- | --- |
+| Dig irrigation | Soil fertility +12% |
+| Rally the people | Solidarity +15 points |
+| Tend the sick | Stops plague, short immunity |
+| Lead settlers | Neighbours move into empty land, or you found a new people |
+| Learn | You carry this people's knowledge (no change to the world) |
+| Teach | Closes half the gap between their knowledge and what you carry |
+| Sow discord | Solidarity −15 points |
+| Assassinate | At a capital only: realm-wide succession crisis (solidarity ×0.68) |
+
+Walking doesn't touch the simulation; it only spends your time. Deeds are
+recorded as interventions, so a life of deeds replays exactly. Acting later in a
+timeline continues it; going back in time and acting forks a new one. After a
+deed you get the immediate local effect (for example "Their knowledge rises from
+Iron Age (1100) to Classical Age (2600)"), and the impact meter shows **lives
+changed** (immediate) and **lands ruled differently** (usually takes
+centuries). Carrying ideas from an advanced people to a backward one, and
+assassinating the ruler of an already fragile empire, are the strongest levers
+in testing.
+
+The god-like **Powers** (plague, floods, mountains…) are still on the left toolbar.
+
 ## How to play
 
 | Action | How |
 | --- | --- |
 | Play / pause | Space, or ▶ |
-| Travel in time | Click or drag the history chart; ←/→ (Shift ×10); Home/End |
-| Change history | Pick a tool on the left, click the map |
+| Travel in time | Click or drag the history chart; `,` / `.` (Shift ×10); Home/End |
+| Change history | Deeds 1–8 where you stand, or a Power from the left toolbar and click the map |
 | Compare timelines | "vs" dropdown, *Divergence* map mode, *Only changes* in the chronicle |
 | Follow a people | Inspect tool → click a realm, or double-click a band in the chart |
 | Undo | Ctrl+Z |

@@ -73,6 +73,37 @@ check('undo removes the edit', w.undo(br) && br.interventions.length === 1);
 while (w.compute(br, 1000)) {}
 check('after undo the branch recomputes identically', Sim.stateHash(v.seek(br, 700)) === Sim.stateHash(expected));
 
+console.log('A single person');
+var w2 = new TL.World(11, { horizon: 500, kfEvery: 50 });
+while (w2.compute(w2.root, 1000)) {}
+var v2 = new TL.View(w2), sp = v2.seek(w2.root, 150), home = -1, empty = -1;
+for (i = 0; i < Sim.N; i++) {
+  if (home < 0 && sp.owner[i] >= 0 && sp.cCap[sp.owner[i]] === i) home = i;
+}
+for (i = 0; i < Sim.N && empty < 0; i++) {
+  if (sp.owner[i] >= 0) for (var d = 0; d < 4; d++) { var nb = Sim.NB[i * 4 + d]; if (nb >= 0 && Sim.isLand(sp.terrain[nb]) && sp.owner[nb] < 0 && sp.pop[nb] === 0) { empty = nb; break; } }
+}
+var hx = home % Sim.W, hy = (home / Sim.W) | 0, ex = empty % Sim.W, ey = (empty / Sim.W) | 0;
+check('deed blockers: assassinate allowed only at a capital', Sim.deedBlocker(sp, 'assassinate', hx, hy, null) === '' && Sim.deedBlocker(sp, 'assassinate', ex, ey, null) !== '');
+check('deed blockers: settle allowed only on empty land', Sim.deedBlocker(sp, 'settle', ex, ey, null) === '' && Sim.deedBlocker(sp, 'settle', hx, hy, null) !== '');
+var life = w2.intervene(w2.root, 150, { type: 'irrigate', x: hx, y: hy });
+var life2 = w2.intervene(life, 151, { type: 'rally', x: hx, y: hy });
+var life3 = w2.intervene(life, 160, { type: 'settle', x: ex, y: ey });
+check('deeds later in your life continue the same timeline', life2 === life && life3 === life && life.interventions.length === 3);
+var life4 = w2.intervene(life, 170, { type: 'teach', x: hx, y: hy, v: 5000 });
+var life5 = w2.intervene(life, 165, { type: 'assassinate', x: hx, y: hy });
+check('going back before your last deed forks a new timeline', life4 === life && life5 !== life && life5.interventions.length === 4);
+while (w2.compute(life, 1000)) {}
+var deeds = [{ t: 150, type: 'irrigate', x: hx, y: hy }, { t: 151, type: 'rally', x: hx, y: hy }, { t: 160, type: 'settle', x: ex, y: ey }, { t: 170, type: 'teach', x: hx, y: hy, v: 5000 }];
+function runSeed(seed, years, ivs) { var r = Sim.create(seed), by = {}; ivs.forEach(function (q) { (by[q.t] = by[q.t] || []).push(q); });
+  for (var tt = 0; tt < years; tt++) { (by[tt] || []).forEach(function (q) { Sim.applyIntervention(r, q); }); Sim.step(r, null); } return r; }
+check('a life of deeds replays identically', Sim.stateHash(v2.seek(life, 500)) === Sim.stateHash(runSeed(11, 500, deeds)));
+check('settling claims the empty land', v2.seek(life, 160).owner[empty] >= 0);
+var vv = new TL.View(w2);
+console.log('       one life of 4 deeds changes ' + (TL.divergence(v2.seek(life, 500), vv.seek(w2.root, 500)) * 100).toFixed(1) + '% of the world by year 500');
+var code = TL.decode(TL.encode(11, life.interventions));
+check('teach carries its knowledge in the timeline code', code.interventions[3].v === 5000);
+
 console.log('Sharing');
 var enc = TL.encode(7, br.interventions), dec = TL.decode('#' + enc);
 check('timeline encodes to a link and back', dec.seed === 7 && dec.interventions.length === 1 && dec.interventions[0].x === iv.x && dec.interventions[0].type === 'tribe');

@@ -938,8 +938,93 @@
         forArea(x, y, 3, function (i) { recomputeBase(s, i); });
         forArea(x, y, 1, function (i) { s.soil[i] = s.base[i]; });
         break;
+
+      // ---- deeds of a single person (small, local; history amplifies them) ----
+      case 'irrigate':
+        ensureOwnStatic(s);
+        forArea(x, y, 1, function (i) {
+          if (!isLand(s.terrain[i])) return;
+          s.base[i] = Math.min(CFG.soilMax, s.base[i] + 1200);
+          s.soil[i] = Math.min(s.base[i], s.soil[i] + 1200);
+        });
+        break;
+      case 'rally':
+        forArea(x, y, 1, function (i) { if (s.owner[i] >= 0) s.asab[i] = Math.min(CFG.asabMax, s.asab[i] + 1500); });
+        break;
+      case 'discord':
+        forArea(x, y, 1, function (i) { if (s.owner[i] >= 0) s.asab[i] = Math.max(0, s.asab[i] - 1500); });
+        break;
+      case 'heal':
+        forArea(x, y, 1, function (i) { s.plague[i] = 0; if (s.pop[i] > 0 && s.immune[i] < 30) s.immune[i] = 30; });
+        break;
+      case 'settle': {
+        if (!isLand(s.terrain[center]) || s.owner[center] >= 0 || s.pop[center] > 0) break;
+        var from = -1;
+        for (var d = 0; d < 4; d++) {
+          var n = NB[center * 4 + d];
+          if (n >= 0 && s.owner[n] >= 0 && (from < 0 || s.pop[n] > s.pop[from])) from = n;
+        }
+        var m = from >= 0 ? Math.max(10, Math.floor(s.pop[from] / 4)) : 0;
+        if (from >= 0 && s.pop[from] > m + 10) {
+          s.pop[from] -= m;
+          s.pop[center] = m; s.owner[center] = s.owner[from]; s.asab[center] = s.asab[from];
+          if (s.soil[center] < 1500) s.soil[center] = Math.min(s.base[center], 1500);
+        } else {
+          spawnTribe(s, center, 25, 5000);
+        }
+        break;
+      }
+      case 'teach': {
+        var tc = s.owner[center];
+        if (tc >= 0 && (iv.v | 0) > s.cTech[tc]) s.cTech[tc] += Math.floor(((iv.v | 0) - s.cTech[tc]) / 2);
+        break;
+      }
+      case 'assassinate': {
+        var ac = s.owner[center];
+        if (ac < 0 || s.cCap[ac] !== center) break;
+        // succession crisis: solidarity drops realm-wide; a fragile realm may not survive it
+        for (var k = 0; k < N; k++) if (s.owner[k] === ac) s.asab[k] = Math.floor(s.asab[k] * 68 / 100);
+        s.cCrisis[ac] = Math.min(255, s.cCrisis[ac] + 8);
+        break;
+      }
     }
     computeStats(s);
+  }
+
+  /** Deeds a single person can do where they stand. Effects live in applyIntervention. */
+  var DEEDS = [
+    { id: 'irrigate', key: '1', name: 'Dig irrigation', icon: '⌇', desc: 'Dig canals with the locals: richer soil here and next door.' },
+    { id: 'rally', key: '2', name: 'Rally the people', icon: '⚑', desc: 'Stir the solidarity of the people around you.' },
+    { id: 'heal', key: '3', name: 'Tend the sick', icon: '✚', desc: 'Nurse and quarantine: stop a plague around you.' },
+    { id: 'settle', key: '4', name: 'Lead settlers', icon: '⌂', desc: 'Lead neighbours into this empty land, or gather followers into a new people.' },
+    { id: 'learn', key: '5', name: 'Learn', icon: '◎', desc: 'Study what the people here know. You carry it with you.' },
+    { id: 'teach', key: '6', name: 'Teach', icon: '✎', desc: 'Teach the knowledge you carry to the people here.' },
+    { id: 'discord', key: '7', name: 'Sow discord', icon: '☍', desc: 'Spread rumours that weaken the solidarity around you.' },
+    { id: 'assassinate', key: '8', name: 'Assassinate', icon: '†', desc: 'At a ruler\'s seat only: throw the whole realm into a succession crisis.' }
+  ];
+
+  /** Whether a deed would do anything here. Returns '' if possible, else the reason. */
+  function deedBlocker(s, id, x, y, knowledge) {
+    var i = y * W + x, c = s.owner[i], d, n, anyOwned = c >= 0;
+    for (d = 0; d < 4; d++) { n = NB[i * 4 + d]; if (n >= 0 && s.owner[n] >= 0) anyOwned = true; }
+    switch (id) {
+      case 'irrigate': return isLand(s.terrain[i]) ? '' : 'You cannot dig canals at sea.';
+      case 'rally': case 'discord': return anyOwned ? '' : 'There is no one here to listen.';
+      case 'heal':
+        if (s.plague[i]) return '';
+        for (d = 0; d < 4; d++) { n = NB[i * 4 + d]; if (n >= 0 && s.plague[n]) return ''; }
+        return 'No one around you is sick.';
+      case 'settle':
+        if (!isLand(s.terrain[i])) return 'You cannot settle the sea.';
+        return c < 0 && s.pop[i] === 0 ? '' : 'This land is already settled. Walk to empty land.';
+      case 'learn': return c >= 0 ? '' : 'There is no one here to learn from.';
+      case 'teach':
+        if (!knowledge) return 'You have learned nothing yet. Learn from an advanced people first.';
+        if (c < 0) return 'There is no one here to teach.';
+        return knowledge.tech > s.cTech[c] ? '' : 'They already know more than you can teach.';
+      case 'assassinate': return c >= 0 && s.cCap[c] === i ? '' : 'You must stand at a ruler\'s seat (a capital).';
+    }
+    return '';
   }
 
   // ---------------------------------------------------------------------------
@@ -947,7 +1032,7 @@
   // ---------------------------------------------------------------------------
   var Sim = {
     W: W, H: H, N: N, MAX_CIVS: MAX_CIVS, TER: TER, TERRAIN_NAMES: TERRAIN_NAMES,
-    AGES: AGES, TOOLS: TOOLS, CFG: CFG, G_TICK: G_TICK,
+    AGES: AGES, TOOLS: TOOLS, DEEDS: DEEDS, deedBlocker: deedBlocker, CFG: CFG, G_TICK: G_TICK, NB: NB,
     create: create, step: step, snapshot: snapshot, restore: restore,
     applyIntervention: applyIntervention, computeStats: computeStats,
     stateHash: stateHash, civName: civName, ageOf: ageOf, meanAsab: meanAsab,

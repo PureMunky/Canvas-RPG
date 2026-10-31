@@ -81,16 +81,20 @@
   };
 
   /**
-   * The traveller acts at year T. Edits made at the same year as a branch's
-   * own most recent edits (and before it has children) extend that branch;
-   * anything else forks a new branch from `b`.
+   * The traveller acts at year T. Acting at or after a branch's own latest
+   * change (while it has no children) extends that branch, so a life lived
+   * forward stays one timeline; going back in time and acting forks a new one.
    */
   World.prototype.intervene = function (b, T, iv) {
-    iv = { t: T, type: iv.type, x: iv.x, y: iv.y };
+    var src = iv;
+    iv = { t: T, type: src.type, x: src.x, y: src.y };
+    if (src.v) iv.v = src.v | 0;           // e.g. the knowledge level a teacher carries
+    if (src.note) iv.note = src.note;      // display only, not part of the timeline's identity
     var self = this;
     var hasChildren = this.branches.some(function (c) { return c.parent === b.id; });
     var own = b.interventions.slice(this._inheritedCount(b));
-    var extend = b.parent >= 0 && !hasChildren && own.length > 0 && own.every(function (o) { return o.t === T; });
+    // Acting at or after your latest change continues this timeline; going back before it forks.
+    var extend = b.parent >= 0 && !hasChildren && own.length > 0 && own.every(function (o) { return o.t <= T; });
     if (extend) {
       b.interventions.push(iv);
       this._index(b);
@@ -243,6 +247,13 @@
     return land ? diff / land : 0;
   }
 
+  /** How much two worlds differ: share of land ruled differently, and lives changed. */
+  function impact(a, b) {
+    var lives = 0;
+    for (var i = 0; i < Sim.N; i++) { var d = a.pop[i] - b.pop[i]; lives += d < 0 ? -d : d; }
+    return { owners: divergence(a, b), lives: lives };
+  }
+
   function eventKey(e) { return e.t + '|' + e.type + '|' + e.a + '|' + e.b; }
 
   /**
@@ -269,7 +280,7 @@
   // ---------------------------------------------------------------------------
   function encode(seed, interventions) {
     return 'seed=' + seed + (interventions.length ? '&iv=' + interventions.map(function (iv) {
-      return iv.t + '.' + iv.type + '.' + iv.x + '.' + iv.y;
+      return iv.t + '.' + iv.type + '.' + iv.x + '.' + iv.y + (iv.v ? '.' + iv.v : '');
     }).join('_') : '');
   }
   function decode(str) {
@@ -279,14 +290,16 @@
       if (p[0] === 'seed') out.seed = parseInt(p[1], 10) >>> 0;
       if (p[0] === 'iv' && p[1]) out.interventions = p[1].split('_').map(function (s) {
         var q = s.split('.');
-        return { t: parseInt(q[0], 10), type: q[1], x: parseInt(q[2], 10), y: parseInt(q[3], 10) };
+        var iv = { t: parseInt(q[0], 10), type: q[1], x: parseInt(q[2], 10), y: parseInt(q[3], 10) };
+        if (q[4]) iv.v = parseInt(q[4], 10) | 0;
+        return iv;
       }).filter(function (iv) { return !isNaN(iv.t) && !isNaN(iv.x) && !isNaN(iv.y); })
         .sort(function (a, b) { return a.t - b.t; });
     });
     return out;
   }
 
-  var Timeline = { World: World, View: View, divergence: divergence, diffChronicle: diffChronicle,
+  var Timeline = { World: World, View: View, divergence: divergence, impact: impact, diffChronicle: diffChronicle,
     encode: encode, decode: decode, SAMPLE: SAMPLE, eventKey: eventKey };
   if (typeof module !== 'undefined' && module.exports) module.exports = Timeline;
   else root.Timeline = Timeline;

@@ -76,7 +76,7 @@ button, input, select { font: inherit; color: inherit; }
 #map {
   display: block; width: 100%; height: auto; margin: 0 auto; image-rendering: pixelated; cursor: crosshair;
   /* keep map + transport + chart within one screen */
-  max-width: max(480px, calc((100vh - 330px) * 1.6));
+  max-width: max(480px, calc((100vh - 400px) * 1.6));
 }
 .map-overlay {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -207,3 +207,39 @@ button, input, select { font: inherit; color: inherit; }
 }
 
 .toast .code { display: block; margin-top: 6px; padding: 4px 6px; background: var(--bg); border-radius: 4px; font-size: 12px; user-select: all; word-break: break-all; }
+
+/* ---------- playing as a person ---------- */
+.map-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.map-bar .map-modes { flex: 1; min-width: 0; }
+.toolbar-label { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-align: center; margin: 8px 0 0; }
+.tool.power { height: 40px; font-size: 17px; }
+.tool.power.active { border-color: #be96ff; background: #241c33; box-shadow: 0 0 0 1px #be96ff inset; }
+
+.hotbar { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; }
+.deed {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center; column-gap: 6px;
+  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 8px; padding: 6px 8px; cursor: pointer; text-align: left; min-width: 0;
+}
+.deed:hover { background: #2a2416; border-color: var(--gold); }
+.deed:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.deed .k { grid-row: 1; grid-column: 1; font-size: 10px; color: var(--gold); border: 1px solid var(--gold-dim); border-radius: 3px; padding: 0 4px; line-height: 14px; }
+.deed .di { grid-row: 1; grid-column: 2; font-size: 17px; line-height: 1; color: var(--gold); }
+.deed .dn { grid-row: 2; grid-column: 1 / -1; font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deed.blocked { border-color: var(--line); opacity: .45; }
+.deed.blocked .di, .deed.blocked .k { color: var(--muted); border-color: var(--line); }
+.deed.rest { border-color: var(--line); }
+
+.you { margin-top: 8px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--line); border-left: 2px solid var(--gold); border-radius: 6px; font-size: 13px; }
+.you b { font-weight: 600; }
+.sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.warn { color: var(--erased); }
+.btn.mini { padding: 0 6px; font-size: 11px; margin-left: 6px; }
+.chronicle li.mine { border-left-color: var(--gold); background: rgba(216, 170, 78, .07); }
+.chronicle li.mine .i { color: var(--gold); }
+
+@media (max-width: 900px) {
+  .hotbar { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .hotbar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
