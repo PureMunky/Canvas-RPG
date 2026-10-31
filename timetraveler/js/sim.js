@@ -174,7 +174,8 @@
       sFarPick: new Int32Array(MAX_CIVS), sFarH: new Uint32Array(MAX_CIVS),
       sFamine: new Int32Array(MAX_CIVS), sPlague: new Int32Array(MAX_CIVS),
       sContact: new Int32Array(MAX_CIVS), sShock: new Uint8Array(MAX_CIVS),
-      sPower: new Float64Array(MAX_CIVS), sReach: new Int32Array(MAX_CIVS)
+      sPower: new Float64Array(MAX_CIVS), sReach: new Int32Array(MAX_CIVS),
+      conq: []                // this year's conquests as [attackerSig, defenderSig] pairs (scratch, for history)
     };
   }
 
@@ -586,6 +587,7 @@
   // ---------------------------------------------------------------------------
   function step(s, sink) {
     var t = s.g[G_TICK];
+    s.conq.length = 0;
     computeStats(s);
     computeClimate(s);
     civPhase(s, sink);
@@ -817,6 +819,7 @@
           s.pop[j] -= Math.floor(s.pop[j] * CFG.conquestLossPct / 100);
           s.pop[i] -= Math.floor(s.pop[i] / 16);
           s.cLostTo[e] = s.cSig[c];
+          s.conq.push(s.cSig[c], s.cSig[e]);
           if (s.cCap[e] === j) s.cCapLostTo[e] = s.cSig[c];
           s.owner[j] = c;
           s.asab[j] = Math.floor(s.asab[i] * 3 / 4);

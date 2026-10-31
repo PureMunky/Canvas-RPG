@@ -15,9 +15,10 @@
       <input id="seed" type="text" spellcheck="false" autocomplete="off" aria-label="World number or timeline code" placeholder="number or code" title="A world number starts a new story; a timeline code opens it in sandbox mode">
       <button id="btn-new" class="btn">Create</button>
       <button id="btn-random" class="btn" title="Random world">⚄</button>
+      <button id="btn-today" class="btn" title="Today's world: the same life for everyone who plays today">Today</button>
     </div>
     <div class="top-actions">
-      <button id="btn-link" class="btn" title="Copy a code that recreates this exact timeline">Share timeline</button>
+      <button id="btn-link" class="btn" title="Story: copy a challenge code (same realm, same birth). Sandbox: copy this exact timeline.">Share</button>
       <button id="btn-help" class="btn" title="How it works">?</button>
     </div>
   </header>
@@ -43,7 +44,7 @@
         <button class="btn icon" id="btn-fwd" title="Forward one year (. key, Shift: 10)">▶|</button>
         <button class="btn icon" id="btn-end" title="Furthest known future (End)">⏭</button>
         <label class="speed">Speed
-          <select id="speed">
+          <select id="speed" title="While you are alive in story mode, time flows at most 100 years a second">
             <option value="1">1 yr/s</option>
             <option value="2">2 yrs/s</option>
             <option value="10" selected>10 yrs/s</option>
@@ -119,6 +120,8 @@
         <li><b>Age and health:</b> you age only while you live through years (walking, deeds, resting, Play), not while you travel in time. Plague, famine, wilderness, sea voyages and border strife hurt you; living among people heals you. Choose which years of history to spend your life on.</li>
         <li><b>Walk:</b> click the map, or use WASD / arrow keys. Walking a province takes about two months; crossing sea by boat takes half a year.</li>
         <li><b>Deeds</b> (keys 1–8) act where you stand and take a year. Greyed-out deeds tell you why they won't work here.</li>
+        <li><b>Pass it on</b> (P): once the Chronoscope is yours, you can give it to a young person where you stand, choosing the year and place, and they carry on the quest. If you die first, you hand it to whoever finds you.</li>
+        <li><b>Listen:</b> the Chronoscope hums in the years that matter and sings when one deed, here and now, would turn fate. You can switch hints off in the Journal.</li>
         <li><b>Rest</b> (R) lets a year pass. Press Play to let time flow on its own.</li>
         <li><b>Travel in time</b> by dragging the history chart. Acting later in your own timeline continues it; going back and acting starts a new one, so you can compare.</li>
       </ul>
@@ -138,7 +141,7 @@
         <li><b>Collapse:</b> an empire whose solidarity stays low too long shatters into successor states.</li>
         <li><b>Plague and climate:</b> crowded cities breed epidemics; regional droughts and golden ages come and go.</li>
       </ul>
-      <p class="keys">WASD/arrows walk · 1–8 deeds · R rest · Space play/pause · , and . step a year (Shift ×10) · Z close/world view · M map mode · Ctrl+Z undo · Esc walk</p>
+      <p class="keys">WASD/arrows walk · 1–8 deeds · R rest · P pass it on · Space play/pause · , and . step a year (Shift ×10) · Z close/world view · M map mode · Ctrl+Z undo · Esc walk</p>
       <div class="story-actions"><button class="btn primary" id="btn-help-close">Close</button><button class="btn" id="btn-sandbox" title="Skip the story: no aging, every power unlocked">Sandbox mode (no story)</button></div>
     </div>
   </div>
@@ -146,6 +149,7 @@
   <script src="js/sim.js"></script>
   <script src="js/timeline.js"></script>
   <script src="js/story.js"></script>
+  <script src="js/oracle.js"></script>
   <script src="js/ui.js"></script>
 </body>
 </html>

@@ -49,14 +49,15 @@
   // ---------------------------------------------------------------------------
   /** A realm alive at START_YEAR whose fall is foretold within a few centuries. */
   function pickHome(branch, s, rnd) {
-    var doomed = [], others = [];
+    var named = [], doomed = [], others = [];
     for (var c = 0; c < s.g[1]; c++) {
       if (!s.cAlive[c] || s.sTiles[c] < 15) continue;
       var f = fate(branch, s.cSig[c], START_YEAR);
       var item = { c: c, sig: s.cSig[c], end: f.end };
-      if (f.end && f.end > START_YEAR + 60 && f.end < START_YEAR + 450) doomed.push(item); else others.push(item);
+      if (f.end && f.end > START_YEAR + 60 && f.end < START_YEAR + 450) (f.event ? named : doomed).push(item); else others.push(item);
     }
-    var pool = doomed.length ? doomed : others;
+    // prefer a fall the chronicle names (a conqueror or a collapse): it makes a better story
+    var pool = named.length ? named : doomed.length ? doomed : others;
     if (!pool.length) return null;
     return pool[Math.floor(rnd() * pool.length)];
   }
@@ -155,6 +156,14 @@
   function esc(t) { return String(t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); }
   function fmtPop(p) { return p >= 1e6 ? (p / 1e6).toFixed(1) + ' million' : p >= 1000 ? Math.round(p / 1000) + ',000' : String(p); }
 
+  /** A short sketch of a people, for a new bearer of the Chronoscope. */
+  function peopleSketch(s, c) {
+    var sig = s.cSig[c], sv = survey(s, c), name = Sim.civName(sig);
+    var c1 = hashPick(sig, 11, CUSTOMS.length);
+    return 'The ' + esc(name) + ' are ' + folk(sv) + ' of the ' + ageName(s.cTech[c]) + ', ' + fmtPop(s.sPop[c]) + ' souls in ' + sv.tiles + ' provinces. ' +
+      'They ' + CUSTOMS[c1] + ', and today they are ' + temperament(Sim.meanAsab(s, c)) + '.';
+  }
+
   /** The prologue: who you are, where you come from. Returns { title, html, ruler, capital }. */
   function homeStory(s, c, branch, tick, birth) {
     var sig = s.cSig[c], name = Sim.civName(sig), sv = survey(s, c), A = Sim.meanAsab(s, c);
@@ -176,15 +185,91 @@
         return (k === 0 ? 'To the ' : 'To the ') + nb.dir + ' lie the <b>' + esc(Sim.civName(nb.sig)) + '</b>, a realm ' + rel + '.';
       }).join(' ') + '</p>';
     }
-    var hist = branch.events.filter(function (e) {
-      return e.t <= tick && (e.a === sig || e.b === sig || (s.cParent[c] && e.a === s.cParent[c]));
-    }).slice(-4);
+    var hist = memories(branch, sig, tick);
     if (hist.length) {
-      html += '<p class="lore-head">The elders remember:</p><ul class="lore">' + hist.map(function (e) {
-        return '<li><span class="t">' + e.t + '</span> ' + esc(e.text) + '</li>';
+      html += '<p class="lore-head">The elders remember:</p><ul class="lore">' + hist.map(function (m) {
+        return '<li><span class="t">' + m.t + '</span> ' + m.html + '</li>';
       }).join('') + '</ul>';
     }
     return { name: name, ruler: ruler, capital: cap, html: html };
+  }
+
+  // ---------------------------------------------------------------------------
+  // What a people remembers: ancestry, wars, census milestones, chronicle
+  // ---------------------------------------------------------------------------
+  function censusSeries(branch, sig, upTo) {
+    var out = [];
+    for (var k = 0; k * SAMPLE <= upTo && k < branch.samples.length; k++) {
+      var arr = branch.samples[k], v = -1;
+      if (arr) for (var j = 0; j < arr.length; j += 3) if (arr[j] === sig) { v = arr[j + 1]; break; }
+      out.push(v);
+    }
+    return out;
+  }
+
+  /** Long wars between `sig` and others: consecutive decades of fighting with one foe. */
+  function warsOf(branch, sig, upTo) {
+    var byFoe = {};
+    branch.warLog.forEach(function (w) {
+      if (w.dec * 10 > upTo || (w.a !== sig && w.d !== sig)) return;
+      var foe = w.a === sig ? w.d : w.a;
+      (byFoe[foe] = byFoe[foe] || []).push({ dec: w.dec, won: w.a === sig ? w.n : 0, lost: w.d === sig ? w.n : 0 });
+    });
+    var wars = [];
+    Object.keys(byFoe).forEach(function (foe) {
+      var list = byFoe[foe].sort(function (x, y) { return x.dec - y.dec; }), cur = null;
+      list.forEach(function (e) {
+        if (cur && e.dec <= cur.end + 2) { cur.end = Math.max(cur.end, e.dec); cur.won += e.won; cur.lost += e.lost; }
+        else { if (cur) wars.push(cur); cur = { foe: +foe, start: e.dec, end: e.dec, won: e.won, lost: e.lost }; }
+      });
+      if (cur) wars.push(cur);
+    });
+    return wars.filter(function (w) { return w.won + w.lost >= 5; })
+      .sort(function (x, y) { return (y.won + y.lost) - (x.won + x.lost); });
+  }
+
+  function memories(branch, sig, tick) {
+    var m = [], name = Sim.civName(sig);
+    // ancestry
+    var lin = branch.lineage[sig], chain = [];
+    for (var g = lin; g && g.parent && chain.length < 3; g = branch.lineage[g.parent]) chain.push(g.parent);
+    if (lin && chain.length) {
+      var parentName = Sim.civName(chain[0]);
+      var pFall = branch.events.filter(function (e) { return e.a === chain[0] && (e.type === 'collapse' || e.type === 'fall') && e.t <= tick; })[0];
+      var seceded = branch.events.some(function (e) { return e.type === 'secede' && e.a === sig; });
+      m.push({ t: lin.founded, html: 'The ' + esc(name) + (seceded ? ' broke away from the <b>' + esc(parentName) + '</b>' : ' rose from the ruins of the <b>' + esc(parentName) + '</b>') +
+        (pFall && !seceded ? ', whose realm ' + (pFall.type === 'collapse' ? 'collapsed' : 'fell') + ' in ' + pFall.t : '') +
+        (chain.length > 1 ? '; they in turn were heirs of the ' + chain.slice(1).map(function (x) { return esc(Sim.civName(x)); }).join(', then the ') : '') + '.' });
+    }
+    else if (lin) {
+      m.push({ t: lin.founded, html: lin.founded < 60 ? 'The first villages of the ' + esc(name) + ' are raised by settlers from beyond memory.' : 'The ' + esc(name) + ' are founded.' });
+    }
+    // wars
+    warsOf(branch, sig, tick).slice(0, 3).forEach(function (w) {
+      var foe = esc(Sim.civName(w.foe)), total = w.won + w.lost, years = (w.end - w.start + 1) * 10;
+      var verdict = w.won > w.lost * 2 ? 'most of them won by the ' + esc(name) : w.lost > w.won * 2 ? 'most of them lost to the ' + foe : 'neither side winning for long';
+      m.push({ t: w.start * 10, html: (years >= 30 ? 'The long war with the <b>' + foe + '</b>' : 'War with the <b>' + foe + '</b>') + ' (' + w.start * 10 + '–' + Math.min(tick, w.end * 10 + 9) + '): ' + total + ' provinces changed hands, ' + verdict + '.' });
+    });
+    // census milestones
+    var ser = censusSeries(branch, sig, tick), peak = -1, peakK = -1, k;
+    for (k = 0; k < ser.length; k++) if (ser[k] > peak) { peak = ser[k]; peakK = k; }
+    var gap = 20; // a century, in samples
+    var bestGrow = null, bestDrop = null;
+    for (k = gap; k < ser.length; k++) {
+      var a0 = ser[k - gap], a1 = ser[k];
+      if (a0 < 1500 || a1 <= 0) continue;
+      if (a1 >= a0 * 2 && (!bestGrow || a1 / a0 > bestGrow.r)) bestGrow = { r: a1 / a0, t: k * SAMPLE };
+      if (a1 <= a0 * 0.65 && (!bestDrop || a1 / a0 < bestDrop.r)) bestDrop = { r: a1 / a0, t: k * SAMPLE };
+    }
+    if (bestGrow) m.push({ t: bestGrow.t - 100, html: 'Within a century their numbers ' + (bestGrow.r >= 4 ? 'more than quadrupled' : bestGrow.r >= 3 ? 'tripled' : 'doubled') + '.' });
+    if (bestDrop) m.push({ t: bestDrop.t - 100, html: 'Hard times: within a century they lost ' + Math.round((1 - bestDrop.r) * 100) + '% of their people to war, hunger or plague.' });
+    if (peakK >= 0 && peakK * SAMPLE < tick - 40) m.push({ t: peakK * SAMPLE, html: 'Their golden age: ' + fmtPop(peak) + ' souls, more than they number today.' });
+    // chronicle
+    branch.events.forEach(function (e) {
+      if (e.t <= tick && (e.a === sig || e.b === sig) && e.type !== 'rise') m.push({ t: e.t, html: esc(e.text) });
+    });
+    m.sort(function (x, y) { return x.t - y.t; });
+    return m.slice(-6);
   }
 
   // ---------------------------------------------------------------------------
@@ -203,7 +288,7 @@
     } else {
       hint = 'The causes are unclear. Watch the realm\'s solidarity, harvests and neighbours as its end draws near.';
     }
-    return { end: f.end, target: f.end + MARGIN, vision: vision, hint: hint, conqueror: conqueror };
+    return { end: f.end, target: f.end + MARGIN, vision: vision, hint: hint, conqueror: conqueror, foeSig: conqueror ? ev.b : 0 };
   }
 
   // ---------------------------------------------------------------------------
@@ -245,8 +330,8 @@
   function maxHealth(age) { return Math.max(0, Math.min(100, 100 - Math.max(0, age - 50) * 2)); }
   function condition(h) { return h >= 80 ? 'hale' : h >= 55 ? 'well' : h >= 30 ? 'weary' : h >= 12 ? 'ill' : 'dying'; }
 
-  var Story = { START_YEAR: START_YEAR, MARGIN: MARGIN, fate: fate, present: present, pickHome: pickHome, pickBirthplace: pickBirthplace,
-    homeStory: homeStory, prophecy: prophecy, healthYear: healthYear, maxHealth: maxHealth, condition: condition, survey: survey };
+  var Story = { START_YEAR: START_YEAR, MARGIN: MARGIN, fate: fate, present: present, pickHome: pickHome, memories: memories, warsOf: warsOf, pickBirthplace: pickBirthplace,
+    homeStory: homeStory, peopleSketch: peopleSketch, personName: personName, prophecy: prophecy, healthYear: healthYear, maxHealth: maxHealth, condition: condition, survey: survey };
   if (typeof module !== 'undefined' && module.exports) module.exports = Story;
   else root.Story = Story;
 }(this));

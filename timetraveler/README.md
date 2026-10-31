@@ -15,16 +15,30 @@ node timetraveler/tools/chronicle.js 1 3000   # print a world's full history hea
 
 ## Story mode (default)
 
-Each new world starts a story:
+The world number decides the story, so anyone entering the same number is born into the same life.
 
-1. **Prologue, year 1000.** You are twenty, born in a village of a realm chosen at random among those alive in year 1000 whose fall is foretold within a few centuries. The opening describes your people from the actual simulation: their land (river people, hill clans, seafarers…), size, age of technology, temperament (their solidarity), two customs, their ruler, their neighbours, and what their elders remember from the chronicle. The future is hidden and time travel is locked.
-2. **Coming of age.** Walk to the capital (gold star) and swear the oath, spend a year learning, then help your people with a deed.
-3. **The Chronoscope.** A stranger gives you the instrument and you see your realm's real fall in this timeline (for example "Year 1127. The last stronghold of Tharian falls to Jenithriis."), with a hint at the cause. **Quest: your realm must still stand 50 years after its foretold fall.** Time travel unlocks, and the Journal tracks your realm's fate in whatever timeline you are in.
-4. **Victory** unlocks the god-like Powers. **Death** ends a life: your deeds stay in the timeline and you can live again.
+1. **Prologue, year 1000.** You are twenty and named, born in a village of a realm that is alive in year 1000 and whose fall is foretold within a few centuries (realms whose fall the chronicle names, by conquest or collapse, are preferred). The opening describes your people from the actual simulation: their land, size, technology, temperament, customs, their named ruler and their neighbours. **The elders remember** true history: ancestry (which realm they broke from or rose out of), their long wars (taken from per-decade conquest records), census milestones (booms, disasters, golden ages) and chronicle events. The future is hidden and time travel is locked.
+2. **Coming of age.** Walk to the capital (gold star) and swear the oath, spend a year learning, then help your people.
+3. **The Chronoscope.** A stranger presses it into your hands and you see your realm's real fall, with a hint at the cause. **Quest: your realm must still hold at least one province 50 years after its foretold fall.** Time travel unlocks. The Journal tracks the realm's fate in whatever timeline you are in.
+4. **Victory** unlocks the god-like Powers.
+
+### Timelines are your lives
+In story mode the original history is **"The world without you"**, and the timelines you make are **"Your first life"**, "Your first life, path 2" (when you go back and act again), **"Your second life"** (the next bearer), and so on. The impact meter therefore answers how much you mattered.
+
+### Passing on the Chronoscope
+There is no respawn. **Pass it on (P)**: give the Chronoscope to a young person wherever and whenever you stand, choosing the moment well, and your life as its bearer ends. If you die first, you press it into the hands of whoever finds you, someone nearby and of that land. Either way the new bearer begins at twenty with full health, knowing nothing you learned, and every deed of earlier bearers still stands in the timeline.
+
+### The Chronoscope hums (hints and difficulty)
+When the quest begins, the **Oracle** (`js/oracle.js`) quietly replays your current timeline from candidate years, about every 20 years over the 160 before the fall. In each it tries one simple deed a person could do: kill the rival ruler, sow discord in their capital, rally or irrigate your capital, or teach your people the world's best knowledge. It notes which deeds keep your realm alive. Because the world is deterministic, these aren't guesses. Then:
+- The Journal shows the **difficulty**: "A few threads lead to salvation", or "No single deed will turn this fate. It will take many".
+- The Chronoscope **hums faintly** in the right era, **hums** within a few provinces and years of a winning moment, and **sings**, lighting up the deed on the hotbar, when you stand exactly there and then.
+- It re-reads whenever your timeline changes. Hints can be switched off in the Journal.
+
+Across worlds 1–6, three quests have single-deed solutions (3–5 of about 40 tested) and three need several deeds.
 
 ### Aging and health
 
-You age only while living through years (walking, deeds, resting, Play), never while travelling in time, so a life of about 50 years has to be spent where it matters. Each year your health changes with your surroundings:
+You age only while living through years (walking, deeds, resting, Play), never while travelling in time. Each year is judged on that exact year's world, stepped one year at a time, so health is reproducible. While you're alive, playback runs at most 100 years per second.
 
 | Where you spend the year | Health |
 | --- | --- |
@@ -39,7 +53,10 @@ You age only while living through years (walking, deeds, resting, Play), never w
 
 A quiet life at home ends around 65–85. Below 30 health you walk at two-thirds speed.
 
-The quests are hard but winnable. In world 1 (Tharian vs Jenithriis), a search of 52 single deeds found 6 that save the realm, all of them by killing the Jenithriis ruler while that realm was still fragile (years 1000–1050). Combinations of deeds open more paths.
+### Sharing and challenges
+- **Share** in story mode copies a **challenge code** such as `seed=1&home=2089162062&born=35.65`. Whoever enters it in the World box is born where you were, in the same realm, facing the same fall.
+- **Today** opens today's world (the number is the date, for example 20261031): the same life for everyone who plays that day.
+- In sandbox mode, Share copies the full timeline code (world plus deeds).
 
 **Sandbox mode** (in the help screen, or by opening a timeline code) skips the story: no aging, every power unlocked.
 
@@ -145,7 +162,8 @@ timetraveler/
   css/style.css
   js/sim.js         deterministic simulation (pure, runs in Node and the browser)
   js/timeline.js    keyframes, branches, views, divergence, chronicle diff, links
-  js/story.js       home realm, prologue text, prophecy, quest fate, health rules
+  js/story.js       home realm, prologue and memories, prophecy, quest fate, health rules
+  js/oracle.js      replays the timeline with test deeds: hints and difficulty
   js/ui.js          canvas map, history chart, playback, panels
   test/run.js       determinism & time-travel tests
   tools/chronicle.js headless history printer for tuning

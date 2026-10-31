@@ -36,7 +36,7 @@
       age: 20, health: 100, life: 1, immuneUntil: 0, reasons: [], dead: false },
     story: { mode: 'story', stage: 'loading', unlocked: false, home: null, journal: [], prophecy: null, quest: '' },
     needsRender: true, chartDirty: true, chartDrawn: 0, panelsAt: 0, chronKey: '', tlKey: '',
-    flash: null, tab: 'journal', chartMax: 1, impact: null
+    flash: null, tab: 'journal', chartMax: 1, impact: null, oracle: null
   };
 
   // ---------------------------------------------------------------------------
@@ -62,11 +62,13 @@
   // ---------------------------------------------------------------------------
   // World lifecycle
   // ---------------------------------------------------------------------------
-  function newWorld(seed, interventions, mode) {
+  function newWorld(seed, interventions, mode, fixed) {
     seed = seed >>> 0;
     var st = app.story;
+    st.fixed = fixed || null; // a challenge: { home: sig, born: {x, y} }
     st.mode = mode || 'story'; st.unlocked = st.mode === 'sandbox'; st.stage = st.mode === 'story' ? 'loading' : 'free';
-    st.home = null; st.journal = []; st.prophecy = null; st.quest = '';
+    st.home = null; st.journal = []; st.prophecy = null; st.quest = ''; st.paths = {}; st.hints = st.hints !== false;
+    app.oracle = null; app.person.name = '';
     var p0 = app.person; p0.age = 20; p0.health = 100; p0.life = 1; p0.immuneUntil = 0; p0.reasons = []; p0.dead = false;
     app.world = new Timeline.World(seed, { horizon: HORIZON, kfEvery: KF, maxCached: 4 });
     app.view = new Timeline.View(app.world);
@@ -82,6 +84,7 @@
       if (app.cur !== prev) app.cmp = prev;
     });
     if (app.cur !== app.world.root) app.cmp = app.world.root;
+    if (st.mode === 'story') app.world.root.name = 'The world without you';
     placePerson();
     buildToolbar();
     invalidateAll();
@@ -91,6 +94,16 @@
       showStory({ kicker: 'World ' + seed, title: 'A world is being born', html: '<p>Peoples are settling the land, raising their first villages, and fighting their first wars. Your story begins in the year ' + Story.START_YEAR + '.</p><p class="muted" id="birth-progress">Year 0</p>', buttons: [] });
     }
   }
+
+  function seededRandom(a) {
+    return function () { // mulberry32
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function todaySeed() { var d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
 
   function locked() { return app.story.mode === 'story' && !app.story.unlocked; }
   function lockedToast() { toast('You cannot travel in time. <i>Not yet.</i>'); }
@@ -131,7 +144,7 @@
   }
   function payTime() {
     var p = app.person, b = app.cur;
-    while (p.timeAcc >= 1 && app.tick < b.computedTo && app.tick < HORIZON && !p.dead) { p.timeAcc -= 1; app.tick++; app.needsRender = true; liveYear(); }
+    while (p.timeAcc >= 1 && app.tick < b.computedTo && app.tick < HORIZON && !p.dead) { p.timeAcc -= 1; liveThroughYear(); }
     if (app.tick >= HORIZON) p.timeAcc = Math.min(p.timeAcc, 0.99);
     p.stalled = p.timeAcc >= 1;
   }
@@ -146,11 +159,21 @@
   }
   function isDeed(type) { return DEEDS.some(function (d) { return d.id === type; }); }
 
+  var ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
+  /** In story mode, timelines are named after your lives. */
+  function nameBranch(b) {
+    var st = app.story;
+    if (st.mode !== 'story') return;
+    var life = app.person.life, n = st.paths[life] = (st.paths[life] || 0) + 1;
+    b.name = 'Your ' + (ORD[life - 1] || life + 'th') + ' life' + (n > 1 ? ', path ' + n : '');
+    b.bearer = app.person.name;
+  }
+
   function record(iv) {
     var prev = app.cur;
     var b = app.world.intervene(app.cur, app.tick, iv);
     app.cur = b;
-    if (b !== prev) app.cmp = prev;
+    if (b !== prev) { app.cmp = prev; nameBranch(b); }
     app.flash = { x: iv.x, y: iv.y, until: performance.now() + 1500 };
     invalidateAll();
     updateHash();
@@ -275,18 +298,29 @@
     var st = app.story, root = app.world.root;
     setTick(Story.START_YEAR, true);
     var s = app.view.seek(root, app.tick);
-    var pick = Story.pickHome(root, s, Math.random);
+    // The world number alone decides your story, so anyone entering it is born into the same life.
+    var rnd = seededRandom(app.world.seed ^ 0x5eed), pick = null;
+    if (st.fixed && st.fixed.home) {
+      for (var fc = 0; fc < s.g[1]; fc++) if (s.cSig[fc] === st.fixed.home && s.cAlive[fc] && s.sTiles[fc] > 0) pick = { c: fc, sig: s.cSig[fc] };
+    }
+    if (!pick) pick = Story.pickHome(root, s, rnd);
     if (!pick) { st.mode = 'sandbox'; st.unlocked = true; st.stage = 'free'; $('story').hidden = true; buildToolbar(); return; }
-    var birth = Story.pickBirthplace(s, pick.c, Math.random);
+    var birth = Story.pickBirthplace(s, pick.c, rnd);
+    if (st.fixed && st.fixed.born) {
+      var fb = st.fixed.born.y * W + st.fixed.born.x;
+      if (fb >= 0 && fb < N && s.owner[fb] === pick.c) birth = fb;
+    }
+    st.birth = birth;
     var p = app.person;
     p.x = birth % W; p.y = (birth / W) | 0; p.target = -1; p.timeAcc = 0;
+    p.name = Story.personName(pick.sig, app.world.seed);
     var tale = Story.homeStory(s, pick.c, root, app.tick, birth);
     st.home = { sig: pick.sig, name: tale.name, ruler: tale.ruler };
     st.stage = 'goCapital';
     app.selected = 0;
     setCamera('close');
     journal('You come of age in a village of the <b>' + esc(tale.name) + '</b>.');
-    showStory({ kicker: 'Prologue · Year ' + app.tick, title: 'Child of the ' + tale.name, html: tale.html +
+    showStory({ kicker: 'Prologue · Year ' + app.tick, title: p.name + ', child of the ' + tale.name, html: '<p>Your name is <b>' + esc(p.name) + '</b>.</p>' + tale.html +
       '<p><b>Custom demands that every youth of age present themselves to the ruler.</b> Walk to the capital (marked with a gold star): click the map or use WASD.</p>',
       buttons: [{ label: 'Set out' }] });
     invalidateAll();
@@ -330,6 +364,7 @@
       if (app.cur.computedTo >= HORIZON && app.person.timeAcc < 1) showVision();
     } else if (st.stage === 'quest') {
       checkQuest();
+      tendOracle();
     }
   }
 
@@ -351,10 +386,32 @@
       '<p>In its glass you see the years run like water. Villages grow and burn. Then, ' + yearsAway + ' years from now:</p>' +
       '<p class="vision">Year ' + pr.end + '. ' + esc(pr.vision) + '</p>' +
       '<p>' + pr.hint + '</p>' +
-      '<p><b>Save the ' + esc(st.home.name) + ': they must still stand in the year ' + pr.target + '.</b></p>' +
-      '<p>The Chronoscope lets you travel through time: drag the history chart, or use , and . to step. <b>Travelling does not age you; living does.</b> You have one life, perhaps fifty years. Spend them where they matter. If you act in the past, history rewrites itself, and the Journal tells you whether your people still fall.</p>',
+      '<p><b>Save the ' + esc(st.home.name) + ': they must still hold at least one province in the year ' + pr.target + '.</b></p>' +
+      '<p>The Chronoscope lets you travel through time: drag the history chart, or use , and . to step. <b>Travelling does not age you; living does.</b> You have one life, perhaps fifty years. Spend them where they matter. If you act in the past, history rewrites itself, and the Journal tells you whether your people still fall.</p>' +
+      '<p>Listen to the instrument. It hums in the years that matter, louder as you come near a place and moment where one deed would turn fate. When your strength fails, give it to someone young (P), as it was given to you.</p>',
       buttons: [{ label: 'Take up the Chronoscope' }] });
     invalidateAll();
+  }
+
+  /** Keep the Oracle reading the timeline you are in (restarting when it changes). */
+  function tendOracle() {
+    var st = app.story, pr = st.prophecy, b = app.cur;
+    if (!pr || b.computedTo < pr.target) return;
+    var key = b.id + ':' + b.version;
+    if (!app.oracle || app.oracle.key !== key) {
+      app.oracle = new Oracle({ world: app.world, branch: b, homeSig: st.home.sig, foeSig: pr.foeSig, end: pr.end, target: pr.target });
+      app.oracle.key = key;
+    }
+  }
+
+  function humHTML() {
+    var o = app.oracle, p = app.person;
+    if (!o || !app.story.hints || app.story.stage !== 'quest' || p.dead) return '';
+    var h = o.hum(p.x, p.y, app.tick);
+    if (!h) return o.done ? '' : '<div class="hum quiet">⧗ The Chronoscope is listening…</div>';
+    if (h.level === 3) return '<div class="hum loud">⧗ The Chronoscope sings! A deed here, now, would turn fate: <b>' + esc(toolDef(h.deed).name) + '</b>.</div>';
+    if (h.level === 2) return '<div class="hum">⧗ The Chronoscope hums: somewhere near, within a few years, a single deed would matter.</div>';
+    return '<div class="hum faint">⧗ The Chronoscope hums faintly: these are years that matter.</div>';
   }
 
   function checkQuest() {
@@ -378,10 +435,20 @@
     }
   }
 
-  function liveYear() {
-    if (app.story.mode !== 'story' || app.story.stage === 'loading') return;
-    var p = app.person, s = app.view.s;
-    if (p.dead || !s) return;
+  var LIVING_SPEED = 100; // years per second at most while you are alive in story mode
+  function living() { return app.story.mode === 'story' && app.story.stage !== 'loading' && !app.person.dead; }
+
+  /** Live through the current year where you stand, judged on that exact year's world, then move on. */
+  function liveThroughYear() {
+    if (living()) liveYear(app.view.seek(app.cur, app.tick));
+    app.tick++;
+    app.needsRender = true;
+  }
+
+  function liveYear(s) {
+    var p = app.person;
+    if (!living() || !s) return;
+    p.reasonsYear = app.tick;
     var r = Story.healthYear(s, p.y * W + p.x, p.age, p.age < p.immuneUntil);
     p.age += 1;
     p.health = Math.min(Story.maxHealth(p.age), p.health + r.delta);
@@ -390,29 +457,78 @@
     if (p.health <= 0) die(r.reasons);
   }
 
+  // ---- passing on the Chronoscope ----
+  function freshName(sig) { return Story.personName(sig, Math.floor(Math.random() * 1e6)); }
+
+  /** A populated province at or near i (the nearest one), or anywhere among your people, or anywhere. */
+  function successorTile(s, i) {
+    var x0 = i % W, y0 = (i / W) | 0, best = -1, bestD = 1e9;
+    for (var y = Math.max(0, y0 - 8); y <= Math.min(H - 1, y0 + 8); y++) for (var x = Math.max(0, x0 - 8); x <= Math.min(W - 1, x0 + 8); x++) {
+      var j = y * W + x, d = Math.abs(x - x0) + Math.abs(y - y0);
+      if (s.owner[j] >= 0 && s.pop[j] > 0 && d < bestD) { best = j; bestD = d; }
+    }
+    if (best >= 0) return best;
+    var c = homeCiv(s);
+    if (c >= 0) return Story.pickBirthplace(s, c, Math.random);
+    for (var k = 0; k < 400; k++) { var r = Math.floor(Math.random() * N); if (s.pop[r] > 0 && s.owner[r] >= 0) return r; }
+    return i;
+  }
+
+  function causeOfDeath(reasons) {
+    var worst = reasons.filter(function (x) { return x[1] < 0; }).sort(function (a, b) { return a[1] - b[1]; })[0];
+    return worst ? { plague: 'of plague', 'plague nearby': 'of the plague that swept your district', famine: 'of hunger', age: 'of old age', 'at sea': 'at sea', wilderness: 'alone in the wilderness', 'harsh climate': 'in a bitter season', 'desert heat': 'of thirst in the desert', 'border strife': 'in a border skirmish', 'thin mountain air': 'in the high passes' }[worst[0]] || 'of hardship' : 'of hardship';
+  }
+
   function die(reasons) {
     var p = app.person, st = app.story, s = app.view.s;
     p.dead = true; p.health = 0; p.target = -1;
     app.playing = false; syncPlay();
-    var worst = reasons.filter(function (x) { return x[1] < 0; }).sort(function (a, b) { return a[1] - b[1]; })[0];
-    var cause = worst ? { plague: 'of plague', 'plague nearby': 'of the plague that swept your district', famine: 'of hunger', age: 'of old age', 'at sea': 'at sea', wilderness: 'alone in the wilderness', 'harsh climate': 'in a bitter season', 'desert heat': 'of thirst in the desert', 'border strife': 'in a border skirmish', 'thin mountain air': 'in the high passes' }[worst[0]] || 'of hardship' : 'of hardship';
-    var i = p.y * W + p.x, c = s ? s.owner[i] : -1;
-    journal('You die ' + cause + ' at the age of ' + p.age + (c >= 0 ? ', among the ' + esc(Sim.civName(s.cSig[c])) : '') + '.');
-    showStory({ kicker: 'Year ' + app.tick, title: 'Your life ends', html:
-      '<p>You die ' + cause + ' at the age of ' + p.age + ' in the year ' + app.tick + (c >= 0 ? ', among the <b>' + esc(Sim.civName(s.cSig[c])) + '</b>' : '') + '.</p>' +
-      '<p>What you did still stands: every deed of this life remains written into its timeline.</p>' +
-      (st.stage === 'quest' ? '<p>Your people\'s fate is still undecided. The Chronoscope can find another bearer.</p>' : ''),
-      buttons: [{ label: 'Live again', fn: liveAgain }, { label: 'New world', fn: function () { newWorld(Math.floor(Math.random() * 1e6)); } }] });
+    var cause = causeOfDeath(reasons), i = p.y * W + p.x, c = s ? s.owner[i] : -1;
+    var heir = successorTile(s, i), hc = s.owner[heir], heirName = freshName(hc >= 0 ? s.cSig[hc] : 7);
+    var heirPeople = hc >= 0 ? Sim.civName(s.cSig[hc]) : 'wanderers';
+    journal('<b>' + esc(p.name) + '</b> dies ' + cause + ' at the age of ' + p.age + (c >= 0 ? ', among the ' + esc(Sim.civName(s.cSig[c])) : '') + '.');
+    var holds = st.unlocked;
+    showStory({ kicker: 'Year ' + app.tick, title: 'The end of ' + p.name, html:
+      '<p>You die ' + cause + ' at the age of ' + p.age + ' in the year ' + app.tick + (c >= 0 ? ', among the <b>' + esc(Sim.civName(s.cSig[c])) + '</b>' : '') + '. Every deed of your life remains written into its timeline.</p>' +
+      (holds ? '<p>With your last strength you press the Chronoscope into the hands of <b>' + esc(heirName) + '</b>, a young ' + esc(heirPeople) + ' who found you. You say nothing. You understand now why the stranger said nothing either.</p>'
+        : '<p>Your story passes to another child of the <b>' + esc(st.home.name) + '</b>: <b>' + esc(heirName) + '</b>.</p>'),
+      buttons: [{ label: 'Continue as ' + heirName, fn: function () { becomeBearer(heir, heirName, 'death'); } }, { label: 'New world', fn: function () { newWorld(Math.floor(Math.random() * 1e6)); } }] });
   }
 
-  function liveAgain() {
+  /** Hand the Chronoscope on while you still live: you choose the year and the place. */
+  function offerPassOn() {
     var p = app.person, s = app.view.s, st = app.story;
-    p.life++; p.age = 20; p.health = 100; p.dead = false; p.immuneUntil = 0; p.reasons = []; p.timeAcc = 0; p.knowledge = null;
-    var c = homeCiv(s), spot = -1;
-    if (c >= 0) spot = Story.pickBirthplace(s, c, Math.random);
-    else for (var k = 0; k < 200 && spot < 0; k++) { var i = Math.floor(Math.random() * N); if (s.pop[i] > 0) spot = i; }
-    if (spot >= 0) { p.x = spot % W; p.y = (spot / W) | 0; }
-    journal('Life ' + p.life + ' begins: you wake, twenty years old, ' + (c >= 0 ? 'among the ' + esc(st.home.name) : 'far from your people') + ', with the Chronoscope in your pack.');
+    if (!st.unlocked || st.mode !== 'story') { toast('The Chronoscope is not yours to give. Not yet.'); return; }
+    if (p.dead || !s || app.view.tick !== app.tick) return;
+    var i = p.y * W + p.x, c = s.owner[i];
+    if (c < 0 || s.pop[i] <= 0) { toast('There is no one here to take the Chronoscope. Walk to where people live.'); return; }
+    var heirName = freshName(s.cSig[c]);
+    showStory({ kicker: 'Year ' + app.tick, title: 'Pass on the Chronoscope?', html:
+      '<p>A young ' + esc(Sim.civName(s.cSig[c])) + ' named <b>' + esc(heirName) + '</b> lives here, twenty years old. You could give them the Chronoscope now, in the year ' + app.tick + ', and walk into the dark as the stranger once did for you.</p>' +
+      '<p>Your own life ends here. They begin theirs with full health and all of it ahead of them, in this year and this place. Choose the moment well: travel first to where and when your people will need a young bearer.</p>',
+      buttons: [{ label: 'Give it to ' + heirName, fn: function () {
+        journal('<b>' + esc(p.name) + '</b>, aged ' + p.age + ', gives the Chronoscope to ' + esc(heirName) + ' and walks into the dark.');
+        becomeBearer(i, heirName, 'gift');
+      } }, { label: 'Not yet' }] });
+  }
+
+  function becomeBearer(tile, name, how) {
+    var p = app.person, st = app.story, s = app.view.seek(app.cur, app.tick);
+    p.life++; p.name = name; p.age = 20; p.health = 100; p.dead = false; p.immuneUntil = 0; p.reasons = []; p.timeAcc = 0;
+    p.knowledge = null; p.target = -1; p.x = tile % W; p.y = (tile / W) | 0;
+    var c = s.owner[tile], people = c >= 0 ? Sim.civName(s.cSig[c]) : null, pr = st.prophecy;
+    journal('<b>' + esc(name) + '</b> becomes bearer ' + p.life + ' of the Chronoscope' + (people ? ', among the ' + esc(people) : '') + '.');
+    if (!st.unlocked) { app.needsRender = true; app.panelsAt = 0; return; }
+    var how2 = how === 'gift'
+      ? 'A stranger in a grey cloak, old and quiet, pressed a brass instrument into your hands and walked into the dark.'
+      : 'You found a dying stranger by the road. With their last strength they pressed a brass instrument into your hands.';
+    showStory({ kicker: 'Bearer ' + p.life + ' · Year ' + app.tick, title: name + (people ? ' of the ' + people : ''), html:
+      '<p>You are <b>' + esc(name) + '</b>, twenty years old. ' + (c >= 0 ? Story.peopleSketch(s, c) : '') + '</p>' +
+      '<p>' + how2 + ' In its glass you saw a people called the <b>' + esc(st.home.name) + '</b>' +
+      (pr && st.stage === 'quest' ? ', and the year ' + pr.end + ', and a promise you did not make but now must keep: they must still hold a province in ' + pr.target + '.</p>'
+        : '.</p>') +
+      '<p class="muted">You carry no knowledge but your own. The deeds of those who held it before you still stand.</p>',
+      buttons: [{ label: 'Take up the Chronoscope' }] });
     app.needsRender = true; app.panelsAt = 0;
   }
 
@@ -433,7 +549,7 @@
       case 'help': t = 'Help your people: dig irrigation (1), rally them (2) or tend the sick (3) in their lands.'; break;
       case 'awaitVision': t = 'Rest (R) or go about your life…'; break;
       case 'quest':
-        t = 'Save the ' + esc(st.home.name) + ': they must still stand in the year ' + pr.target + '. Foretold fall: ' + pr.end + '.';
+        t = 'Save the ' + esc(st.home.name) + ': they must still hold at least one province in the year ' + pr.target + '. Foretold fall: ' + pr.end + '.';
         if (st.quest === 'reading') status = 'The Chronoscope is reading this timeline… (year ' + app.cur.computedTo + ')';
         else if (st.quest.indexOf('fallen:') === 0) {
           var y = st.quest.slice(7); cls = 'bad';
@@ -448,12 +564,21 @@
   }
 
   function renderJournal() {
-    var st = app.story, html = objectiveHTML();
+    var st = app.story, html = objectiveHTML(), o = app.oracle;
+    if (st.stage === 'quest') {
+      var d = o && o.difficulty();
+      html += '<div class="oracle">' + (!o ? 'The Chronoscope waits for this timeline to be written…'
+        : !o.done ? 'The Chronoscope is reading the threads of this timeline… ' + Math.round(o.progress() * 100) + '%' + (d ? '<br>' + esc(d.label) + ' so far.' : '')
+        : esc(d.label) + '. <span class="muted">(' + o.wins().length + ' of ' + o.total + ' single deeds it tested would save them.)</span>') +
+        '<label class="hint-toggle"><input type="checkbox" id="hints"' + (st.hints ? ' checked' : '') + '> Listen to the Chronoscope (hints)</label></div>';
+    }
     if (st.mode !== 'story') html += '<p class="muted">Sandbox: no story in this world. Choose a world number and press Create to start a new life with a story.</p>';
     html += '<ol class="journal">' + st.journal.slice().reverse().map(function (j) {
       return '<li><span class="t">Y' + j.t + '</span>' + j.html + '</li>';
     }).join('') + '</ol>';
     $('journal').innerHTML = html;
+    var hb = document.getElementById('hints');
+    if (hb) hb.onchange = function () { st.hints = hb.checked; app.panelsAt = 0; };
   }
 
   function drawObjective(ctx, s, ox, oy, ts, close) {
@@ -1014,7 +1139,7 @@
   function updateYou(s) {
     var p = app.person, i = p.y * W + p.x, c = s.owner[i], t = s.terrain[i];
     var PLACE = ['sail the deep ocean', 'sail the shallow sea', 'stand on the plains', 'walk in a forest', 'stand in the hills', 'climb in the mountains', 'cross the desert'];
-    var html = '<b>You</b> ' + PLACE[t] + (s.river[i] ? ' by a river' : '') + ' at (' + p.x + ', ' + p.y + ')';
+    var html = '<b>' + (app.story.mode === 'story' && p.name ? esc(p.name) : 'You') + '</b>' + (app.story.mode === 'story' && p.name ? ': you ' : ' ') + PLACE[t] + (s.river[i] ? ' by a river' : '') + ' at (' + p.x + ', ' + p.y + ')';
     if (c >= 0) {
       html += ', among the <span class="sw" style="background:' + civCSS(s.cSig[c]) + '"></span><b>' + esc(Sim.civName(s.cSig[c])) + '</b>';
       html += ' (' + fmtPop(s.pop[i]) + ' here' + (s.cCap[c] === i ? ', their capital' : '') + ')';
@@ -1029,21 +1154,26 @@
       html += '<div class="vitals"><span>Age <b>' + p.age + '</b></span><span>' + (p.dead ? 'dead' : Story.condition(p.health)) + '</span>' +
         '<div class="hbar" title="Health ' + Math.round(p.health) + ' of ' + Story.maxHealth(p.age) + '"><div style="width:' + Math.max(0, p.health) + '%;background:' + hc + '"></div></div>' +
         '<span>' + Math.round(p.health) + '</span></div>';
-      if (p.reasons.length) html += '<div class="reasons">Last year: ' + p.reasons.map(function (r) {
+      if (p.reasons.length) html += '<div class="reasons">Year ' + p.reasonsYear + (p.reasonsYear !== app.tick - 1 ? ' (the last year you lived)' : '') + ': ' + p.reasons.map(function (r) {
         return '<span class="' + (r[1] >= 0 ? 'pos' : 'neg') + '">' + esc(r[0]) + ' ' + (r[1] >= 0 ? '+' : '') + r[1] + '</span>';
       }).join(' · ') + '</div>';
-      if (p.life > 1) html += '<div class="reasons">Life ' + p.life + '</div>';
+      if (p.life > 1) html += '<div class="reasons">Bearer ' + p.life + ' of the Chronoscope</div>';
+      html += humHTML();
     }
     $('you').innerHTML = html;
   }
 
   function updateHotbar(s) {
-    var p = app.person;
+    var p = app.person, pass = $('btn-pass'), here = p.y * W + p.x;
+    pass.hidden = !(app.story.mode === 'story' && app.story.unlocked);
+    pass.classList.toggle('blocked', s.owner[here] < 0 || s.pop[here] <= 0 || p.dead);
     DEEDS.forEach(function (d) {
       var btn = document.querySelector('[data-deed="' + d.id + '"]');
       if (!btn) return;
       var why = Sim.deedBlocker(s, d.id, p.x, p.y, p.knowledge);
       btn.classList.toggle('blocked', !!why);
+      var hum = app.oracle && app.story.hints && app.story.stage === 'quest' ? app.oracle.hum(p.x, p.y, app.tick) : null;
+      btn.classList.toggle('hum', !!(hum && hum.level === 3 && hum.deed === d.id));
       btn.title = d.name + ' (' + d.key + '): ' + d.desc + (why ? '\n\n' + why : '\n\nTakes a year.');
     });
   }
@@ -1257,15 +1387,19 @@
     var budget = document.hidden ? 0 : app.story.stage === 'loading' ? 40 : 10, t0 = performance.now();
     if (!w.isComplete(b)) { w.compute(b, budget); app.chartDirty = true; }
     if (app.cmp && !w.isComplete(app.cmp) && performance.now() - t0 < budget) { w.compute(app.cmp, budget - (performance.now() - t0)); app.chartDirty = true; }
+    if (app.oracle && !app.oracle.done && app.story.stage === 'quest' && !document.hidden) {
+      var spare = (app.playing ? 6 : 12) - (performance.now() - t0);
+      if (spare > 1) app.oracle.work(spare);
+    }
 
     // time flows on its own while playing
     if (app.playing) {
-      app.acc += dt * app.speed;
-      var adv = Math.floor(app.acc);
+      app.acc += dt * (living() ? Math.min(app.speed, LIVING_SPEED) : app.speed);
+      var adv = Math.min(Math.floor(app.acc), living() ? 4 : 1e9);
       if (adv > 0) {
         app.acc -= adv;
         var target = Math.min(app.tick + adv, b.computedTo);
-        while (app.tick < target && !app.person.dead) { app.tick++; app.needsRender = true; liveYear(); }
+        while (app.tick < target && !app.person.dead) liveThroughYear();
         if (app.tick >= HORIZON) { app.playing = false; syncPlay(); }
       }
     }
@@ -1333,9 +1467,11 @@
   function buildHotbar() {
     $('hotbar').innerHTML = DEEDS.map(function (d) {
       return '<button class="deed" data-deed="' + d.id + '" aria-label="' + esc(d.name) + '"><span class="k">' + d.key + '</span><span class="di">' + d.icon + '</span><span class="dn">' + esc(d.name) + '</span></button>';
-    }).join('') + '<button class="deed rest" id="btn-rest" title="Let a year pass where you are (R)"><span class="k">R</span><span class="di">☾</span><span class="dn">Rest a year</span></button>';
+    }).join('') + '<button class="deed rest" id="btn-rest" title="Let a year pass where you are (R)"><span class="k">R</span><span class="di">☾</span><span class="dn">Rest a year</span></button>' +
+      '<button class="deed pass" id="btn-pass" title="Give the Chronoscope to a young person here and end your life as its bearer (P)"><span class="k">P</span><span class="di">⧗</span><span class="dn">Pass it on</span></button>';
     document.querySelectorAll('[data-deed]').forEach(function (btn) { btn.onclick = function () { doDeed(btn.dataset.deed); }; });
     $('btn-rest').onclick = function () { spendTime(1); };
+    $('btn-pass').onclick = offerPassOn;
   }
   function setTool(id) {
     app.tool = id;
@@ -1431,22 +1567,27 @@
       var v = $('seed').value.trim();
       if (v.indexOf('seed=') >= 0) {
         var p = Timeline.decode(v);
+        if (p.home && !p.interventions.length) { newWorld(p.seed || 0, [], 'story', { home: p.home, born: p.born }); return; }
         newWorld(p.seed || 0, p.interventions, 'sandbox');
         if (p.interventions.length) toast('Timeline restored: ' + p.interventions.length + ' deed' + (p.interventions.length > 1 ? 's' : '') + ' replayed.');
       } else newWorld(parseInt(v, 10) || 0);
     };
     $('btn-random').onclick = function () { newWorld(Math.floor(Math.random() * 1e6)); };
+    $('btn-today').onclick = function () { newWorld(todaySeed()); toast('Today\'s world: everyone who plays today is born into this same life.'); };
     $('help').querySelector('#btn-sandbox').onclick = function () { $('help').hidden = true; newWorld(app.world.seed, [], 'sandbox'); };
     $('seed').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btn-new').click(); });
     $('btn-link').onclick = function () {
-      var code = Timeline.encode(app.world.seed, app.cur.interventions);
+      var st = app.story, challenge = st.mode === 'story' && st.home && st.birth != null;
+      var code = challenge ? 'seed=' + app.world.seed + '&home=' + st.home.sig + '&born=' + (st.birth % W) + '.' + ((st.birth / W) | 0)
+        : Timeline.encode(app.world.seed, app.cur.interventions);
+      var what = challenge ? 'Challenge code' : 'Timeline code';
+      var how = challenge ? 'Whoever enters it in the World box is born where you were, as ' + esc(app.story.home.name) + ', facing the same fall.'
+        : 'Paste it into the World box to replay exactly this history.';
       var show = function (msg) { toast(msg + '<br><code class="code">' + esc(code) + '</code>'); };
       try {
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(function () {
-          show('Timeline code copied. Paste it into the World box to replay exactly this history.');
-        }, function () { show('Copy this code and paste it into the World box to replay this history:'); });
-        else show('Copy this code and paste it into the World box to replay this history:');
-      } catch (e) { show('Copy this code and paste it into the World box to replay this history:'); }
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(function () { show(what + ' copied. ' + how); }, function () { show('Copy this ' + what.toLowerCase() + '. ' + how); });
+        else show('Copy this ' + what.toLowerCase() + '. ' + how);
+      } catch (e) { show('Copy this ' + what.toLowerCase() + '. ' + how); }
     };
     $('btn-help').onclick = function () { $('help').hidden = false; };
     $('btn-help-close').onclick = function () { $('help').hidden = true; try { localStorage.setItem('chronoscope-help', '2'); } catch (e) { /* ignore */ } };
@@ -1477,6 +1618,7 @@
       else if (key === 'z') setCamera(app.camera === 'close' ? 'world' : 'close');
       else if (key === 'm') { var k = MODES.findIndex(function (m) { return m.id === app.mode; }); setMode(MODES[(k + 1) % MODES.length].id); }
       else if (key === 'r') spendTime(1);
+      else if (key === 'p') offerPassOn();
       else if (key === 'i') setTool('inspect');
       else {
         var deed = DEEDS.filter(function (d) { return d.key === key; })[0];
@@ -1490,7 +1632,8 @@
     wire();
     var parsed = Timeline.decode(location.hash);
     var sandbox = parsed.interventions.length > 0;
-    newWorld(parsed.seed != null ? parsed.seed : Math.floor(Math.random() * 1e6), parsed.interventions, sandbox ? 'sandbox' : 'story');
+    newWorld(parsed.seed != null ? parsed.seed : Math.floor(Math.random() * 1e6), parsed.interventions, sandbox ? 'sandbox' : 'story',
+      parsed.home ? { home: parsed.home, born: parsed.born } : null);
     sizeChart();
     syncPlay();
     requestAnimationFrame(frame);

@@ -51,6 +51,9 @@
       popHist: new Float64Array(this.horizon + 1),
       statesHist: new Uint16Array(this.horizon + 1),
       samples: [],
+      warLog: [],      // [{dec, a: attackerSig, d: defenderSig, n: provinces taken}]
+      warAcc: {},
+      lineage: {},     // sig -> { parent: sig, founded: year }
       version: 0,
       lastUsed: ++this.useCounter
     };
@@ -74,8 +77,7 @@
     b.keyframes.length = lastK + 1;
     var to = Math.min(b.computedTo, lastK * kf);
     b.computedTo = to;
-    b.events = b.events.filter(function (e) { return e.t < to; });
-    b.samples.length = Math.min(b.samples.length, Math.ceil(to / SAMPLE));
+    trimDerived(b, to);
     b.work = null;
     b.version++;
   };
@@ -109,8 +111,11 @@
     child.keyframes = b.keyframes.slice(0, lastK + 1);
     child.computedTo = Math.min(b.computedTo, lastK * this.kfEvery);
     var to = child.computedTo;
-    child.events = b.events.filter(function (e) { return e.t < to; });
-    child.samples = b.samples.slice(0, Math.ceil(to / SAMPLE));
+    child.events = b.events.slice();
+    child.samples = b.samples.slice();
+    child.warLog = b.warLog.slice();
+    child.lineage = Object.assign({}, b.lineage);
+    trimDerived(child, to);
     child.popHist.set(b.popHist.subarray(0, to));
     child.statesHist.set(b.statesHist.subarray(0, to));
     self._evict();
@@ -147,8 +152,7 @@
       b.work = Sim.restore(b.keyframes[k]);
       b.computedTo = k * kf;
       var to = b.computedTo;
-      b.events = b.events.filter(function (e) { return e.t < to; });
-      b.samples.length = Math.min(b.samples.length, Math.ceil(to / SAMPLE));
+      trimDerived(b, to);
     }
     var s = b.work, events = b.events;
     var sink = function (e) { e.major = isMajor(s, e); events.push(e); };
@@ -176,6 +180,15 @@
     return false;
   }
 
+  /** Forget derived history from year `to` on (keyframes are multiples of 50, so decades align). */
+  function trimDerived(b, to) {
+    b.events = b.events.filter(function (e) { return e.t < to; });
+    b.samples.length = Math.min(b.samples.length, Math.ceil(to / SAMPLE));
+    b.warLog = b.warLog.filter(function (w) { return w.dec * 10 + 10 <= to; });
+    b.warAcc = {};
+    for (var sig in b.lineage) if (b.lineage[sig].founded >= to) delete b.lineage[sig];
+  }
+
   World.prototype._record = function (b, s, t) {
     // stats computed at the start of this step (post-intervention state of year t)
     var total = 0, states = 0, nc = s.g[1];
@@ -183,7 +196,22 @@
     for (var c = 0; c < nc; c++) {
       if (s.sTiles[c] <= 0) continue;
       total += s.sPop[c]; states++;
-      if (sample && s.sTiles[c] >= 3) sample.push(s.cSig[c], s.sPop[c], s.cFounded[c]);
+      if (sample) sample.push(s.cSig[c], s.sPop[c], s.cFounded[c]);
+      var sig = s.cSig[c];
+      if (!b.lineage[sig]) b.lineage[sig] = { parent: s.cParent[c], founded: s.cFounded[c] };
+    }
+    // wars: provinces taken between each pair of peoples, summed per decade
+    for (var k = 0; k < s.conq.length; k += 2) {
+      var key = s.conq[k] + ',' + s.conq[k + 1];
+      b.warAcc[key] = (b.warAcc[key] || 0) + 1;
+    }
+    if (t % 10 === 9) {
+      for (var wk in b.warAcc) {
+        if (b.warAcc[wk] < 2) continue;
+        var pr = wk.split(',');
+        b.warLog.push({ dec: (t - 9) / 10, a: +pr[0], d: +pr[1], n: b.warAcc[wk] });
+      }
+      b.warAcc = {};
     }
     b.popHist[t] = total;
     b.statesHist[t] = states;
@@ -198,7 +226,7 @@
     for (var k = 0; k < cached.length - this.maxCached; k++) {
       var b = cached[k];
       if (keep && keep.indexOf(b) >= 0) continue;
-      b.keyframes.length = 1; b.work = null; b.computedTo = 0; b.events = []; b.samples = []; b.version++;
+      b.keyframes.length = 1; b.work = null; b.computedTo = 0; b.events = []; b.samples = []; b.warLog = []; b.warAcc = {}; b.lineage = {}; b.version++;
     }
   };
   World.prototype.touch = function (b, keep) { b.lastUsed = ++this.useCounter; this._evict(keep); };
@@ -288,6 +316,8 @@
     (str || '').replace(/^#/, '').split('&').forEach(function (kv) {
       var p = kv.split('=');
       if (p[0] === 'seed') out.seed = parseInt(p[1], 10) >>> 0;
+      if (p[0] === 'home') out.home = parseInt(p[1], 10) >>> 0;
+      if (p[0] === 'born' && p[1]) { var xy = p[1].split('.'); out.born = { x: parseInt(xy[0], 10), y: parseInt(xy[1], 10) }; }
       if (p[0] === 'iv' && p[1]) out.interventions = p[1].split('_').map(function (s) {
         var q = s.split('.');
         var iv = { t: parseInt(q[0], 10), type: q[1], x: parseInt(q[2], 10), y: parseInt(q[3], 10) };

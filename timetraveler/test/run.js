@@ -122,9 +122,35 @@ check('a year in the capital heals the young, old age wears you down', quiet.del
 var seaTile = -1; for (i = 0; i < Sim.N && seaTile < 0; i++) if (!Sim.isLand(s3.terrain[i])) seaTile = i;
 check('a year at sea hurts', St.healthYear(s3, seaTile, 30, false).delta < 0);
 
+var mem = St.memories(w3.root, home3.sig, 1000);
+check('the elders remember several things, in order', mem.length >= 2 && mem.every(function (m, k) { return !k || mem[k - 1].t <= m.t; }));
+check('wars are recorded between peoples', w3.root.warLog.length > 0 && w3.root.warLog.every(function (x) { return x.n >= 2 && x.a !== x.d; }));
+
+console.log('The Oracle');
+var Oracle = require('../js/oracle.js');
+// world 1's Rigaraeis fall to the Thaaeia in 1378; killing the Thaaeia ruler around 1218-1238 saves them
+var w4 = new TL.World(1, { horizon: 1440 });
+while (w4.compute(w4.root, 1000)) {}
+var s4 = new TL.View(w4).seek(w4.root, 1000), rig = 0;
+for (i = 0; i < s4.g[1]; i++) if (s4.sTiles[i] && Sim.civName(s4.cSig[i]) === 'Rigaraeis') rig = s4.cSig[i];
+var pr3 = St.prophecy(w4.root, rig, 1000);
+var orc = new Oracle({ world: w4, branch: w4.root, homeSig: rig, foeSig: pr3.foeSig, end: pr3.end, target: pr3.target, span: 170, every: 20 });
+while (orc.work(1000)) {}
+check('the Oracle tests single deeds and rates the difficulty', orc.total > 0 && orc.difficulty() !== null);
+if (orc.wins().length) {
+  var win = orc.wins()[0];
+  var proof = w4.intervene(w4.root, win.t, { type: win.type, x: win.x, y: win.y });
+  while (w4.compute(proof, 1000)) {}
+  check('a deed the Oracle hums for really saves the realm (' + win.type + ' in ' + win.t + ')', St.present(proof, rig, pr3.target));
+  check('it sings only at that place and time', orc.hum(win.x, win.y, win.t).level === 3 && (!orc.hum(win.x + 9, win.y + 9, win.t) || orc.hum(win.x + 9, win.y + 9, win.t).level < 3));
+} else check('the Oracle finds the known way to save the Rigaraeis', false);
+
 console.log('Sharing');
 var enc = TL.encode(7, br.interventions), dec = TL.decode('#' + enc);
 check('timeline encodes to a link and back', dec.seed === 7 && dec.interventions.length === 1 && dec.interventions[0].x === iv.x && dec.interventions[0].type === 'tribe');
+
+var ch = TL.decode('seed=5&home=123456&born=40.22');
+check('a challenge code carries the home realm and birthplace', ch.seed === 5 && ch.home === 123456 && ch.born.x === 40 && ch.born.y === 22);
 
 console.log('\n' + passes + ' passed, ' + failures + ' failed');
 process.exit(failures ? 1 : 0);
