@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chronoscope</title>
+  <meta name="description" content="A deterministic time-travel civilization sandbox: go back, change one thing, watch history rewrite itself.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="glyph">⧗</span> Chronoscope</div>
+    <div class="world-controls">
+      <label for="seed">World</label>
+      <input id="seed" type="number" min="0" step="1" inputmode="numeric" aria-label="World seed">
+      <button id="btn-new" class="btn">Create</button>
+      <button id="btn-random" class="btn" title="Random world">⚄</button>
+    </div>
+    <div class="top-actions">
+      <button id="btn-link" class="btn" title="Copy a link that recreates this exact timeline">Copy link</button>
+      <button id="btn-help" class="btn" title="How it works">?</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <nav class="toolbar" id="toolbar" aria-label="Tools"></nav>
+
+    <section class="stage">
+      <div class="map-modes" id="map-modes" role="tablist"></div>
+      <div class="map-wrap" id="map-wrap">
+        <canvas id="map" width="960" height="600" aria-label="World map"></canvas>
+        <div class="map-overlay" id="map-overlay" hidden></div>
+        <div class="tooltip" id="tooltip" hidden></div>
+      </div>
+      <div class="transport">
+        <button class="btn icon" id="btn-start" title="Dawn of history (Home)">⏮</button>
+        <button class="btn icon" id="btn-back" title="Back one year (←, Shift: 10)">◀</button>
+        <button class="btn icon play" id="btn-play" title="Play / pause (Space)">▶</button>
+        <button class="btn icon" id="btn-fwd" title="Forward one year (→, Shift: 10)">▶|</button>
+        <button class="btn icon" id="btn-end" title="Furthest known future (End)">⏭</button>
+        <label class="speed">Speed
+          <select id="speed">
+            <option value="2">2 yrs/s</option>
+            <option value="10">10 yrs/s</option>
+            <option value="25" selected>25 yrs/s</option>
+            <option value="60">60 yrs/s</option>
+            <option value="150">150 yrs/s</option>
+            <option value="400">400 yrs/s</option>
+          </select>
+        </label>
+        <span class="compute-status" id="compute-status"></span>
+      </div>
+      <div class="chart-wrap" id="chart-wrap">
+        <canvas id="chart" aria-label="History of all peoples over time. Click or drag to travel in time."></canvas>
+        <div class="tooltip" id="chart-tip" hidden></div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="year-card">
+        <div class="year-line"><span class="year" id="year">Year 0</span><span class="age" id="age"></span></div>
+        <div class="year-stats" id="year-stats"></div>
+        <div class="branch-line" id="branch-line"></div>
+        <div class="divergence" id="divergence" hidden>
+          <div class="div-label" id="div-label"></div>
+          <div class="bar"><div class="bar-fill" id="div-bar"></div></div>
+        </div>
+        <div class="tool-hint" id="tool-hint"></div>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="chronicle">Chronicle</button>
+        <button class="tab" data-tab="timelines">Timelines</button>
+        <button class="tab" data-tab="realm">Realm</button>
+      </div>
+      <div class="panel" id="panel-chronicle">
+        <div class="filters">
+          <label><input type="checkbox" id="f-major" checked> Major events</label>
+          <label id="f-changes-wrap"><input type="checkbox" id="f-changes"> Only changes</label>
+        </div>
+        <ol class="chronicle" id="chronicle"></ol>
+      </div>
+      <div class="panel" id="panel-timelines" hidden>
+        <div id="timelines"></div>
+      </div>
+      <div class="panel" id="panel-realm" hidden>
+        <div id="realm"></div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <div class="modal" id="help" hidden>
+    <div class="modal-card">
+      <h2><span class="glyph">⧗</span> Chronoscope</h2>
+      <p>You are watching a world whose history is <b>completely deterministic</b>. Every run of the same world plays out identically, year for year. Peoples settle, farm, multiply, fight, trade ideas, catch plagues, rise into empires and shatter into successor states, all from a handful of simple rules.</p>
+      <p><b>Travel back in time and change one thing.</b> Pick a tool on the left and click the map. A new timeline branches off, the future is rewritten, and you can compare it with the history you came from.</p>
+      <ul>
+        <li><b>Chart:</b> each coloured band is a people. Click or drag to travel in time. Gold marks are your interventions.</li>
+        <li><b>Chronicle:</b> the future is already written (italics). After a change, <span class="tag new">new</span> events are history you created, and <span class="tag erased">erased</span> ones you prevented.</li>
+        <li><b>Divergence</b> map mode shows which lands are ruled by a different people than in the timeline you compare against.</li>
+      </ul>
+      <h3>The rules</h3>
+      <ul class="rules">
+        <li><b>Land:</b> soil feeds people; farming depletes it, fallow land recovers. Rivers and coasts are rich.</li>
+        <li><b>People:</b> grow toward what the land can feed, starve in droughts, spill over into empty land.</li>
+        <li><b>Solidarity</b> (Ibn Khaldun's <i>asabiya</i>): grows on contested frontiers, decays in comfortable interiors.</li>
+        <li><b>War:</b> power = solidarity × population × technology, fading with distance from the capital. Strong neighbours take land.</li>
+        <li><b>Ideas:</b> technology grows with population, raises harvests and reach, crosses borders, and is partly lost when realms fall.</li>
+        <li><b>Collapse:</b> when an empire's solidarity stays low too long it shatters into successor states. Far provinces may rebel first.</li>
+        <li><b>Plague and climate:</b> crowded cities breed epidemics; slow regional droughts and golden ages come and go.</li>
+      </ul>
+      <p class="keys">Space play/pause · ←/→ year (Shift ×10) · Home/End · 1–6 map modes · Ctrl+Z undo last change · Esc inspect</p>
+      <button class="btn primary" id="btn-help-close">Begin</button>
+    </div>
+  </div>
+
+  <script src="js/sim.js"></script>
+  <script src="js/timeline.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
