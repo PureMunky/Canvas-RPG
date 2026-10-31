@@ -134,6 +134,11 @@ while (w4.compute(w4.root, 1000)) {}
 var s4 = new TL.View(w4).seek(w4.root, 1000), rig = 0;
 for (i = 0; i < s4.g[1]; i++) if (s4.sTiles[i] && Sim.civName(s4.cSig[i]) === 'Rigaraeis') rig = s4.cSig[i];
 var pr3 = St.prophecy(w4.root, rig, 1000);
+check('the prophecy explains the fall with a verdict, evidence and advice', pr3.why && pr3.why.verdict.length > 10 && pr3.why.lines.length >= 2 && pr3.why.advice.length >= 1);
+var vit = St.vitals(w4.root, rig);
+check('vital signs record people, provinces, solidarity and technology', vit.length > 50 && vit.every(function (x) { return x.pop > 0 && x.tiles > 0 && x.asab >= 0 && x.tech >= 0; }));
+var dz = St.danger(s4, rig, pr3.foeSig);
+check('the danger gauge reads solidarity and power against the rival', dz && dz.asab > 0 && dz.ratio > 0 && dz.line === Sim.CFG.collapseAsab);
 var orc = new Oracle({ world: w4, branch: w4.root, homeSig: rig, foeSig: pr3.foeSig, end: pr3.end, target: pr3.target, span: 170, every: 20 });
 while (orc.work(1000)) {}
 check('the Oracle tests single deeds and rates the difficulty', orc.total > 0 && orc.difficulty() !== null);

@@ -10,7 +10,7 @@
   'use strict';
   var Sim = (typeof module !== 'undefined' && module.exports) ? require('./sim.js') : root.Sim;
   var Timeline = (typeof module !== 'undefined' && module.exports) ? require('./timeline.js') : root.Timeline;
-  var W = Sim.W, H = Sim.H, N = Sim.N, TER = Sim.TER, SAMPLE = Timeline.SAMPLE;
+  var W = Sim.W, H = Sim.H, N = Sim.N, TER = Sim.TER, SAMPLE = Timeline.SAMPLE, STRIDE = Timeline.STRIDE;
 
   var START_YEAR = 1000, MARGIN = 50;
 
@@ -20,7 +20,7 @@
   function present(branch, sig, t) {
     var arr = branch.samples[Math.floor(t / SAMPLE)];
     if (!arr) return false;
-    for (var j = 0; j < arr.length; j += 3) if (arr[j] === sig) return true;
+    for (var j = 0; j < arr.length; j += STRIDE) if (arr[j] === sig) return true;
     return false;
   }
 
@@ -201,7 +201,7 @@
     var out = [];
     for (var k = 0; k * SAMPLE <= upTo && k < branch.samples.length; k++) {
       var arr = branch.samples[k], v = -1;
-      if (arr) for (var j = 0; j < arr.length; j += 3) if (arr[j] === sig) { v = arr[j + 1]; break; }
+      if (arr) for (var j = 0; j < arr.length; j += STRIDE) if (arr[j] === sig) { v = arr[j + 1]; break; }
       out.push(v);
     }
     return out;
@@ -273,6 +273,132 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Vital signs and why a realm falls
+  // ---------------------------------------------------------------------------
+  /** Military power, the same formula the war rules use. */
+  function power(pop, tiles, asab, tech) {
+    return asab * (Math.floor(pop / 120) + tiles) * (100 + Math.floor(Math.min(tech, 12000) / 40)) / 100;
+  }
+  function powerOf(s, c) { return power(s.sPop[c], s.sTiles[c], Sim.meanAsab(s, c), s.cTech[c]); }
+
+  /** One realm's census entry at year t: { pop, tiles, asab, tech, power } or null. */
+  function sampleOf(branch, sig, t) {
+    var arr = branch.samples[Math.floor(t / SAMPLE)];
+    if (!arr) return null;
+    for (var j = 0; j < arr.length; j += STRIDE) if (arr[j] === sig) {
+      return { pop: arr[j + 1], tiles: arr[j + 3], asab: arr[j + 4], tech: arr[j + 5], power: power(arr[j + 1], arr[j + 3], arr[j + 4], arr[j + 5]) };
+    }
+    return null;
+  }
+
+  /** Every census entry of a realm: [{ t, pop, tiles, asab, tech, power }]. */
+  function vitals(branch, sig) {
+    var out = [];
+    for (var k = 0; k < branch.samples.length && k * SAMPLE < branch.computedTo; k++) {
+      var v = sampleOf(branch, sig, k * SAMPLE);
+      if (v) { v.t = k * SAMPLE; out.push(v); }
+      else if (out.length) break;
+    }
+    return out;
+  }
+
+  /** The realm this one fought hardest, overall (for comparisons). */
+  function mainRival(branch, sig, upTo) {
+    var w = warsOf(branch, sig, upTo == null ? branch.computedTo : upTo)[0];
+    return w ? w.foe : 0;
+  }
+
+  var pct = function (a) { return (a / 100).toFixed(a < 1000 ? 1 : 0) + '%'; };
+
+  /**
+   * Why does `sig` fall in year `end` in this timeline? Reads the last ~80
+   * years of census and war records. Returns { cause, lines[], advice[], rival, crossing, warStart }.
+   */
+  function whyFall(branch, sig, end, ev) {
+    var name = esc(Sim.civName(sig)), from = Math.max(0, end - 80), line = Sim.CFG.collapseAsab;
+    var v = vitals(branch, sig).filter(function (x) { return x.t >= from && x.t <= end; });
+    var out = { cause: ev ? ev.type : 'fade', verdict: '', lines: [], advice: [], rival: 0, crossing: null, warStart: null };
+    if (!v.length) return out;
+    var a0 = v[0], aN = v[v.length - 1], peakTiles = 0, minAsab = 1e9;
+    v.forEach(function (x) { peakTiles = Math.max(peakTiles, x.tiles); });
+    // only count solidarity trouble while the realm was still substantial (not its last dying provinces)
+    v.forEach(function (x) {
+      if (x.tiles < peakTiles / 3) return;
+      minAsab = Math.min(minAsab, x.asab);
+      if (out.crossing == null && x.asab < line) out.crossing = x.t;
+    });
+    if (minAsab === 1e9) minAsab = aN.asab;
+    // who took their land
+    var takers = {}, lostTotal = 0;
+    branch.warLog.forEach(function (w) {
+      if (w.d !== sig || w.dec * 10 < from - 20 || w.dec * 10 > end) return;
+      var t = takers[w.a] = takers[w.a] || { n: 0, start: w.dec * 10 };
+      t.n += w.n; t.start = Math.min(t.start, w.dec * 10); lostTotal += w.n;
+    });
+    var top = Object.keys(takers).map(Number).sort(function (x, y) { return takers[y].n - takers[x].n; })[0];
+    if (ev && ev.type === 'fall' && ev.b) top = ev.b;
+    if (top) { out.rival = top; out.warStart = takers[top] ? takers[top].start : null; }
+
+    // solidarity story
+    out.lines.push('Solidarity went from <b>' + pct(a0.asab) + '</b> in ' + a0.t + ' to <b>' + pct(aN.asab) + '</b> in ' + aN.t +
+      ' (a realm breaks apart if it stays below ' + pct(line) + ' for ' + Sim.CFG.crisisYears + ' years)' +
+      (out.crossing != null ? ', crossing that line in <b>' + out.crossing + '</b>.' : '.'));
+    out.lines.push('Provinces: ' + peakTiles + ' at their height in these years, ' + aN.tiles + ' at the end' + (a0.pop > aN.pop * 1.4 ? '; people fell from ' + fmtPop(a0.pop) + ' to ' + fmtPop(aN.pop) : '') + '.');
+    if (top) {
+      var rName = esc(Sim.civName(top)), ws = out.warStart != null ? out.warStart : Math.max(from, end - 40);
+      var us = sampleOf(branch, sig, ws) || a0, them = sampleOf(branch, top, ws);
+      var lost = takers[top] ? takers[top].n : 0;
+      out.lines.push((lost ? 'The <b>' + rName + '</b> took ' + lost + ' provinces from ' + (out.warStart != null ? out.warStart : 'the last years') + ' on' : 'The final blow came from the <b>' + rName + '</b>') +
+        (them ? '. When it began their power was <b>' + (them.power / Math.max(1, us.power)).toFixed(1) + '×</b> yours (solidarity ' + pct(them.asab) + ' vs ' + pct(us.asab) +
+          ', ' + fmtPop(them.pop) + ' vs ' + fmtPop(us.pop) + ' people, technology ' + them.tech + ' vs ' + us.tech + ').' : '.'));
+      // advice against a conqueror
+      var low = null;
+      for (var t = Math.max(0, ws - 80); t <= ws; t += SAMPLE) {
+        var r = sampleOf(branch, top, t);
+        if (r && (!low || r.asab < low.asab)) { low = r; low.t = t; }
+      }
+      var adv = 'Act before ' + ws + ': weaken the <b>' + rName + '</b> (sow discord in their capital, or kill their ruler';
+      adv += low ? ', best when their solidarity is lowest: ' + pct(low.asab) + ' around ' + low.t + ')' : ')';
+      adv += ', or make your people stronger';
+      if (them && them.tech > us.tech * 1.15) adv += '. Technology is the widest gap: learn from an advanced people and teach yours';
+      else adv += ': more people through irrigation, more solidarity through rallies';
+      out.advice.push(adv + '.');
+    }
+    if (out.crossing != null || (ev && ev.type === 'collapse')) {
+      var tiles = Math.max(1, (sampleOf(branch, sig, out.crossing != null ? out.crossing : aN.t) || aN).tiles);
+      if (tiles < peakTiles / 3) tiles = peakTiles;
+      var perRally = 7500 / tiles / 100, need = Math.max(0, Math.ceil((line - minAsab) * tiles / 7500));
+      out.advice.push('Collapse is decided by the average across all ' + tiles + ' provinces, so one rally lifts it only about <b>' + perRally.toFixed(perRally < 1 ? 2 : 1) +
+        ' points</b>. Holding it above the line would take about ' + need + ' rallies before ' + (out.crossing != null ? out.crossing : end) +
+        '. Help where it counts: keep frontiers contested and peoples fed, and stop plague and famine, which erode solidarity everywhere.');
+    }
+    if (!out.advice.length) out.advice.push('Watch the vital signs as the end nears and act where they turn.');
+
+    // the verdict, in one sentence
+    var conquered = top && (ev ? ev.type === 'fall' : true), broke = out.crossing != null || (ev && ev.type === 'collapse');
+    var rn = top ? '<b>' + esc(Sim.civName(top)) + '</b>' : '';
+    if (conquered && !broke) out.verdict = 'Conquered. Their solidarity held (it never fell below ' + pct(minAsab) + '); they were simply outmatched by the ' + rn + '. Raising solidarity alone will not save them.';
+    else if (conquered && broke) out.verdict = 'Worn down by war with the ' + rn + ' while their solidarity broke (below the line from ' + out.crossing + ').';
+    else if (broke) out.verdict = 'Collapse from within: their average solidarity sank below ' + pct(line) + (out.crossing != null ? ' in ' + out.crossing : '') + ' and stayed there.';
+    else out.verdict = 'They dwindled away, province by province.';
+    return out;
+  }
+
+  /** A live reading of the danger to `sig` in state s (against `foeSig` if given). */
+  function danger(s, sig, foeSig) {
+    var c = -1, f = -1;
+    for (var k = 0; k < s.g[1]; k++) {
+      if (!s.cAlive[k] || s.sTiles[k] <= 0) continue;
+      if (s.cSig[k] === sig) c = k;
+      if (foeSig && s.cSig[k] === foeSig) f = k;
+    }
+    if (c < 0) return null;
+    var A = Sim.meanAsab(s, c);
+    return { asab: A, line: Sim.CFG.collapseAsab, crisis: s.cCrisis[c], crisisMax: Sim.CFG.crisisYears, tiles: s.sTiles[c],
+      ratio: f >= 0 ? powerOf(s, c) / Math.max(1, powerOf(s, f)) : null, foe: f >= 0 ? foeSig : 0 };
+  }
+
+  // ---------------------------------------------------------------------------
   // The prophecy
   // ---------------------------------------------------------------------------
   function prophecy(branch, sig, from) {
@@ -288,7 +414,8 @@
     } else {
       hint = 'The causes are unclear. Watch the realm\'s solidarity, harvests and neighbours as its end draws near.';
     }
-    return { end: f.end, target: f.end + MARGIN, vision: vision, hint: hint, conqueror: conqueror, foeSig: conqueror ? ev.b : 0 };
+    var why = whyFall(branch, sig, f.end, ev);
+    return { end: f.end, target: f.end + MARGIN, vision: vision, hint: hint, conqueror: conqueror, foeSig: conqueror ? ev.b : why.rival, why: why };
   }
 
   // ---------------------------------------------------------------------------
@@ -330,7 +457,7 @@
   function maxHealth(age) { return Math.max(0, Math.min(100, 100 - Math.max(0, age - 50) * 2)); }
   function condition(h) { return h >= 80 ? 'hale' : h >= 55 ? 'well' : h >= 30 ? 'weary' : h >= 12 ? 'ill' : 'dying'; }
 
-  var Story = { START_YEAR: START_YEAR, MARGIN: MARGIN, fate: fate, present: present, pickHome: pickHome, memories: memories, warsOf: warsOf, pickBirthplace: pickBirthplace,
+  var Story = { START_YEAR: START_YEAR, MARGIN: MARGIN, fate: fate, present: present, pickHome: pickHome, memories: memories, warsOf: warsOf, whyFall: whyFall, vitals: vitals, sampleOf: sampleOf, danger: danger, power: power, powerOf: powerOf, mainRival: mainRival, pickBirthplace: pickBirthplace,
     homeStory: homeStory, peopleSketch: peopleSketch, personName: personName, prophecy: prophecy, healthYear: healthYear, maxHealth: maxHealth, condition: condition, survey: survey };
   if (typeof module !== 'undefined' && module.exports) module.exports = Story;
   else root.Story = Story;

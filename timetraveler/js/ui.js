@@ -9,7 +9,7 @@
   'use strict';
   var W = Sim.W, H = Sim.H, N = Sim.N, S = 6;          // world view: 6px per province
   var TS = 30, VW = 32, VH = 20;                        // close view: 30px per province; VW x VH visible (portrait on phones)
-  var HORIZON = 3000, KF = 50, SAMPLE = Timeline.SAMPLE;
+  var HORIZON = 3000, KF = 50, SAMPLE = Timeline.SAMPLE, STRIDE = Timeline.STRIDE;
   var TER = Sim.TER;
   var STEP_COST = 1 / 6, SEA_COST = 1 / 2, DEED_COST = 1;
   var $ = function (id) { return document.getElementById(id); };
@@ -68,7 +68,7 @@
     var st = app.story;
     st.fixed = fixed || null; // a challenge: { home: sig, born: {x, y} }
     st.mode = mode || 'story'; st.unlocked = st.mode === 'sandbox'; st.stage = st.mode === 'story' ? 'loading' : 'free';
-    st.home = null; st.journal = []; st.prophecy = null; st.quest = ''; st.paths = {}; st.hints = st.hints !== false;
+    st.home = null; st.journal = []; st.prophecy = null; st.quest = ''; st.paths = {}; st.hints = st.hints !== false; st.whyOpen = true;
     app.oracle = null; app.person.name = '';
     var p0 = app.person; p0.age = 20; p0.health = 100; p0.life = 1; p0.immuneUntil = 0; p0.reasons = []; p0.dead = false;
     app.world = new Timeline.World(seed, { horizon: HORIZON, kfEvery: KF, maxCached: 4 });
@@ -196,8 +196,10 @@
     var tiles = [i];
     for (var d = 0; d < 4; d++) { var nb = Sim.NB[i * 4 + d]; if (nb >= 0) tiles.push(nb); }
     tiles.forEach(function (t) { sum += Sim.capacity(s, t, s.owner[t] >= 0 ? s.cTech[s.owner[t]] : 0); if (s.owner[t] >= 0) { asab += s.asab[t]; n++; } });
+    var st = app.story, dz = st.home && st.prophecy ? Story.danger(s, st.home.sig, st.prophecy.foeSig) : null;
     return { cap: sum, asab: n ? asab / n : 0, sig: c >= 0 ? s.cSig[c] : 0, tech: c >= 0 ? s.cTech[c] : 0,
-      realmAsab: c >= 0 ? Sim.meanAsab(s, c) : 0, plague: tiles.filter(function (t) { return s.plague[t]; }).length, owner: s.owner[i] };
+      realmAsab: c >= 0 ? Sim.meanAsab(s, c) : 0, realmTiles: c >= 0 ? s.sTiles[c] : 0,
+      ratio: dz ? dz.ratio : null, plague: tiles.filter(function (t) { return s.plague[t]; }).length, owner: s.owner[i] };
   }
 
   function doDeed(id) {
@@ -234,6 +236,24 @@
   }
 
   function describeEffect(id, a, b) {
+    return localEffect(id, a, b) + realmEffect(id, a, b);
+  }
+
+  /** The same deed, measured across the whole realm (and against your people's rival). */
+  function realmEffect(id, a, b) {
+    var st = app.story, out = '', pct1 = function (v) { return (v / 100).toFixed(1) + '%'; };
+    if ((id === 'rally' || id === 'discord') && a.sig) {
+      out += '<br><span class="realm-fx">Across all ' + a.realmTiles + ' provinces of the ' + esc(Sim.civName(a.sig)) + ': solidarity ' + pct1(a.realmAsab) + ' → <b>' + pct1(b.realmAsab) + '</b>' +
+        (a.sig === (st.home && st.home.sig) ? ' (they break apart below ' + pct1(Sim.CFG.collapseAsab) + ')' : '') + '.</span>';
+    }
+    if (a.ratio != null && b.ratio != null && a.ratio > 0 && Math.abs(b.ratio / a.ratio - 1) >= 0.002) {
+      var ch = (b.ratio / a.ratio - 1) * 100;
+      out += '<br><span class="realm-fx">Your people\'s power against the ' + esc(Sim.civName(st.prophecy.foeSig)) + ': ' + a.ratio.toFixed(2) + '× → <b>' + b.ratio.toFixed(2) + '×</b> (' + (ch > 0 ? '+' : '') + ch.toFixed(ch > -1 && ch < 1 ? 1 : 0) + '%).</span>';
+    }
+    return out;
+  }
+
+  function localEffect(id, a, b) {
     var pct = function (v) { return Math.round(v / 100) + '%'; };
     switch (id) {
       case 'irrigate': return 'The land around you can now feed about ' + fmtPop(Math.max(0, Math.round(b.cap - a.cap))) + ' more people.';
@@ -389,7 +409,7 @@
       '<p>That night a stranger in a grey cloak waits by your door. Without a word they press a brass instrument into your hands, cold and humming, and walk into the dark.</p>' +
       '<p>In its glass you see the years run like water. Villages grow and burn. Then, ' + yearsAway + ' years from now:</p>' +
       '<p class="vision">Year ' + pr.end + '. ' + esc(pr.vision) + '</p>' +
-      '<p>' + pr.hint + '</p>' +
+      whyHTML(pr.why, true) +
       '<p><b>Save the ' + esc(st.home.name) + ': they must still hold at least one province in the year ' + pr.target + '.</b></p>' +
       '<p>The Chronoscope lets you travel through time: ' + (app.touch ? 'drag along the history strip at the bottom' : 'drag the history chart, or use , and . to step') + '. <b>Travelling does not age you; living does.</b> You have one life, perhaps fifty years. Spend them where they matter. If you act in the past, history rewrites itself, and the Journal tells you whether your people still fall.</p>' +
       '<p>Listen to the instrument. It hums in the years that matter, louder as you come near a place and moment where one deed would turn fate. When your strength fails, give it to someone young' + key('P') + ', as it was given to you.</p>',
@@ -567,9 +587,56 @@
       (status ? '<span class="status ' + cls + '">' + status + '</span>' : '') + '</div>';
   }
 
+  /** Verdict, evidence and advice from Story.whyFall. */
+  function whyHTML(why, compact) {
+    if (!why) return '';
+    return '<div class="why"><p class="verdict">' + why.verdict + '</p>' +
+      (why.lines.length ? '<ul class="evidence">' + why.lines.map(function (l) { return '<li>' + l + '</li>'; }).join('') + '</ul>' : '') +
+      (why.advice.length ? '<p class="lore-head">Where to act:</p><ul class="advice">' + why.advice.map(function (l) { return '<li>' + l + '</li>'; }).join('') + '</ul>' : '') +
+      (compact ? '' : '') + '</div>';
+  }
+
+  /** Why the home realm falls in the timeline you are in now (cached per timeline). */
+  var whyCache = { key: '', why: null };
+  function currentWhy() {
+    var st = app.story, pr = st.prophecy, b = app.cur;
+    if (!pr) return null;
+    if (st.quest.indexOf('fallen:') !== 0) return st.quest === 'saved' ? null : pr.why;
+    var end = +st.quest.slice(7), key = b.id + ':' + b.version + ':' + end;
+    if (whyCache.key !== key) {
+      var ev = b.events.filter(function (e) { return e.a === st.home.sig && (e.type === 'collapse' || e.type === 'fall') && e.t >= Story.START_YEAR; })[0] || null;
+      whyCache = { key: key, why: Story.whyFall(b, st.home.sig, end, ev) };
+    }
+    return whyCache.why;
+  }
+
+  /** Live danger gauge for your people in the year you are in. */
+  function dangerHTML(compact) {
+    var st = app.story, s = app.view.s;
+    if (!st.home || !s || !st.prophecy) return '';
+    var d = Story.danger(s, st.home.sig, st.prophecy.foeSig);
+    if (!d) return compact ? '' : '<div class="gauge muted">The ' + esc(st.home.name) + ' do not exist in the year ' + app.tick + '.</div>';
+    var a = d.asab / 100, line = d.line / 100, cls = d.asab < d.line ? 'bad' : d.asab < d.line * 1.6 ? 'warn' : 'ok';
+    var foe = d.foe ? esc(Sim.civName(d.foe)) : '';
+    if (compact) return '<span class="st ' + (cls === 'bad' ? 'bad' : '') + '">Solidarity ' + a.toFixed(1) + '% (breaks below ' + line + '%)' + (d.ratio != null ? ' · ' + d.ratio.toFixed(2) + '× the ' + foe : '') + '</span>';
+    var scale = 50, mark = Math.min(100, line / scale * 100);
+    var html = '<div class="gauge"><span class="label">The ' + esc(st.home.name) + ' in ' + app.tick + '</span>' +
+      '<div class="g-row"><span>Solidarity</span><div class="g-bar"><i class="' + cls + '" style="width:' + Math.min(100, a / scale * 100).toFixed(1) + '%"></i><b style="left:' + mark + '%"></b></div><span class="g-val">' + a.toFixed(1) + '%</span></div>' +
+      '<div class="g-note">They break apart if the average across all ' + d.tiles + ' provinces stays below ' + line + '% for ' + d.crisisMax + ' years' + (d.crisis ? '. <b class="warn-t">In crisis: ' + d.crisis + ' of ' + d.crisisMax + ' years.</b>' : '.') + '</div>';
+    if (d.ratio != null) {
+      var r = d.ratio, w = Math.max(2, Math.min(100, 50 + Math.log(r) / Math.log(8) * 50));
+      html += '<div class="g-row"><span>Power</span><div class="g-bar two"><i class="' + (r >= 1 ? 'ok' : r >= 0.6 ? 'warn' : 'bad') + '" style="width:' + w.toFixed(1) + '%"></i><b style="left:50%"></b></div><span class="g-val">' + r.toFixed(2) + '×</span></div>' +
+        '<div class="g-note">Against the ' + foe + ' (power = solidarity × people × technology). Even is 1.00×.</div>';
+    }
+    return html + '<button class="btn mini" id="btn-vitals">Vital signs over time</button></div>';
+  }
+
   function renderJournal() {
     var st = app.story, html = objectiveHTML(), o = app.oracle;
     if (st.stage === 'quest') {
+      html += dangerHTML(false);
+      var why = currentWhy();
+      if (why) html += '<details class="why-box"' + (st.whyOpen ? ' open' : '') + ' id="why-box"><summary>Why they fall' + (st.quest.indexOf('fallen:') === 0 ? ' in this timeline' : '') + '</summary>' + whyHTML(why) + '</details>';
       var d = o && o.difficulty();
       html += '<div class="oracle">' + (!o ? 'The Chronoscope waits for this timeline to be written…'
         : !o.done ? 'The Chronoscope is reading the threads of this timeline… ' + Math.round(o.progress() * 100) + '%' + (d ? '<br>' + esc(d.label) + ' so far.' : '')
@@ -583,6 +650,10 @@
     $('journal').innerHTML = html;
     var hb = document.getElementById('hints');
     if (hb) hb.onchange = function () { st.hints = hb.checked; app.panelsAt = 0; };
+    var wb = document.getElementById('why-box');
+    if (wb) wb.ontoggle = function () { st.whyOpen = wb.open; };
+    var vb = document.getElementById('btn-vitals');
+    if (vb) vb.onclick = function () { app.selected = st.home.sig; setTab('realm'); invalidateAll(); };
   }
 
   function drawObjective(ctx, s, ox, oy, ts, close) {
@@ -1028,7 +1099,7 @@
 
   function sortedSample(arr) {
     var idx = [];
-    for (var k = 0; k < arr.length; k += 3) idx.push(k);
+    for (var k = 0; k < arr.length; k += STRIDE) idx.push(k);
     idx.sort(function (a, b) { return arr[a + 2] - arr[b + 2] || arr[a] - arr[b]; });
     return idx;
   }
@@ -1300,7 +1371,7 @@
     for (var k = 0; k < b.samples.length; k++) {
       var arr = b.samples[k];
       if (!arr) continue;
-      for (var j = 0; j < arr.length; j += 3) if (arr[j] === sig) {
+      for (var j = 0; j < arr.length; j += STRIDE) if (arr[j] === sig) {
         series[k] = arr[j + 1];
         if (first < 0) first = k * SAMPLE;
         last = k * SAMPLE;
@@ -1326,7 +1397,7 @@
       html += '<div class="realm-sub">' + (first < 0 ? 'Not yet recorded in this timeline' : app.tick < first ? 'Not yet born in year ' + app.tick : 'No longer exists in year ' + app.tick) + '</div></div></div><p></p>';
     }
     if (first >= 0) html += '<div class="realm-sub">Recorded ' + first + ' to ' + last + ' · peak ' + fmtPop(peak) + ' people in year ' + peakT + '</div>';
-    html += '<canvas id="realm-spark" width="600" height="140"></canvas><div class="links">' +
+    html += '<canvas id="realm-spark" aria-label="Vital signs of the ' + esc(name) + ' over time"></canvas><div class="vitals-legend" id="vitals-legend"></div><div class="links">' +
       (first >= 0 ? '<button class="btn" data-jump="' + first + '">Go to birth</button><button class="btn" data-jump="' + peakT + '">Go to peak</button><button class="btn" data-jump="' + last + '">Go to end</button>' : '') +
       '<button class="btn" id="btn-unselect">Clear</button></div></div>';
     el.innerHTML = html;
@@ -1334,11 +1405,89 @@
     $('btn-unselect').onclick = function () { app.selected = 0; invalidateAll(); renderRealm(); };
     el.querySelectorAll('[data-jump]').forEach(function (btn) { if (locked()) btn.hidden = true; });
     if ($('btn-goto-cap')) $('btn-goto-cap').onclick = function () { app.person.target = s.cCap[c]; setTool('walk'); };
-    var cv = $('realm-spark'), ctx = cv.getContext('2d'), maxv = peak || 1;
-    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, cv.height);
-    for (k = 0; k < series.length; k++) ctx.lineTo(k * SAMPLE / HORIZON * cv.width, cv.height - series[k] / maxv * (cv.height - 8));
-    ctx.lineTo(series.length * SAMPLE / HORIZON * cv.width, cv.height); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.fillRect(app.tick / HORIZON * cv.width - 1, 0, 2, cv.height);
+    drawVitals($('realm-spark'), sig, col);
+  }
+
+  /**
+   * Vital signs of a realm over its lifetime: people, solidarity (with the
+   * collapse line), provinces, and power against its rival. Marks: now, your
+   * deeds, and for your people the foretold fall and the quest's target year.
+   */
+  function drawVitals(cv, sig, col) {
+    var b = app.cur, st = app.story, ctx = cv.getContext('2d');
+    // draw at the panel's real size so labels stay legible on any screen
+    var dpr = window.devicePixelRatio || 1, Wc = Math.max(240, cv.clientWidth || 320), Hc = 0;
+    var hasRival = !!((st.home && st.home.sig === sig && st.prophecy && st.prophecy.foeSig) || Story.mainRival(b, sig));
+    Hc = (hasRival ? 4 : 3) * 92 + 10;
+    cv.style.height = Hc + 'px'; cv.width = Math.round(Wc * dpr); cv.height = Math.round(Hc * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, Wc, Hc);
+    var v = Story.vitals(b, sig);
+    if (!v.length) { ctx.fillStyle = '#9a9585'; ctx.font = '14px system-ui'; ctx.fillText('No census records for this realm yet.', 12, 24); return; }
+    var isHome = st.home && st.home.sig === sig && st.prophecy;
+    var rival = isHome ? st.prophecy.foeSig : Story.mainRival(b, sig);
+    var rv = {}; if (rival) Story.vitals(b, rival).forEach(function (x) { rv[x.t] = x; });
+    var t0 = Math.max(0, v[0].t - 10), t1 = Math.min(HORIZON, Math.max(v[v.length - 1].t, isHome ? st.prophecy.target : 0, app.tick) + 10);
+    if (locked()) t1 = Math.min(t1, app.tick + 5);
+    var L = 46, R = 8, X = function (t) { return L + (t - t0) / Math.max(1, t1 - t0) * (Wc - L - R); };
+    var panels = [
+      { name: 'People', get: function (x) { return x.pop; }, fmt: fmtPop, area: true },
+      { name: 'Solidarity', get: function (x) { return x.asab / 100; }, fmt: function (y) { return y.toFixed(1) + '%'; }, line: Sim.CFG.collapseAsab / 100, min: 50 },
+      { name: 'Provinces', get: function (x) { return x.tiles; }, fmt: function (y) { return String(Math.round(y)); }, rival: function (r) { return r.tiles; } },
+      rival ? { name: 'Power vs ' + Sim.civName(rival), ratio: true, fmt: function (y) { return y.toFixed(2) + '×'; } } : null
+    ].filter(Boolean);
+    var ph = (Hc - 6) / panels.length;
+    var nowV = null; v.forEach(function (x) { if (x.t <= app.tick) nowV = x; });
+    panels.forEach(function (p, k) {
+      var top = k * ph + 18, bot = (k + 1) * ph - 4, hgt = bot - top;
+      var pts = v.filter(function (x) { return x.t <= t1; }).map(function (x) {
+        var y = p.ratio ? (rv[x.t] ? x.power / Math.max(1, rv[x.t].power) : null) : p.get(x);
+        return { t: x.t, y: y, r: p.rival && rv[x.t] ? p.rival(rv[x.t]) : null };
+      });
+      var max = p.min || 1;
+      pts.forEach(function (q) { if (q.y != null && !p.ratio) max = Math.max(max, q.y); if (q.r != null) max = Math.max(max, q.r); });
+      var Y = p.ratio ? function (y) { var l = Math.max(-1, Math.min(1, Math.log(y) / Math.log(8))); return top + hgt / 2 - l * hgt / 2; }
+        : function (y) { return bot - y / max * hgt; };
+      ctx.fillStyle = 'rgba(255,255,255,.03)'; ctx.fillRect(L, top, Wc - L - R, hgt);
+      // label and value now
+      ctx.fillStyle = '#9a9585'; ctx.font = '600 12px system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText(p.name, L, top - 5);
+      var nowPt = null; pts.forEach(function (q) { if (q.t <= app.tick && q.y != null) nowPt = q; });
+      if (nowPt) { ctx.fillStyle = '#e9e3d3'; ctx.textAlign = 'right'; ctx.fillText(p.fmt(nowPt.y) + ' in ' + nowPt.t, Wc - R, top - 5); }
+      // reference lines
+      ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+      if (p.line) { ctx.strokeStyle = '#e0726a'; ctx.beginPath(); ctx.moveTo(L, Y(p.line)); ctx.lineTo(Wc - R, Y(p.line)); ctx.stroke(); ctx.fillStyle = '#e0726a'; ctx.textAlign = 'left'; ctx.font = '10px system-ui'; ctx.fillText('breaks apart below ' + p.line + '%', L + 4, Y(p.line) - 3); }
+      if (p.ratio) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.moveTo(L, Y(1)); ctx.lineTo(Wc - R, Y(1)); ctx.stroke(); ctx.fillStyle = '#9a9585'; ctx.textAlign = 'right'; ctx.font = '10px system-ui'; ctx.fillText('even', L - 4, Y(1) + 3); ctx.fillText('8×', L - 4, top + 8); ctx.fillText('⅛×', L - 4, bot); }
+      ctx.setLineDash([]);
+      if (!p.ratio && !p.line) { ctx.fillStyle = '#9a9585'; ctx.font = '10px system-ui'; ctx.textAlign = 'right'; ctx.fillText(p.fmt(max), L - 4, top + 8); }
+      // rival series (faint)
+      if (p.rival) {
+        ctx.strokeStyle = 'rgba(224,114,106,.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); var on = false;
+        pts.forEach(function (q) { if (q.r == null) { on = false; return; } if (!on) { ctx.moveTo(X(q.t), Y(q.r)); on = true; } else ctx.lineTo(X(q.t), Y(q.r)); });
+        ctx.stroke();
+      }
+      // main series
+      ctx.beginPath(); var started = false;
+      pts.forEach(function (q) { if (q.y == null) { started = false; return; } if (!started) { ctx.moveTo(X(q.t), Y(q.y)); started = true; } else ctx.lineTo(X(q.t), Y(q.y)); });
+      if (p.area) { ctx.lineTo(X(pts[pts.length - 1].t), bot); ctx.lineTo(X(pts[0].t), bot); ctx.closePath(); ctx.fillStyle = col; ctx.globalAlpha = 0.8; ctx.fill(); ctx.globalAlpha = 1; }
+      else { ctx.strokeStyle = p.ratio ? '#d8aa4e' : col; ctx.lineWidth = 2; ctx.stroke(); }
+    });
+    // vertical marks across all panels
+    var vline = function (t, color, dash) {
+      if (t < t0 || t > t1) return;
+      ctx.strokeStyle = color; ctx.setLineDash(dash || []); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(X(t), 14); ctx.lineTo(X(t), Hc - 10); ctx.stroke(); ctx.setLineDash([]);
+    };
+    b.interventions.forEach(function (iv) { if (isDeed(iv.type)) { ctx.fillStyle = '#d8aa4e'; ctx.fillRect(X(iv.t) - 1, Hc - 8, 2, 8); } });
+    if (isHome) { vline(st.prophecy.end, '#e0726a', [3, 3]); vline(st.prophecy.target, '#6fcf8e', [3, 3]); }
+    vline(app.tick, '#ffffff', null);
+    // legend (HTML, so it stays crisp and wraps on small screens)
+    var lg = document.getElementById('vitals-legend');
+    if (lg) lg.innerHTML = '<span><i class="lg now"></i>now (' + app.tick + ')</span>' +
+      (isHome ? '<span><i class="lg fall"></i>foretold fall ' + st.prophecy.end + '</span><span><i class="lg goal"></i>goal ' + st.prophecy.target + '</span>' : '') +
+      (rival ? '<span><i class="lg rival"></i>' + esc(Sim.civName(rival)) + ' (rival)</span>' : '') +
+      (b.interventions.some(function (iv) { return isDeed(iv.type); }) ? '<span><i class="lg deed"></i>your deeds</span>' : '');
+    ctx.fillStyle = '#9a9585'; ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillText(String(t0), L, Hc - 1); ctx.textAlign = 'right'; ctx.fillText(String(t1), Wc - R, Hc - 1);
   }
 
   function setTab(tab) {
@@ -1492,6 +1641,7 @@
         if (st.quest.indexOf('fallen:') === 0) short += '<span class="st bad">This timeline: they fall in ' + st.quest.slice(7) + '</span>';
         else if (st.quest === 'reading') short += '<span class="st">Reading this timeline…</span>';
       }
+      if (st.stage === 'quest') short += dangerHTML(true);
       hud = short ? short + humHTML() : '';
     }
     $('map-hud').innerHTML = hud;

@@ -21,6 +21,7 @@
 
   var now = (typeof performance !== 'undefined' && performance.now) ? function () { return performance.now(); } : function () { return Date.now(); };
   var SAMPLE = 5; // years between per-civilization census samples (for the history chart)
+  var STRIDE = 6; // numbers per realm in a census sample: sig, people, founded, provinces, solidarity, technology
 
   function World(seed, opts) {
     opts = opts || {};
@@ -196,7 +197,8 @@
     for (var c = 0; c < nc; c++) {
       if (s.sTiles[c] <= 0) continue;
       total += s.sPop[c]; states++;
-      if (sample) sample.push(s.cSig[c], s.sPop[c], s.cFounded[c]);
+      // census entry: [sig, people, founded, provinces, mean solidarity (0..10000), technology] -- see STRIDE
+      if (sample) sample.push(s.cSig[c], s.sPop[c], s.cFounded[c], s.sTiles[c], Math.floor(s.sAsab[c] / s.sTiles[c]), s.cTech[c]);
       var sig = s.cSig[c];
       if (!b.lineage[sig]) b.lineage[sig] = { parent: s.cParent[c], founded: s.cFounded[c] };
     }
@@ -330,7 +332,7 @@
   }
 
   var Timeline = { World: World, View: View, divergence: divergence, impact: impact, diffChronicle: diffChronicle,
-    encode: encode, decode: decode, SAMPLE: SAMPLE, eventKey: eventKey };
+    encode: encode, decode: decode, SAMPLE: SAMPLE, STRIDE: STRIDE, eventKey: eventKey };
   if (typeof module !== 'undefined' && module.exports) module.exports = Timeline;
   else root.Timeline = Timeline;
 }(this));

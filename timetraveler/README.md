@@ -25,6 +25,14 @@ The world number decides the story, so anyone entering the same number is born i
 ### Timelines are your lives
 In story mode the original history is **"The world without you"**, and the timelines you make are **"Your first life"**, "Your first life, path 2" (when you go back and act again), **"Your second life"** (the next bearer), and so on. The impact meter therefore answers how much you mattered.
 
+### Understanding why your realm falls
+- **The vision explains the fall** in one verdict and its evidence, from the census and war records of the 80 years before it. For example: "Conquered. Their solidarity held (it never fell below 32%); they were simply outmatched by the Ruhokaoth", with their power at 4.5× yours, 425,000 vs 62,000 people and technology 4113 vs 1969. Then **where to act**: the year to act before, when the rival's solidarity was lowest (the best time to kill their ruler), whether technology or numbers is the bigger gap, and for collapses how many rallies would hold the line.
+- **Journal → danger gauge**: your realm's average solidarity against the collapse line (13%, sustained for 15 years), any crisis count, and power against the rival (1.00× is even). "Why they fall" is re-analysed for whatever timeline you're in.
+- **Realm → vital signs**: people, solidarity (with the collapse line), provinces (with the rival's) and power against the rival over the realm's whole life, with now, your deeds, the foretold fall and the goal year marked.
+- **Deeds report realm-wide effects**: a rally says "Across all 68 provinces of the Ithulavi: solidarity 52.3% → 53.4%" and "Your people's power against the Ruhokaoth: 0.15× → 0.16× (+2%)", not just the local change.
+
+Why rallying in pockets rarely saves a realm: collapse is decided by the *average* over every province, so one rally moves a 150-province realm by about half a point. Many falls are conquests anyway, decided by power, not solidarity.
+
 ### Passing on the Chronoscope
 There is no respawn. **Pass it on (P)**: give the Chronoscope to a young person wherever and whenever you stand, choosing the moment well, and your life as its bearer ends. If you die first, you press it into the hands of whoever finds you, someone nearby and of that land. Either way the new bearer begins at twenty with full health, knowing nothing you learned, and every deed of earlier bearers still stands in the timeline.
 
