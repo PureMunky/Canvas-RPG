@@ -8,7 +8,7 @@
 (function () {
   'use strict';
   var W = Sim.W, H = Sim.H, N = Sim.N, S = 6;          // world view: 6px per province
-  var TS = 30, VW = 32, VH = 20;                        // close view: 30px per province, 32x20 visible
+  var TS = 30, VW = 32, VH = 20;                        // close view: 30px per province; VW x VH visible (portrait on phones)
   var HORIZON = 3000, KF = 50, SAMPLE = Timeline.SAMPLE;
   var TER = Sim.TER;
   var STEP_COST = 1 / 6, SEA_COST = 1 / 2, DEED_COST = 1;
@@ -36,7 +36,8 @@
       age: 20, health: 100, life: 1, immuneUntil: 0, reasons: [], dead: false },
     story: { mode: 'story', stage: 'loading', unlocked: false, home: null, journal: [], prophecy: null, quest: '' },
     needsRender: true, chartDirty: true, chartDrawn: 0, panelsAt: 0, chronKey: '', tlKey: '',
-    flash: null, tab: 'journal', chartMax: 1, impact: null, oracle: null
+    flash: null, tab: 'journal', chartMax: 1, impact: null, oracle: null,
+    phone: false, touch: false, card: -1
   };
 
   // ---------------------------------------------------------------------------
@@ -104,6 +105,9 @@
     };
   }
   function todaySeed() { var d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+
+  /** A keyboard hint like " (5)", or nothing on touch screens. */
+  function key(k) { return app.touch ? '' : ' (' + k + ')'; }
 
   function locked() { return app.story.mode === 'story' && !app.story.unlocked; }
   function lockedToast() { toast('You cannot travel in time. <i>Not yet.</i>'); }
@@ -321,7 +325,7 @@
     setCamera('close');
     journal('You come of age in a village of the <b>' + esc(tale.name) + '</b>.');
     showStory({ kicker: 'Prologue · Year ' + app.tick, title: p.name + ', child of the ' + tale.name, html: '<p>Your name is <b>' + esc(p.name) + '</b>.</p>' + tale.html +
-      '<p><b>Custom demands that every youth of age present themselves to the ruler.</b> Walk to the capital (marked with a gold star): click the map or use WASD.</p>',
+      '<p><b>Custom demands that every youth of age present themselves to the ruler.</b> Walk to the capital (marked with a gold star): ' + (app.touch ? 'tap the map, then Walk here' : 'click the map or use WASD') + '.</p>',
       buttons: [{ label: 'Set out' }] });
     invalidateAll();
   }
@@ -333,7 +337,7 @@
     if (st.stage === 'learn' && id === 'learn') {
       st.stage = 'help';
       journal('You learn the customs and crafts of your people.');
-      toast('Your people need hands. <b>Help them</b>: dig irrigation (1), rally them (2), or tend the sick (3).');
+      toast('Your people need hands. <b>Help them</b>: dig irrigation' + key('1') + ', rally them' + key('2') + ', or tend the sick' + key('3') + '.');
     } else if (st.stage === 'help' && (id === 'irrigate' || id === 'rally' || id === 'heal' || id === 'settle')) {
       st.stage = 'awaitVision';
       journal('You labour beside your people, and they come to know your name.');
@@ -357,7 +361,7 @@
         showStory({ kicker: 'Prologue · Year ' + app.tick, title: 'The oath', html:
           '<p>The hall is smoky and loud. When your name is called you kneel before <b>' + esc(st.home.ruler) + '</b>, and you swear the oath your parents swore.</p>' +
           '<p>The ruler studies you. "Learn our ways before you serve them."</p>' +
-          '<p><b>Spend a year learning among your people</b> (the Learn deed, key 5). Every deed takes a year of your life, and your health depends on where you spend it.</p>',
+          '<p><b>Spend a year learning among your people</b> (the Learn deed' + (app.touch ? '' : ', key 5') + '). Every deed takes a year of your life, and your health depends on where you spend it.</p>',
           buttons: [{ label: 'Continue' }] });
       }
     } else if (st.stage === 'awaitVision') {
@@ -387,8 +391,8 @@
       '<p class="vision">Year ' + pr.end + '. ' + esc(pr.vision) + '</p>' +
       '<p>' + pr.hint + '</p>' +
       '<p><b>Save the ' + esc(st.home.name) + ': they must still hold at least one province in the year ' + pr.target + '.</b></p>' +
-      '<p>The Chronoscope lets you travel through time: drag the history chart, or use , and . to step. <b>Travelling does not age you; living does.</b> You have one life, perhaps fifty years. Spend them where they matter. If you act in the past, history rewrites itself, and the Journal tells you whether your people still fall.</p>' +
-      '<p>Listen to the instrument. It hums in the years that matter, louder as you come near a place and moment where one deed would turn fate. When your strength fails, give it to someone young (P), as it was given to you.</p>',
+      '<p>The Chronoscope lets you travel through time: ' + (app.touch ? 'drag along the history strip at the bottom' : 'drag the history chart, or use , and . to step') + '. <b>Travelling does not age you; living does.</b> You have one life, perhaps fifty years. Spend them where they matter. If you act in the past, history rewrites itself, and the Journal tells you whether your people still fall.</p>' +
+      '<p>Listen to the instrument. It hums in the years that matter, louder as you come near a place and moment where one deed would turn fate. When your strength fails, give it to someone young' + key('P') + ', as it was given to you.</p>',
       buttons: [{ label: 'Take up the Chronoscope' }] });
     invalidateAll();
   }
@@ -399,7 +403,7 @@
     if (!pr || b.computedTo < pr.target) return;
     var key = b.id + ':' + b.version;
     if (!app.oracle || app.oracle.key !== key) {
-      app.oracle = new Oracle({ world: app.world, branch: b, homeSig: st.home.sig, foeSig: pr.foeSig, end: pr.end, target: pr.target });
+      app.oracle = new Oracle({ world: app.world, branch: b, homeSig: st.home.sig, foeSig: pr.foeSig, end: pr.end, target: pr.target, every: app.phone ? 25 : 20 });
       app.oracle.key = key;
     }
   }
@@ -545,9 +549,9 @@
     switch (st.stage) {
       case 'loading': return '';
       case 'goCapital': t = 'Walk to the capital of the ' + esc(st.home.name) + ' (the gold star) and present yourself to ' + esc(st.home.ruler) + '.'; break;
-      case 'learn': t = 'Spend a year learning among your people: the Learn deed (5).'; break;
-      case 'help': t = 'Help your people: dig irrigation (1), rally them (2) or tend the sick (3) in their lands.'; break;
-      case 'awaitVision': t = 'Rest (R) or go about your life…'; break;
+      case 'learn': t = 'Spend a year learning among your people: the Learn deed' + key('5') + '.'; break;
+      case 'help': t = 'Help your people: dig irrigation' + key('1') + ', rally them' + key('2') + ' or tend the sick' + key('3') + ' in their lands.'; break;
+      case 'awaitVision': t = 'Rest' + key('R') + ' or go about your life…'; break;
       case 'quest':
         t = 'Save the ' + esc(st.home.name) + ': they must still hold at least one province in the year ' + pr.target + '. Foretold fall: ' + pr.end + '.';
         if (st.quest === 'reading') status = 'The Chronoscope is reading this timeline… (year ' + app.cur.computedTo + ')';
@@ -976,13 +980,19 @@
     var d = miniImg.data;
     for (var i = 0, o = 0; i < N; i++, o += 4) { d[o] = tr[i]; d[o + 1] = tg[i]; d[o + 2] = tb[i]; d[o + 3] = 255; }
     miniCtx.putImageData(miniImg, 0, 0);
-    var mw = 160, mh = 100, mx = mapCanvas.width - mw - 10, my = mapCanvas.height - mh - 10;
-    ctx.fillStyle = 'rgba(10,12,18,.7)'; ctx.fillRect(mx - 3, my - 3, mw + 6, mh + 6);
+    var m = minimapRect(), k = m.mw / W;
+    ctx.fillStyle = 'rgba(10,12,18,.7)'; ctx.fillRect(m.mx - 3, m.my - 3, m.mw + 6, m.mh + 6);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(mini, mx, my, mw, mh);
+    ctx.drawImage(mini, m.mx, m.my, m.mw, m.mh);
     ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1;
-    ctx.strokeRect(mx + cam.x + 0.5, my + cam.y + 0.5, VW, VH);
-    ctx.fillStyle = '#ffe9a8'; ctx.fillRect(mx + app.person.x - 1, my + app.person.y - 1, 3, 3);
+    ctx.strokeRect(m.mx + cam.x * k + 0.5, m.my + cam.y * k + 0.5, VW * k, VH * k);
+    ctx.fillStyle = '#ffe9a8'; ctx.fillRect(m.mx + app.person.x * k - 1.5, m.my + app.person.y * k - 1.5, 3, 3);
+  }
+
+  /** Where the minimap sits on the close-view canvas (smaller on narrow phone canvases). */
+  function minimapRect() {
+    var mw = Math.round(Math.min(160, mapCanvas.width * 0.34)), mh = Math.round(mw * H / W);
+    return { mw: mw, mh: mh, mx: mapCanvas.width - mw - 8, my: mapCanvas.height - mh - 8 };
   }
 
   function radiusOf(tool) { return { bless: 2, blight: 2, prophet: 3, smite: 1, mountain: 1, sea: 1, land: 1 }[tool] || 0; }
@@ -994,9 +1004,10 @@
     if (app.camera === 'close') {
       var cam = camOrigin();
       // minimap click jumps the walk target there
-      var mw = 160, mh = 100, mx = mapCanvas.width - mw - 10, my = mapCanvas.height - mh - 10;
-      var px = fx * mapCanvas.width, py = fy * mapCanvas.height;
-      if (px >= mx && py >= my && px < mx + mw && py < my + mh) return Math.floor(py - my) * W + Math.floor(px - mx);
+      var m = minimapRect(), px = fx * mapCanvas.width, py = fy * mapCanvas.height;
+      if (px >= m.mx && py >= m.my && px < m.mx + m.mw && py < m.my + m.mh) {
+        return Math.min(H - 1, Math.floor((py - m.my) * W / m.mw)) * W + Math.min(W - 1, Math.floor((px - m.mx) * W / m.mw));
+      }
       return (cam.y + Math.floor(fy * VH)) * W + cam.x + Math.floor(fx * VW);
     }
     return Math.floor(fy * H) * W + Math.floor(fx * W);
@@ -1346,9 +1357,12 @@
   // ---------------------------------------------------------------------------
   // Tooltip
   // ---------------------------------------------------------------------------
-  function showTooltip(e) {
-    var tip = $('tooltip'), s = app.view.s, i = app.hover;
-    if (!s || i < 0) { tip.hidden = true; return; }
+  function walkTime(i) {
+    var p = app.person, dist = Math.abs(i % W - p.x) + Math.abs(((i / W) | 0) - p.y), y = dist * STEP_COST;
+    return dist === 0 ? '' : y < 1 ? Math.max(1, Math.round(y * 12)) + ' months' : y.toFixed(1) + ' years';
+  }
+
+  function tileInfoHTML(s, i) {
     var c = s.owner[i], t = s.terrain[i], html = '';
     html += Sim.TERRAIN_NAMES[t] + (s.river[i] ? ' · river' : '') + ' <span class="muted">(' + (i % W) + ', ' + ((i / W) | 0) + ')</span>';
     if (Sim.isLand(t)) {
@@ -1361,8 +1375,14 @@
         if (s.starve[i]) html += '<br><span class="warn">Famine</span>';
       } else html += '<br><span class="muted">Wilderness</span>';
     }
-    var p = app.person, dist = Math.abs(i % W - p.x) + Math.abs(((i / W) | 0) - p.y);
-    if (app.tool === 'walk' && dist > 0) html += '<br><span class="muted">Walk here: about ' + (dist * STEP_COST < 1 ? Math.round(dist * STEP_COST * 12) + ' months' : (dist * STEP_COST).toFixed(1) + ' years') + '</span>';
+    return html;
+  }
+
+  function showTooltip(e) {
+    var tip = $('tooltip'), s = app.view.s, i = app.hover;
+    if (!s || i < 0 || app.touch) { tip.hidden = true; return; }
+    var html = tileInfoHTML(s, i), wt = walkTime(i);
+    if (app.tool === 'walk' && wt) html += '<br><span class="muted">Walk here: about ' + wt + '</span>';
     else if (app.tool !== 'walk' && app.tool !== 'inspect') html += '<br><span class="muted">Click: ' + esc(toolDef(app.tool).name) + '</span>';
     tip.innerHTML = html; tip.hidden = false;
     var wrap = $('map-wrap').getBoundingClientRect();
@@ -1370,6 +1390,134 @@
     if (x + tip.offsetWidth > wrap.width) x = e.clientX - wrap.left - tip.offsetWidth - 14;
     if (y + tip.offsetHeight > wrap.height) y = e.clientY - wrap.top - tip.offsetHeight - 14;
     tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  }
+
+
+  // ---------------------------------------------------------------------------
+  // Phone layout
+  // ---------------------------------------------------------------------------
+  var phoneQuery = window.matchMedia('(max-width: 720px), (pointer: coarse) and (max-height: 520px)');
+  var moved = null; // original homes of nodes we move into the phone menu
+
+  function applyLayout(force) {
+    var phone = phoneQuery.matches;
+    app.touch = window.matchMedia('(pointer: coarse)').matches;
+    if (phone !== app.phone || force) {
+      app.phone = phone;
+      document.body.classList.toggle('phone', phone);
+      var nodes = [document.querySelector('.world-controls'), document.querySelector('.top-actions'), document.querySelector('.map-bar'), $('toolbar')];
+      if (!moved) moved = nodes.map(function (n) { return { n: n, parent: n.parentNode, next: n.nextSibling }; });
+      if (phone) moved.forEach(function (m) { $('phone-menu-body').appendChild(m.n); });
+      else moved.forEach(function (m) { m.parent.insertBefore(m.n, m.next); });
+      if (!phone) { setSheet(false); $('phone-menu').hidden = true; hideTileCard(); }
+    }
+    layoutMap();
+    sizeChart();
+    app.needsRender = true;
+  }
+
+  function setCanvasSize(w, h) {
+    if (mapCanvas.width !== w || mapCanvas.height !== h) { mapCanvas.width = w; mapCanvas.height = h; }
+  }
+
+  /** Desktop: fixed 32x20 view. Phone: as many ~30px provinces as fit the screen, in portrait if need be. */
+  function layoutMap() {
+    if (!app.phone) {
+      VW = 32; VH = 20; setCanvasSize(960, 600);
+      mapCanvas.style.width = ''; mapCanvas.style.height = '';
+      app.needsRender = true;
+      return;
+    }
+    var r = $('map-wrap').getBoundingClientRect(), w = Math.max(100, r.width), h = Math.max(100, r.height), scale;
+    if (app.camera === 'close') {
+      VW = Math.max(8, Math.min(32, Math.round(w / 30)));
+      VH = Math.max(8, Math.min(28, Math.round(h / 30)));
+      setCanvasSize(VW * TS, VH * TS);
+    } else setCanvasSize(960, 600);
+    scale = Math.min(w / mapCanvas.width, h / mapCanvas.height);
+    mapCanvas.style.width = Math.floor(mapCanvas.width * scale) + 'px';
+    mapCanvas.style.height = Math.floor(mapCanvas.height * scale) + 'px';
+    app.needsRender = true;
+  }
+
+  function setSheet(open) { document.body.classList.toggle('sheet-open', !!open); }
+
+  function showTileCard(i) {
+    var s = app.view.s;
+    if (!s) return;
+    app.card = i; app.hover = i; app.needsRender = true;
+    var c = s.owner[i], wt = walkTime(i), html = '<button class="close" aria-label="Close">✕</button>' + tileInfoHTML(s, i), acts = [];
+    var power = POWERS.filter(function (t) { return t.id === app.tool; })[0];
+    if (power) acts.push('<button class="btn primary" data-act="power">' + power.icon + ' ' + esc(power.name) + ' here</button>');
+    else if (wt && !app.person.dead) acts.push('<button class="btn primary" data-act="walk">Walk here · ' + wt + '</button>');
+    else if (!wt) html += '<br><span class="muted">You are here.</span>';
+    if (c >= 0) acts.push('<button class="btn" data-act="follow">Follow the ' + esc(Sim.civName(s.cSig[c])) + '</button>');
+    var card = $('tile-card');
+    card.innerHTML = html + (acts.length ? '<div class="actions">' + acts.join('') + '</div>' : '');
+    card.hidden = false;
+    card.querySelector('.close').onclick = hideTileCard;
+    card.querySelectorAll('[data-act]').forEach(function (b) {
+      b.onclick = function () {
+        var act = b.dataset.act;
+        if (act === 'walk') { app.person.target = i; }
+        else if (act === 'power') usePower(i % W, (i / W) | 0);
+        else if (act === 'follow') { app.selected = s.cSig[c]; setTab('realm'); setSheet(true); invalidateAll(); }
+        hideTileCard();
+      };
+    });
+  }
+  function hideTileCard() { $('tile-card').hidden = true; app.card = -1; app.hover = -1; app.needsRender = true; }
+
+  /** The phone's status bar and the objective / hum overlay on the map. */
+  function updatePhoneHud() {
+    if (!app.phone) return;
+    var s = app.view.s, p = app.person, st = app.story;
+    $('ph-year').innerHTML = 'Year ' + app.tick + (s ? '<small>' + worldAge(s) + '</small>' : '');
+    if (st.mode === 'story' && st.stage !== 'loading' && p.name) {
+      var hc = p.health >= 55 ? 'var(--new)' : p.health >= 25 ? 'var(--gold)' : 'var(--erased)';
+      $('ph-you').innerHTML = '<span class="ph-name"><b>' + esc(p.name) + '</b> · ' + p.age + (p.dead ? ' · dead' : '') + '</span>' +
+        '<span class="ph-health"><span class="ph-bar"><i style="width:' + Math.max(0, p.health) + '%;background:' + hc + '"></i></span> ' + Math.round(p.health) + '</span>';
+    } else $('ph-you').innerHTML = st.mode === 'sandbox' ? '<span class="ph-name muted">Sandbox</span>' : '';
+    var hud = '';
+    if (st.mode === 'story' && st.home) {
+      var short = {
+        goCapital: '★ Walk to the capital and swear the oath',
+        learn: '◎ Learn the ways of your people (Learn)',
+        help: '⌇ Help your people: dig, rally or heal',
+        awaitVision: '☾ Rest, or go about your life…',
+        won: '✓ You saved the ' + esc(st.home.name)
+      }[st.stage];
+      if (st.stage === 'quest' && st.prophecy) {
+        short = 'Save the <b>' + esc(st.home.name) + '</b>: hold a province in ' + st.prophecy.target;
+        if (st.quest.indexOf('fallen:') === 0) short += '<span class="st bad">This timeline: they fall in ' + st.quest.slice(7) + '</span>';
+        else if (st.quest === 'reading') short += '<span class="st">Reading this timeline…</span>';
+      }
+      hud = short ? short + humHTML() : '';
+    }
+    $('map-hud').innerHTML = hud;
+  }
+
+  function wirePhone() {
+    $('ph-menu').onclick = function () { $('phone-menu').hidden = false; };
+    $('pm-close').onclick = function () { $('phone-menu').hidden = true; };
+    $('phone-menu').addEventListener('click', function (e) {
+      if (e.target === this) this.hidden = true;
+      // choosing a tool, mode or world closes the menu
+      if (e.target.closest('.tool, #map-modes button, #btn-camera, #btn-new, #btn-random, #btn-today, #btn-link, #btn-help')) this.hidden = true;
+    });
+    $('ph-year').onclick = $('map-hud').onclick = function () { setTab('journal'); setSheet(true); };
+    $('ph-you').onclick = function () { setTab('journal'); setSheet(true); };
+    $('sheet-handle').onclick = function () { setSheet(!document.body.classList.contains('sheet-open')); };
+    document.querySelectorAll('.tab').forEach(function (t) {
+      t.addEventListener('click', function () { if (app.phone) setSheet(true); });
+    });
+    // swipe the sheet down to close it
+    var y0 = null;
+    $('sheet-handle').addEventListener('touchstart', function (e) { y0 = e.touches[0].clientY; }, { passive: true });
+    document.querySelector('.side').addEventListener('touchend', function (e) {
+      if (y0 != null && e.changedTouches[0].clientY - y0 > 40) setSheet(false);
+      y0 = null;
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -1423,7 +1571,7 @@
         overlay.hidden = true;
         app.needsRender = false;
         renderMap();
-        if (moved || now - app.panelsAt > 250) { updateYearCard(); updateToolHint(); }
+        if (moved || now - app.panelsAt > 250) { updateYearCard(); updateToolHint(); if (app.phone) $('ph-year').firstChild.textContent = 'Year ' + app.tick; }
       } else {
         overlay.hidden = false;
         overlay.textContent = 'Recomputing ' + b.name + '… year ' + b.computedTo + ' of ' + app.tick;
@@ -1438,6 +1586,7 @@
       if (app.story.stage === 'quest') checkQuest();
       updateBranchLine();
       if (app.view.s) { updateYou(app.view.s); updateHotbar(app.view.s); }
+      updatePhoneHud();
       if (app.tab === 'journal') renderJournal();
       else if (app.tab === 'chronicle') renderChronicle();
       else if (app.tab === 'timelines') renderTimelines();
@@ -1493,6 +1642,7 @@
   function setCamera(cam) {
     app.camera = cam;
     $('btn-camera').textContent = cam === 'close' ? 'World view' : 'Close view';
+    layoutMap();
     app.needsRender = true;
   }
 
@@ -1507,6 +1657,7 @@
     mapCanvas.addEventListener('click', function (e) {
       var i = tileFromEvent(e);
       if (i < 0) return;
+      if (app.phone) { setSheet(false); showTileCard(i); return; }
       if (app.tool === 'walk') { app.person.target = i; app.needsRender = true; }
       else if (app.tool === 'inspect') {
         var s = app.view.s, c = s ? s.owner[i] : -1;
@@ -1625,16 +1776,18 @@
         if (deed) doDeed(deed.id);
       }
     });
-    window.addEventListener('resize', sizeChart);
+    window.addEventListener('resize', function () { applyLayout(); });
+    wirePhone();
   }
 
   function boot() {
     wire();
     var parsed = Timeline.decode(location.hash);
     var sandbox = parsed.interventions.length > 0;
+    applyLayout(true);
     newWorld(parsed.seed != null ? parsed.seed : Math.floor(Math.random() * 1e6), parsed.interventions, sandbox ? 'sandbox' : 'story',
       parsed.home ? { home: parsed.home, born: parsed.born } : null);
-    sizeChart();
+    applyLayout(true);
     syncPlay();
     requestAnimationFrame(frame);
   }

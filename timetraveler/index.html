@@ -8,6 +8,17 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <div class="phone-hud" id="phone-hud">
+    <button class="ph-year" id="ph-year" aria-label="Open the journal">Year 0</button>
+    <button class="ph-you" id="ph-you" aria-label="Your health and details"></button>
+    <button class="btn icon" id="ph-menu" aria-label="Menu: world, map modes, powers, help">☰</button>
+  </div>
+  <div class="phone-menu" id="phone-menu" hidden>
+    <div class="pm-panel" role="dialog" aria-label="Menu">
+      <div class="pm-head"><span class="brand"><span class="glyph">⧗</span> Chronoscope</span><button class="btn icon" id="pm-close" aria-label="Close menu">✕</button></div>
+      <div class="pm-body" id="phone-menu-body"></div>
+    </div>
+  </div>
   <header class="topbar">
     <div class="brand"><span class="glyph">⧗</span> Chronoscope</div>
     <div class="world-controls">
@@ -34,6 +45,8 @@
       <div class="map-wrap" id="map-wrap">
         <canvas id="map" width="960" height="600" aria-label="World map"></canvas>
         <div class="map-overlay" id="map-overlay" hidden></div>
+        <button class="map-hud" id="map-hud" aria-label="Open the journal"></button>
+        <div class="tile-card" id="tile-card" hidden></div>
         <div class="tooltip" id="tooltip" hidden></div>
       </div>
       <div class="hotbar" id="hotbar" aria-label="Your deeds"></div>
@@ -63,6 +76,7 @@
     </section>
 
     <aside class="side">
+      <button class="sheet-handle" id="sheet-handle" aria-label="Show or hide the panels"><span></span></button>
       <div class="year-card">
         <div class="year-line"><span class="year" id="year">Year 0</span><span class="age" id="age"></span></div>
         <div class="year-stats" id="year-stats"></div>

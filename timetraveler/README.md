@@ -92,6 +92,20 @@ in testing.
 
 The god-like **Powers** (plague, floods, mountains…) are still on the left toolbar.
 
+## Playing on a phone
+
+On narrow screens (or a phone held sideways) the page switches to a phone layout automatically. The desktop layout is unchanged.
+
+- **The map fills the screen** and follows you with about 30-pixel provinces. A portrait camera shows roughly 12×13 provinces instead of the desktop's 32×20, with the minimap in the corner.
+- **Tap a province** for an info card (people, plague, famine, soil, climate) with **Walk here · 8 months** and **Follow this realm**. With a Power selected the card offers that power instead, so nothing happens on an accidental tap.
+- **An overlay on the map** shows your current objective, your realm's fate in this timeline and the Chronoscope's hum. Tap it for the Journal.
+- **The top bar** shows the year and age of the world, plus your name, age and health.
+- **Deeds sit in a thumb-reach row** (scroll sideways), above the time controls and a slim history strip you drag to travel in time.
+- **Journal, Chronicle, Timelines and Realm live in a pull-up sheet:** tap a tab or the handle, swipe down to close.
+- **☰ opens world controls** (world number, Today, Share, help), map modes, World/Close view, and the Powers.
+- **Held sideways,** the map sits on the left with deeds, time and history on the right.
+- Keyboard hints disappear on touch screens, and the hint system tests slightly fewer moments on phones to keep them responsive.
+
 ## How to play
 
 | Action | How |
